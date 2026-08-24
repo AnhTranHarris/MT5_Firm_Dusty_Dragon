@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Protocol, Sequence
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from dusty_dragon.domain.trades import Side, TradeProposal
 
@@ -40,6 +40,16 @@ class MarketBar(BaseModel):
     tick_volume: float = Field(ge=0)
     spread_points: float = Field(ge=0)
     real_volume: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def validate_ohlc_geometry(self) -> "MarketBar":
+        if self.low > self.high:
+            raise ValueError("market bar low cannot exceed high")
+        if not self.low <= self.open <= self.high:
+            raise ValueError("market bar open must lie within low/high")
+        if not self.low <= self.close <= self.high:
+            raise ValueError("market bar close must lie within low/high")
+        return self
 
 
 class BrokerAccountState(BaseModel):
