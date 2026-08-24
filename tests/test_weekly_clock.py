@@ -1,3 +1,4 @@
+# ruff: noqa: I001
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -40,4 +41,5 @@ def test_sunday_moves_from_research_to_validation_to_trading():
 
 def test_naive_datetime_is_rejected():
     with pytest.raises(ValueError, match="timezone-aware"):
-        FirmWeeklyClock().phase_at(datetime(2026, 8, 24, 10))
+        # Intentionally naive: this test proves the firm clock fails closed.
+        FirmWeeklyClock().phase_at(datetime(2026, 8, 24, 10))  # noqa: DTZ001
