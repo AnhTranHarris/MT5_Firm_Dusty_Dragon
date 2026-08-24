@@ -3,9 +3,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
+from pydantic import BaseModel, Field
+
 from dusty_dragon.brokers.contracts import Position
 from dusty_dragon.domain.trades import Side, TradeProposal
-from pydantic import BaseModel, Field
 
 
 KNOWN_FX_CURRENCIES = frozenset(
