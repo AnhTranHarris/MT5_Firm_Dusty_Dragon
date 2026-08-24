@@ -29,6 +29,30 @@ class Quote(BaseModel):
         return self.ask - self.bid
 
 
+class MarketBar(BaseModel):
+    symbol: str
+    timeframe: str
+    opened_at: datetime
+    open: float = Field(gt=0)
+    high: float = Field(gt=0)
+    low: float = Field(gt=0)
+    close: float = Field(gt=0)
+    tick_volume: float = Field(ge=0)
+    spread_points: float = Field(ge=0)
+    real_volume: float = Field(ge=0)
+
+
+class BrokerAccountState(BaseModel):
+    captured_at: datetime
+    login: int | None = None
+    currency: str
+    balance: float
+    equity: float
+    margin: float
+    free_margin: float
+    margin_level: float | None = None
+
+
 class Position(BaseModel):
     ticket: int
     symbol: str
@@ -68,6 +92,10 @@ class BrokerAdapter(Protocol):
     def symbol_spec(self, symbol: str) -> SymbolSpec: ...
 
     def quote(self, symbol: str) -> Quote: ...
+
+    def bars(self, symbol: str, timeframe: str, count: int) -> Sequence[MarketBar]: ...
+
+    def account_state(self) -> BrokerAccountState: ...
 
     def positions(self) -> Sequence[Position]: ...
 
