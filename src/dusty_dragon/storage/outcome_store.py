@@ -68,7 +68,23 @@ class TradeOutcomeStore:
             ).fetchone()
         if row is None:
             return None
-        payload_json, expected_hash = row
+        return self._decode_verified(trade_id, row[0], row[1])
+
+    def all(self) -> list[TradeOutcome]:
+        """Return all immutable outcomes ordered by close time for firm analytics."""
+
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT trade_id, payload_json, payload_hash
+                FROM trade_outcomes
+                ORDER BY closed_at ASC, trade_id ASC
+                """
+            ).fetchall()
+        return [self._decode_verified(trade_id, payload, digest) for trade_id, payload, digest in rows]
+
+    @staticmethod
+    def _decode_verified(trade_id: str, payload_json: str, expected_hash: str) -> TradeOutcome:
         actual_hash = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
         if actual_hash != expected_hash:
             raise ValueError(f"outcome payload integrity failure for trade {trade_id}")
