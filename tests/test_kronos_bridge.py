@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -7,7 +7,7 @@ from dusty_dragon.intelligence.kronos_bridge import bars_to_kronos_frame, split_
 
 
 def bar(minutes: int, *, symbol: str = "EURUSD", timeframe: str = "M15") -> MarketBar:
-    opened_at = datetime(2026, 8, 24, 12, 0, tzinfo=timezone.utc) + timedelta(minutes=minutes)
+    opened_at = datetime(2026, 8, 24, 12, 0, tzinfo=UTC) + timedelta(minutes=minutes)
     return MarketBar(
         symbol=symbol,
         timeframe=timeframe,
