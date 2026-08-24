@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from decimal import Decimal, ROUND_FLOOR
 from typing import Any, Sequence
 
 from dusty_dragon.brokers.contracts import (
@@ -159,12 +160,17 @@ class MT5BrokerAdapter(BrokerAdapter):
 
     @staticmethod
     def _normalize_volume(volume: float, spec: SymbolSpec) -> float:
-        if volume < spec.volume_min:
-            volume = spec.volume_min
-        if volume > spec.volume_max:
+        """Normalize to broker lot increments without increasing requested exposure."""
+        requested = Decimal(str(volume))
+        minimum = Decimal(str(spec.volume_min))
+        maximum = Decimal(str(spec.volume_max))
+        step = Decimal(str(spec.volume_step))
+
+        if requested < minimum:
+            return float(minimum)
+        if requested > maximum:
             raise ValueError(f"requested volume {volume} exceeds maximum {spec.volume_max}")
 
-        steps = round((volume - spec.volume_min) / spec.volume_step)
-        normalized = spec.volume_min + steps * spec.volume_step
-        normalized = max(spec.volume_min, min(normalized, spec.volume_max))
-        return round(normalized, 8)
+        steps = ((requested - minimum) / step).to_integral_value(rounding=ROUND_FLOOR)
+        normalized = minimum + steps * step
+        return float(normalized)
