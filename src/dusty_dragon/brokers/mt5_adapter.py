@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from datetime import UTC, datetime
-from decimal import ROUND_FLOOR, Decimal
 from typing import Any, ClassVar
 
 from dusty_dragon.brokers.contracts import (
@@ -14,6 +13,7 @@ from dusty_dragon.brokers.contracts import (
     Quote,
     SymbolSpec,
 )
+from dusty_dragon.brokers.volume import normalize_volume_down
 from dusty_dragon.domain.trades import Side, TradeProposal
 
 
@@ -120,6 +120,10 @@ class MT5BrokerAdapter(BrokerAdapter):
             point=float(row.point),
             digits=int(row.digits),
             trade_mode=getattr(row, "trade_mode", None),
+            contract_size=self._positive_or_none(getattr(row, "trade_contract_size", None)),
+            tick_size=self._positive_or_none(getattr(row, "trade_tick_size", None)),
+            tick_value=self._nonnegative_or_none(getattr(row, "trade_tick_value", None)),
+            profit_currency=getattr(row, "currency_profit", None),
         )
 
     def quote(self, symbol: str) -> Quote:
@@ -207,37 +211,34 @@ class MT5BrokerAdapter(BrokerAdapter):
         return tuple(result)
 
     def execute_paper(self, proposal: TradeProposal, volume: float) -> ExecutionResult:
-        """Validate MT5 symbol mechanics without sending an order.
-
-        Paper execution is deliberately local in the first milestone. The method
-        proves symbol/volume/quote translation while guaranteeing no broker order
-        is emitted. A later simulator will model fills, spread, slippage and P/L.
-        """
+        """Validate MT5 symbol mechanics without sending an order."""
         spec = self.symbol_spec(proposal.symbol)
-        normalized_volume = self._normalize_volume(volume, spec)
+        normalized_volume = normalize_volume_down(volume, spec)
         quote = self.quote(proposal.symbol)
         price = quote.ask if proposal.side == Side.BUY else quote.bid
+        spread_points = quote.spread / spec.point
         return ExecutionResult(
             accepted=True,
             message="paper validation accepted; no MT5 order sent",
             requested_volume=volume,
             executed_volume=normalized_volume,
             executed_price=price,
+            spread_points=spread_points,
+            slippage_points=0.0,
+            estimated_commission=0.0,
+            estimated_swap=0.0,
         )
 
     @staticmethod
-    def _normalize_volume(volume: float, spec: SymbolSpec) -> float:
-        """Normalize to broker lot increments without increasing requested exposure."""
-        requested = Decimal(str(volume))
-        minimum = Decimal(str(spec.volume_min))
-        maximum = Decimal(str(spec.volume_max))
-        step = Decimal(str(spec.volume_step))
+    def _positive_or_none(value: Any) -> float | None:
+        if value is None:
+            return None
+        parsed = float(value)
+        return parsed if parsed > 0 else None
 
-        if requested < minimum:
-            return float(minimum)
-        if requested > maximum:
-            raise ValueError(f"requested volume {volume} exceeds maximum {spec.volume_max}")
-
-        steps = ((requested - minimum) / step).to_integral_value(rounding=ROUND_FLOOR)
-        normalized = minimum + steps * step
-        return float(normalized)
+    @staticmethod
+    def _nonnegative_or_none(value: Any) -> float | None:
+        if value is None:
+            return None
+        parsed = float(value)
+        return parsed if parsed >= 0 else None
