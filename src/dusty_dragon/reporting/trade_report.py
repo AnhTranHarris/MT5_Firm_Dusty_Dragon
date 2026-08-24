@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -22,7 +22,7 @@ class TradeReport(BaseModel):
 
     report_version: str = "trade-report/v1"
     trade_id: UUID
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     proposal: TradeProposal
     guard: GuardResult
     execution: ExecutionResult | None = None
@@ -44,7 +44,7 @@ class TradeReport(BaseModel):
         model_versions: dict[str, str] | None = None,
         data_provenance: dict[str, str] | None = None,
         observations: dict[str, Any] | None = None,
-    ) -> "TradeReport":
+    ) -> TradeReport:
         return cls(
             trade_id=proposal.id,
             proposal=proposal,
