@@ -5,9 +5,9 @@ from typing import Protocol
 
 from pydantic import BaseModel
 
-from dusty_dragon.brokers.contracts import BrokerAdapter
-from dusty_dragon.domain.trades import AccountSnapshot, GuardDecision, GuardResult
-from dusty_dragon.intelligence.kronos_forecast import KronosForecast, KronosForecastService
+from dusty_dragon.brokers.contracts import BrokerAdapter, MarketBar
+from dusty_dragon.domain.trades import AccountSnapshot, GuardDecision
+from dusty_dragon.intelligence.kronos_forecast import KronosForecast
 from dusty_dragon.intelligence.research_signal import (
     GeneralistResearchEngine,
     ResearchSignal,
@@ -36,7 +36,7 @@ class DecisionCycleResult(BaseModel):
 
 
 class ForecastServiceLike(Protocol):
-    def forecast(self, bars: list, horizon_bars: int) -> KronosForecast: ...
+    def forecast(self, bars: list[MarketBar], horizon_bars: int) -> KronosForecast: ...
 
 
 @dataclass(frozen=True)
@@ -54,7 +54,7 @@ class PaperTradingOrchestrator:
     """
 
     broker: BrokerAdapter
-    forecast_service: KronosForecastService
+    forecast_service: ForecastServiceLike
     research_engine: GeneralistResearchEngine
     order_guard: OrderGuard
     paper_execution: PaperExecutionEngine
