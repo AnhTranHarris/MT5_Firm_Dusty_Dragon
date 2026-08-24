@@ -57,6 +57,35 @@ class TradeReport(BaseModel):
             observations=observations or {},
         )
 
+    @staticmethod
+    def _optional_metric(label: str, value: float | None, suffix: str = "") -> str | None:
+        if value is None:
+            return None
+        return f"- **{label}:** {value:.5f}{suffix}"
+
+    def _execution_lines(self) -> list[str]:
+        if self.execution is None:
+            return ["- No simulated execution was recorded."]
+
+        lines = [
+            f"- **Status:** {'accepted' if self.execution.accepted else 'rejected'}",
+            f"- **Requested volume:** {self.execution.requested_volume:.5f} lots",
+        ]
+        optional = [
+            self._optional_metric("Executed volume", self.execution.executed_volume, " lots"),
+            self._optional_metric("Executed price", self.execution.executed_price),
+            self._optional_metric("Spread", self.execution.spread_points, " points"),
+            self._optional_metric("Slippage", self.execution.slippage_points, " points"),
+            self._optional_metric("Estimated commission", self.execution.estimated_commission),
+            self._optional_metric("Estimated swap", self.execution.estimated_swap),
+            self._optional_metric("Gross P/L", self.execution.gross_pnl),
+            self._optional_metric("Net P/L", self.execution.net_pnl),
+        ]
+        lines.extend(line for line in optional if line is not None)
+        if self.execution.message:
+            lines.append(f"- **Execution note:** {self.execution.message}")
+        return lines
+
     def to_markdown(self) -> str:
         execution_status = "not executed"
         if self.execution is not None:
@@ -99,5 +128,9 @@ class TradeReport(BaseModel):
                 "## Guard review",
                 "",
                 *guard_reasons,
+                "",
+                "## Paper execution and friction",
+                "",
+                *self._execution_lines(),
             ]
         )
