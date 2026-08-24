@@ -22,12 +22,13 @@ class TradeLedger:
         self._initialize()
 
     def _connect(self) -> sqlite3.Connection:
-        connection = sqlite3.connect(self.path)
+        connection = sqlite3.connect(self.path, timeout=10)
         connection.row_factory = sqlite3.Row
         return connection
 
     def _initialize(self) -> None:
         with self._connect() as connection:
+            connection.execute("PRAGMA journal_mode=WAL")
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS trade_reports (
@@ -51,7 +52,9 @@ class TradeLedger:
 
     def append(self, report: TradeReport) -> str:
         payload_json = report.model_dump_json(exclude_none=False)
-        with self._connect() as connection:
+        connection = self._connect()
+        try:
+            connection.execute("BEGIN IMMEDIATE")
             row = connection.execute(
                 "SELECT record_hash FROM trade_reports ORDER BY sequence DESC LIMIT 1"
             ).fetchone()
@@ -71,7 +74,13 @@ class TradeLedger:
                     record_hash,
                 ),
             )
-        return record_hash
+            connection.commit()
+            return record_hash
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
 
     def reports_for_trade(self, trade_id: str) -> list[TradeReport]:
         with self._connect() as connection:
