@@ -1,3 +1,8 @@
+from __future__ import annotations
+
+from email.message import EmailMessage
+from types import TracebackType
+
 from dusty_dragon.config import Settings
 from dusty_dragon.domain.trades import GuardDecision, GuardResult, Side, TradeProposal
 from dusty_dragon.reporting.delivery import EmailReportSink
@@ -5,26 +10,31 @@ from dusty_dragon.reporting.trade_report import TradeReport
 
 
 class FakeSMTP:
-    instances: list["FakeSMTP"] = []
+    instances: list[FakeSMTP] = []
 
     def __init__(self, host: str, port: int, timeout: int) -> None:
         self.host = host
         self.port = port
         self.timeout = timeout
         self.login_args: tuple[str, str] | None = None
-        self.message = None
+        self.message: EmailMessage | None = None
         self.__class__.instances.append(self)
 
-    def __enter__(self) -> "FakeSMTP":
+    def __enter__(self) -> FakeSMTP:
         return self
 
-    def __exit__(self, exc_type, exc, tb) -> None:
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
         return None
 
     def login(self, username: str, password: str) -> None:
         self.login_args = (username, password)
 
-    def send_message(self, message) -> None:
+    def send_message(self, message: EmailMessage) -> None:
         self.message = message
 
 
@@ -50,7 +60,7 @@ def report() -> TradeReport:
     )
 
 
-def test_email_sink_is_disabled_by_default():
+def test_email_sink_is_disabled_by_default() -> None:
     FakeSMTP.instances.clear()
     sink = EmailReportSink(Settings(_env_file=None), smtp_factory=FakeSMTP)
 
@@ -59,7 +69,7 @@ def test_email_sink_is_disabled_by_default():
     assert FakeSMTP.instances == []
 
 
-def test_email_sink_uses_required_recipient_and_broker_subject():
+def test_email_sink_uses_required_recipient_and_broker_subject() -> None:
     FakeSMTP.instances.clear()
     settings = Settings(
         _env_file=None,
