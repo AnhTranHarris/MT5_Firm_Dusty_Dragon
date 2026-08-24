@@ -24,6 +24,8 @@ def bars(*, rising: bool = True) -> list[MarketBar]:
                 low=close - 0.0002,
                 close=close,
                 tick_volume=100 + index,
+                spread_points=8.0,
+                real_volume=0.0,
             )
         )
     return result
