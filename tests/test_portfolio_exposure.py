@@ -1,5 +1,3 @@
-from datetime import UTC, datetime
-
 from dusty_dragon.brokers.contracts import Position
 from dusty_dragon.domain.trades import Side, TradeProposal
 from dusty_dragon.portfolio.exposure import (
