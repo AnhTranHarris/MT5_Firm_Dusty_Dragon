@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from email.message import EmailMessage
 from types import TracebackType
+from typing import ClassVar, Self
 
 from dusty_dragon.config import Settings
 from dusty_dragon.domain.trades import GuardDecision, GuardResult, Side, TradeProposal
@@ -10,7 +11,7 @@ from dusty_dragon.reporting.trade_report import TradeReport
 
 
 class FakeSMTP:
-    instances: list[FakeSMTP] = []
+    instances: ClassVar[list[FakeSMTP]] = []
 
     def __init__(self, host: str, port: int, timeout: int) -> None:
         self.host = host
@@ -20,7 +21,7 @@ class FakeSMTP:
         self.message: EmailMessage | None = None
         self.__class__.instances.append(self)
 
-    def __enter__(self) -> FakeSMTP:
+    def __enter__(self) -> Self:
         return self
 
     def __exit__(
