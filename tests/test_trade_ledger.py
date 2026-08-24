@@ -35,13 +35,17 @@ def report() -> TradeReport:
             requested_volume=0.01,
             executed_volume=0.01,
             executed_price=1.1002,
+            spread_points=20.0,
+            slippage_points=2.0,
+            estimated_commission=0.035,
+            estimated_swap=0.0,
         ),
         model_versions={"kronos": "pending-integration"},
         data_provenance={"market_data": "mt5"},
     )
 
 
-def test_markdown_explains_why_trade_was_considered():
+def test_markdown_explains_why_trade_was_considered() -> None:
     rendered = report().to_markdown()
 
     assert "Why the bot considered this trade" in rendered
@@ -50,7 +54,17 @@ def test_markdown_explains_why_trade_was_considered():
     assert "Guard decision:** allow" in rendered
 
 
-def test_ledger_round_trip_and_chain_verification(tmp_path):
+def test_markdown_explains_paper_execution_friction() -> None:
+    rendered = report().to_markdown()
+
+    assert "Paper execution and friction" in rendered
+    assert "Executed volume:** 0.01000 lots" in rendered
+    assert "Spread:** 20.00000 points" in rendered
+    assert "Slippage:** 2.00000 points" in rendered
+    assert "Estimated commission:** 0.03500" in rendered
+
+
+def test_ledger_round_trip_and_chain_verification(tmp_path) -> None:
     ledger = TradeLedger(tmp_path / "ledger.sqlite3")
     original = report()
 
@@ -63,7 +77,7 @@ def test_ledger_round_trip_and_chain_verification(tmp_path):
     assert ledger.verify_chain() is True
 
 
-def test_ledger_detects_tampering(tmp_path):
+def test_ledger_detects_tampering(tmp_path) -> None:
     path = tmp_path / "ledger.sqlite3"
     ledger = TradeLedger(path)
     ledger.append(report())
