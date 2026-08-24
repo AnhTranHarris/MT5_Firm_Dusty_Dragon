@@ -17,6 +17,10 @@ class SymbolSpec(BaseModel):
     point: float = Field(gt=0)
     digits: int = Field(ge=0)
     trade_mode: int | None = None
+    contract_size: float | None = Field(default=None, gt=0)
+    tick_size: float | None = Field(default=None, gt=0)
+    tick_value: float | None = Field(default=None, ge=0)
+    profit_currency: str | None = None
 
 
 class Quote(BaseModel):
@@ -24,6 +28,12 @@ class Quote(BaseModel):
     captured_at: datetime
     bid: float = Field(gt=0)
     ask: float = Field(gt=0)
+
+    @model_validator(mode="after")
+    def validate_market(self) -> Quote:
+        if self.ask < self.bid:
+            raise ValueError("quote ask cannot be below bid")
+        return self
 
     @property
     def spread(self) -> float:
@@ -84,6 +94,12 @@ class ExecutionResult(BaseModel):
     requested_volume: float
     executed_volume: float | None = None
     executed_price: float | None = None
+    spread_points: float | None = Field(default=None, ge=0)
+    slippage_points: float | None = Field(default=None, ge=0)
+    estimated_commission: float | None = Field(default=None, ge=0)
+    estimated_swap: float | None = None
+    gross_pnl: float | None = None
+    net_pnl: float | None = None
 
 
 class BrokerAdapter(Protocol):
