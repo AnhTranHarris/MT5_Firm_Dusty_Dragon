@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_FLOOR
-from typing import Any, Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from decimal import ROUND_FLOOR, Decimal
+from typing import Any, ClassVar
 
 from dusty_dragon.brokers.contracts import (
     BrokerAccountState,
@@ -35,7 +36,7 @@ class MT5BrokerAdapter(BrokerAdapter):
     - Automaton: explicit capability boundary and auditable tool execution.
     """
 
-    _TIMEFRAME_NAMES = {
+    _TIMEFRAME_NAMES: ClassVar[dict[str, str]] = {
         "M1": "TIMEFRAME_M1",
         "M5": "TIMEFRAME_M5",
         "M15": "TIMEFRAME_M15",
@@ -126,7 +127,7 @@ class MT5BrokerAdapter(BrokerAdapter):
         tick = mt5.symbol_info_tick(symbol)
         if tick is None:
             raise MT5UnavailableError(f"no current MT5 quote for {symbol}")
-        timestamp = datetime.fromtimestamp(float(tick.time), tz=timezone.utc)
+        timestamp = datetime.fromtimestamp(float(tick.time), tz=UTC)
         return Quote(symbol=symbol, captured_at=timestamp, bid=float(tick.bid), ask=float(tick.ask))
 
     def bars(self, symbol: str, timeframe: str, count: int) -> Sequence[MarketBar]:
@@ -152,7 +153,7 @@ class MT5BrokerAdapter(BrokerAdapter):
                 MarketBar(
                     symbol=symbol,
                     timeframe=normalized_timeframe,
-                    opened_at=datetime.fromtimestamp(float(row["time"]), tz=timezone.utc),
+                    opened_at=datetime.fromtimestamp(float(row["time"]), tz=UTC),
                     open=float(row["open"]),
                     high=float(row["high"]),
                     low=float(row["low"]),
@@ -172,7 +173,7 @@ class MT5BrokerAdapter(BrokerAdapter):
 
         margin_level = float(row.margin_level)
         return BrokerAccountState(
-            captured_at=datetime.now(timezone.utc),
+            captured_at=datetime.now(UTC),
             login=int(row.login) if getattr(row, "login", None) is not None else None,
             currency=str(row.currency),
             balance=float(row.balance),
