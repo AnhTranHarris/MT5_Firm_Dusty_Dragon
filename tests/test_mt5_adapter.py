@@ -113,6 +113,15 @@ def test_volume_below_minimum_is_raised_to_broker_minimum():
     assert result.executed_volume == 0.01
 
 
+def test_volume_step_normalization_never_increases_requested_exposure():
+    fake = FakeMT5()
+    adapter = MT5BrokerAdapter(mt5_module=fake)
+    adapter.connect()
+
+    result = adapter.execute_paper(proposal(), 0.019)
+    assert result.executed_volume == 0.01
+
+
 def test_unknown_symbol_fails_closed():
     fake = FakeMT5()
     adapter = MT5BrokerAdapter(mt5_module=fake)
