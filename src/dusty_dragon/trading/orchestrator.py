@@ -6,13 +6,14 @@ from typing import Protocol
 from pydantic import BaseModel
 
 from dusty_dragon.brokers.contracts import BrokerAdapter, MarketBar
-from dusty_dragon.domain.trades import AccountSnapshot, GuardDecision
+from dusty_dragon.domain.trades import AccountSnapshot, GuardDecision, GuardResult
 from dusty_dragon.intelligence.kronos_forecast import KronosForecast
 from dusty_dragon.intelligence.research_signal import (
     GeneralistResearchEngine,
     ResearchSignal,
     SignalDecision,
 )
+from dusty_dragon.portfolio.exposure import FirmPortfolioGovernor, PortfolioDecision
 from dusty_dragon.reporting.delivery import ReportDeliveryError, ReportSink
 from dusty_dragon.reporting.trade_report import TradeReport
 from dusty_dragon.risk.order_guard import OrderGuard
@@ -45,9 +46,9 @@ class PaperTradingOrchestrator:
 
     Roadmap synthesis:
     - Kronos supplies forecast evidence only.
-    - Vibe-Trading inspires the research -> governance -> execution ordering.
-    - Automaton inspires explicit orchestration, durable audit state, and
-      replaceable capabilities rather than a monolithic agent loop.
+    - Vibe-Trading inspires the research -> portfolio -> risk -> execution ordering.
+    - Automaton inspires explicit orchestration, centralized policy capabilities,
+      durable audit state, and replaceable services rather than a monolithic loop.
 
     The orchestrator cannot place live orders: its execution dependency is the
     deterministic PaperExecutionEngine, which itself never calls order_send.
@@ -56,6 +57,7 @@ class PaperTradingOrchestrator:
     broker: BrokerAdapter
     forecast_service: ForecastServiceLike
     research_engine: GeneralistResearchEngine
+    portfolio_governor: FirmPortfolioGovernor
     order_guard: OrderGuard
     paper_execution: PaperExecutionEngine
     ledger: TradeLedger
@@ -99,13 +101,19 @@ class PaperTradingOrchestrator:
         if proposal is None:
             raise RuntimeError("non-abstain research signal did not produce a proposal")
 
-        guard = self.order_guard.evaluate(
+        portfolio_review = self.portfolio_governor.evaluate(
+            proposal,
+            list(self.broker.positions()),
+            proposed_volume=self.requested_volume,
+        )
+        trade_guard = self.order_guard.evaluate(
             proposal,
             account,
             kill_switch=kill_switch,
             market_data_fresh=market_data_fresh,
             symbol_allowed=symbol_allowed,
         )
+        guard = self._combine_governance(trade_guard, portfolio_review.decision, portfolio_review.reasons)
 
         execution = None
         status = DecisionCycleStatus.DENIED
@@ -125,6 +133,8 @@ class PaperTradingOrchestrator:
                 "signal_decision": signal.decision.value,
                 "signal_confidence": signal.confidence,
                 "forecast_return_pct": forecast.predicted_return_pct,
+                "portfolio_current_net_lots": portfolio_review.current_net_lots,
+                "portfolio_projected_net_lots": portfolio_review.projected_net_lots,
             },
         )
         record_hash = self.ledger.append(report)
@@ -137,6 +147,23 @@ class PaperTradingOrchestrator:
             report=report,
             record_hash=record_hash,
             delivery_error=delivery_error,
+        )
+
+    @staticmethod
+    def _combine_governance(
+        trade_guard: GuardResult,
+        portfolio_decision: PortfolioDecision,
+        portfolio_reasons: list[str],
+    ) -> GuardResult:
+        reasons = list(trade_guard.reasons)
+        reasons.extend(f"firm portfolio: {reason}" for reason in portfolio_reasons)
+        denied = (
+            trade_guard.decision == GuardDecision.DENY
+            or portfolio_decision == PortfolioDecision.DENY
+        )
+        return GuardResult(
+            decision=GuardDecision.DENY if denied else GuardDecision.ALLOW,
+            reasons=reasons,
         )
 
     def _deliver(self, report: TradeReport) -> str | None:
