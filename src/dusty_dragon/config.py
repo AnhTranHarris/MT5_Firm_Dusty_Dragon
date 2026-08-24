@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     trading_mode: TradingMode = TradingMode.PAPER
     broker_name: str = "boforex"
+    broker_display_name: str = "BoForex"
     mt5_login: int | None = None
     mt5_password: str | None = None
     mt5_server: str | None = None
@@ -39,7 +40,7 @@ class Settings(BaseSettings):
 
     @property
     def report_subject(self) -> str:
-        return f"Dusty Dragon Bot Firm — {self.broker_name}"
+        return f"Dusty Dragon Bot Firm — {self.broker_display_name}"
 
     def require_mt5_credentials(self) -> None:
         missing = [
