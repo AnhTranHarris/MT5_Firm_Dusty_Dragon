@@ -1,5 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from dusty_dragon.brokers.contracts import MarketBar, Quote
 from dusty_dragon.intelligence.kronos_forecast import KronosForecast
 from dusty_dragon.intelligence.research_signal import (
@@ -87,7 +89,7 @@ def test_signal_can_become_broker_neutral_trade_proposal():
     assert proposal is not None
     assert proposal.side.value == "buy"
     assert proposal.entry_price == quote.ask
-    assert proposal.reward_to_risk == 2.0
+    assert proposal.reward_to_risk == pytest.approx(2.0)
     assert proposal.evidence["evidence_agreement"] is True
 
 
