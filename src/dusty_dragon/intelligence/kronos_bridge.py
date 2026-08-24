@@ -1,11 +1,8 @@
-from __future__ import annotations
-
 from collections.abc import Sequence
 
 import pandas as pd
 
 from dusty_dragon.brokers.contracts import MarketBar
-
 
 KRONOS_FEATURE_COLUMNS = ("open", "high", "low", "close", "volume")
 
