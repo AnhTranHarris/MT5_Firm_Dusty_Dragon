@@ -47,7 +47,7 @@ class TradeLedger:
 
     @staticmethod
     def _hash(previous_hash: str, payload_json: str) -> str:
-        material = f"{previous_hash}\n{payload_json}".encode("utf-8")
+        material = f"{previous_hash}\n{payload_json}".encode()
         return hashlib.sha256(material).hexdigest()
 
     def append(self, report: TradeReport) -> str:
