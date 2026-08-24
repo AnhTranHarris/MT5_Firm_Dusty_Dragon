@@ -1,10 +1,11 @@
 from datetime import UTC, datetime, timedelta
 
-from dusty_dragon.brokers.contracts import MarketBar, Quote, SymbolSpec
+from dusty_dragon.brokers.contracts import MarketBar, Position, Quote, SymbolSpec
 from dusty_dragon.config import Settings
-from dusty_dragon.domain.trades import AccountSnapshot
+from dusty_dragon.domain.trades import AccountSnapshot, Side
 from dusty_dragon.intelligence.kronos_forecast import KronosForecast
 from dusty_dragon.intelligence.research_signal import GeneralistResearchEngine
+from dusty_dragon.portfolio.exposure import FirmPortfolioGovernor
 from dusty_dragon.reporting.delivery import ReportDeliveryError
 from dusty_dragon.risk.order_guard import OrderGuard
 from dusty_dragon.storage.trade_ledger import TradeLedger
@@ -13,8 +14,9 @@ from dusty_dragon.trading.paper_execution import PaperExecutionEngine
 
 
 class FakeBroker:
-    def __init__(self, *, rising: bool = True) -> None:
+    def __init__(self, *, rising: bool = True, positions: list[Position] | None = None) -> None:
         start = datetime(2026, 8, 24, 12, 0, tzinfo=UTC)
+        self._positions = positions or []
         self._bars = []
         for index in range(12):
             delta = index * 0.0002 * (1 if rising else -1)
@@ -46,6 +48,9 @@ class FakeBroker:
             bid=1.1020,
             ask=1.1022,
         )
+
+    def positions(self):
+        return list(self._positions)
 
     def symbol_spec(self, symbol: str) -> SymbolSpec:
         return SymbolSpec(
@@ -88,12 +93,21 @@ def account() -> AccountSnapshot:
     return AccountSnapshot(balance=10_000, equity=10_000)
 
 
-def orchestrator(tmp_path, *, rising=True, return_pct=0.20, sink=None):
-    broker = FakeBroker(rising=rising)
+def orchestrator(
+    tmp_path,
+    *,
+    rising=True,
+    return_pct=0.20,
+    sink=None,
+    positions: list[Position] | None = None,
+    max_currency_lots: float = 0.05,
+):
+    broker = FakeBroker(rising=rising, positions=positions)
     return PaperTradingOrchestrator(
         broker=broker,
         forecast_service=FakeForecastService(return_pct),
         research_engine=GeneralistResearchEngine(),
+        portfolio_governor=FirmPortfolioGovernor(max_currency_lots),
         order_guard=OrderGuard(Settings()),
         paper_execution=PaperExecutionEngine(broker),
         ledger=TradeLedger(tmp_path / "ledger.sqlite3"),
@@ -102,7 +116,7 @@ def orchestrator(tmp_path, *, rising=True, return_pct=0.20, sink=None):
     )
 
 
-def test_full_cycle_forecast_research_guard_fill_and_ledger(tmp_path):
+def test_full_cycle_forecast_research_governance_fill_and_ledger(tmp_path):
     cycle = orchestrator(tmp_path)
 
     result = cycle.run("EURUSD", "M15", account(), risk_pct=0.25)
@@ -131,6 +145,25 @@ def test_guard_denial_is_still_audited_but_not_filled(tmp_path):
     assert result.report.execution is None
     assert "kill switch is active" in result.report.guard.reasons
     assert result.record_hash is not None
+
+
+def test_firm_currency_exposure_can_veto_otherwise_valid_trade(tmp_path):
+    existing = Position(
+        ticket=7,
+        symbol="GBPUSD",
+        side=Side.BUY,
+        volume=0.02,
+        price_open=1.3000,
+    )
+    cycle = orchestrator(tmp_path, positions=[existing], max_currency_lots=0.02)
+
+    result = cycle.run("EURUSD", "M15", account(), risk_pct=0.25)
+
+    assert result.status == DecisionCycleStatus.DENIED
+    assert result.report is not None
+    assert result.report.execution is None
+    assert any("firm portfolio" in reason for reason in result.report.guard.reasons)
+    assert result.report.observations["portfolio_projected_net_lots"]["USD"] == -0.03
 
 
 def test_conflicting_research_abstains_without_creating_trade_report(tmp_path):
