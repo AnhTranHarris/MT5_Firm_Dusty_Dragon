@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import UUID, uuid4
 
@@ -14,7 +14,7 @@ class Side(StrEnum):
 
 class TradeProposal(BaseModel):
     id: UUID = Field(default_factory=uuid4)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     strategy_version: str
     symbol: str
     side: Side
@@ -28,13 +28,12 @@ class TradeProposal(BaseModel):
     evidence: dict[str, float | str | bool] = Field(default_factory=dict)
 
     @model_validator(mode="after")
-    def validate_price_geometry(self) -> "TradeProposal":
+    def validate_price_geometry(self) -> TradeProposal:
         if self.side == Side.BUY:
             if not self.stop_loss < self.entry_price < self.take_profit:
                 raise ValueError("BUY requires stop_loss < entry_price < take_profit")
-        else:
-            if not self.take_profit < self.entry_price < self.stop_loss:
-                raise ValueError("SELL requires take_profit < entry_price < stop_loss")
+        elif not self.take_profit < self.entry_price < self.stop_loss:
+            raise ValueError("SELL requires take_profit < entry_price < stop_loss")
         return self
 
     @property
@@ -45,7 +44,7 @@ class TradeProposal(BaseModel):
 
 
 class AccountSnapshot(BaseModel):
-    captured_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    captured_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     balance: float = Field(gt=0)
     equity: float = Field(gt=0)
     open_risk_pct: float = Field(default=0, ge=0)
