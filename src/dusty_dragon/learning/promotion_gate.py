@@ -11,8 +11,9 @@ class CampaignPromotionGate:
     """Translate quantitative challenger evidence into lineage promotion gates.
 
     A passing campaign comparison satisfies the historical backtest and direct
-    champion-comparison gates only. Walk-forward and paper-forward evidence stay
-    independent requirements, preventing weekend research from promoting itself.
+    champion-comparison gates only. Walk-forward, paper-forward, and capital-
+    growth evidence stay independent requirements, preventing weekend research
+    from promoting itself or promoting a tidy but unprofitable strategy.
     """
 
     def evidence(
@@ -21,6 +22,7 @@ class CampaignPromotionGate:
         *,
         walk_forward_passed: bool = False,
         paper_passed: bool = False,
+        capital_growth_passed: bool = False,
     ) -> PromotionEvidence:
         passed = comparison.passed
         notes = self._notes(comparison)
@@ -29,6 +31,7 @@ class CampaignPromotionGate:
             walk_forward_passed=walk_forward_passed,
             paper_passed=paper_passed,
             compared_to_champion=passed,
+            capital_growth_passed=capital_growth_passed,
             notes=notes,
         )
 
