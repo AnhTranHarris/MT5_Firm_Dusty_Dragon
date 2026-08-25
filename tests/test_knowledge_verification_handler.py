@@ -53,6 +53,7 @@ def evaluation(*, effect: float, profitable_rate: float, signals: int = 10) -> C
             tested_symbol="EURUSD",
             run_number=1,
             regime="trend_low_vol",
+            estimated_cost_pct_per_trade=0.01,
             cost_adjusted_mean_return_pct=effect,
             directional_accuracy=0.60,
             trade_signals=signals,
