@@ -56,7 +56,8 @@ def test_complete_validation_promotes_challenger_and_retires_old_champion(tmp_pa
             walk_forward_passed=True,
             paper_passed=True,
             compared_to_champion=True,
-            notes="validated against frozen champion",
+            capital_growth_passed=True,
+            notes="validated against frozen champion with positive capital growth",
         ),
     )
 
@@ -79,5 +80,6 @@ def test_rejected_challenger_cannot_be_promoted(tmp_path):
                 walk_forward_passed=True,
                 paper_passed=True,
                 compared_to_champion=True,
+                capital_growth_passed=True,
             ),
         )
