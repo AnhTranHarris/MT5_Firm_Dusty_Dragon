@@ -155,7 +155,7 @@ class KnowledgeValidationPolicy:
         eligible = [
             item
             for item in verifications
-            if item.verifier_desk_id != finding.source_desk_id
+            if not item.counts_as_peer or item.verifier_desk_id != finding.source_desk_id
         ]
         if not eligible:
             return KnowledgeStatus.OBSERVED
