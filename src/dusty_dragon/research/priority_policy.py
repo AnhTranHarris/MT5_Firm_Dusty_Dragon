@@ -50,7 +50,10 @@ class ResearchPriorityPolicy:
                 "champion_comparison",
             }:
                 boost += 8
-            if any(term in hypothesis for term in ("drawdown", "risk", "expectancy", "robust")):
+            if any(
+                term in hypothesis
+                for term in ("drawdown", "risk", "expectancy", "robust")
+            ):
                 boost += 8
 
         if "execution costs" in reasons and task_type == "cost_regime_evaluation":
@@ -62,11 +65,12 @@ class ResearchPriorityPolicy:
             if task_type == "backtest_campaign":
                 boost += 4
 
-        if any(term in reasons for term in ("archive", "task queue")):
-            if task_type in {"archive_health_check", "research_queue_health_check"}:
-                boost += 12
+        if (
+            any(term in reasons for term in ("archive", "task queue"))
+            and task_type in {"archive_health_check", "research_queue_health_check"}
+        ):
+            boost += 12
 
-        # Validation must not jump ahead merely because the firm is unhealthy.
         if task_type == "sunday_validation":
             boost -= 5
 
