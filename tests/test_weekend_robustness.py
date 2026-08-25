@@ -54,6 +54,7 @@ def test_overfit_risk_is_flagged(tmp_path):
     seed_outcome(store)
     protocol = WeekendProtocolResult(
         random_seed=1,
+        runs_per_symbol=10,
         cross_symbol_results=[experiment("cross_symbol", "GBPUSD", -0.1)],
         prior_week_results=[experiment("prior_week_replay", "EURUSD", -0.1)],
     )
@@ -75,6 +76,7 @@ def test_generalizing_results_do_not_create_overfit_priority(tmp_path):
     seed_outcome(store)
     protocol = WeekendProtocolResult(
         random_seed=2,
+        runs_per_symbol=10,
         cross_symbol_results=[experiment("cross_symbol", "GBPUSD", 0.1)],
         prior_week_results=[experiment("prior_week_replay", "EURUSD", 0.1)],
     )
