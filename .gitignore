@@ -11,6 +11,9 @@ venv/
 .env.*
 !.env.example
 config/local*.toml
+secrets/
+credentials*.json
+token*.json
 
 # Trading/runtime state
 *.db
@@ -20,6 +23,7 @@ logs/
 reports/generated/
 data/raw/
 data/cache/
+data/archive_staging/
 
 # IDE / OS
 .vscode/
