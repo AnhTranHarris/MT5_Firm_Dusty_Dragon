@@ -2,13 +2,13 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from dusty_dragon.analytics.performance import FirmPerformanceAnalyzer
-from dusty_dragon.backtest.weekend_protocol import WeekendExperimentResult, WeekendProtocolResult
 from dusty_dragon.backtest.walk_forward import WalkForwardResult
+from dusty_dragon.backtest.weekend_protocol import WeekendExperimentResult, WeekendProtocolResult
+from dusty_dragon.domain.trades import Side
 from dusty_dragon.learning.outcomes import OutcomeClass, TradeOutcome
 from dusty_dragon.research.weekend import WeekendResearchService
 from dusty_dragon.scheduler.weekly_clock import FirmPhase
 from dusty_dragon.storage.outcome_store import TradeOutcomeStore
-from dusty_dragon.domain.trades import Side
 
 
 def experiment(kind: str, symbol: str, mean_return: float):
