@@ -32,6 +32,7 @@ class PromotionEvidence(BaseModel):
     walk_forward_passed: bool = False
     paper_passed: bool = False
     compared_to_champion: bool = False
+    capital_growth_passed: bool = False
     notes: str = ""
 
     @property
@@ -42,5 +43,6 @@ class PromotionEvidence(BaseModel):
                 self.walk_forward_passed,
                 self.paper_passed,
                 self.compared_to_champion,
+                self.capital_growth_passed,
             )
         )
