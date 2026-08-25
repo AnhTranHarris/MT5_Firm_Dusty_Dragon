@@ -125,17 +125,20 @@ class ResearchTaskExecutor:
             return None
 
     def run_until_idle(self, *, max_tasks: int = 100) -> list[ResearchTaskResult]:
+        """Run successful tasks until idle or until one task needs a retry.
+
+        A failed task is intentionally retried by a future heartbeat rather than
+        immediately in a tight loop. This preserves observable retry state and
+        avoids a single broken experiment monopolizing the weekend worker.
+        """
         if max_tasks <= 0:
             raise ValueError("max_tasks must be positive")
         completed: list[ResearchTaskResult] = []
         for _ in range(max_tasks):
             result = self.run_once()
-            if result is not None:
-                completed.append(result)
-                continue
-            if self.graph.claim_next() is None:
+            if result is None:
                 break
-            raise RuntimeError("research task remained runnable after failed execution")
+            completed.append(result)
         return completed
 
     def _dependency_outputs(self, task: ResearchTask) -> dict[UUID, Any]:
