@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -120,7 +121,7 @@ class ResearchTaskExecutor:
             self.results.put(result)
             self.graph.succeed(task.id)
             return result
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 - worker boundary must not strand RUNNING tasks
             self.graph.fail(task.id, f"{type(exc).__name__}: {exc}")
             return None
 
