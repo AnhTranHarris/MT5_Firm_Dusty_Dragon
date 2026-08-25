@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -51,7 +50,10 @@ class KnowledgeScope(BaseModel):
             KnowledgeScopeLevel.SYMBOL,
         } and not self.style:
             raise ValueError("specialized knowledge requires a style")
-        if self.level in {KnowledgeScopeLevel.SECTOR, KnowledgeScopeLevel.SYMBOL} and not self.sector:
+        if self.level in {
+            KnowledgeScopeLevel.SECTOR,
+            KnowledgeScopeLevel.SYMBOL,
+        } and not self.sector:
             raise ValueError("sector and symbol knowledge require a sector")
         if self.level == KnowledgeScopeLevel.SYMBOL and not self.symbol:
             raise ValueError("symbol knowledge requires a symbol")
