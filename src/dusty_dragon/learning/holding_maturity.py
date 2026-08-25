@@ -44,6 +44,7 @@ class StageState:
     stage: HoldingStage
     qualification_trades: int = 0
     accepted_trades: int = 0
+    qualification_pnl: float = 0.0
     authorized: bool = False
     qualified: bool = False
     probation: bool = False
@@ -78,6 +79,10 @@ class MaturityPolicy:
 class HoldingMaturityEngine:
     """Evidence-based authorization ladder for holding-duration capabilities.
 
+    Capital growth is mandatory for graduation. Trade-quality acceptance and
+    risk discipline constrain how that growth is achieved, but cannot substitute
+    for a profitable qualification period.
+
     Qualification progress may reset or a stage may be demoted, but historical
     trade knowledge is never deleted. This engine tracks authorization only; it
     does not place trades, size orders, or alter strategy logic.
@@ -88,10 +93,7 @@ class HoldingMaturityEngine:
 
     def __post_init__(self) -> None:
         if not self.states:
-            self.states = {
-                stage: StageState(stage=stage)
-                for stage in HoldingStage
-            }
+            self.states = {stage: StageState(stage=stage) for stage in HoldingStage}
             self.states[HoldingStage.INTRADAY].authorized = True
 
     def record(self, assessment: StageTradeAssessment) -> None:
@@ -100,6 +102,7 @@ class HoldingMaturityEngine:
             raise PermissionError(f"holding stage {assessment.stage} is not authorized")
 
         state.qualification_trades += 1
+        state.qualification_pnl += assessment.pnl
         if assessment.quality == TradeQuality.ACCEPTED:
             state.accepted_trades += 1
         state.recent.append(assessment)
@@ -146,11 +149,13 @@ class HoldingMaturityEngine:
         return (
             state.qualification_trades >= self.policy.qualification_target
             and state.acceptance_rate >= self.policy.acceptance_threshold
+            and state.qualification_pnl > 0
         )
 
     def _reset_stage(self, state: StageState) -> None:
         state.qualification_trades = 0
         state.accepted_trades = 0
+        state.qualification_pnl = 0.0
         state.qualified = False
         state.probation = True
         state.recent.clear()
@@ -170,6 +175,7 @@ class HoldingMaturityEngine:
         previous_state.probation = True
         previous_state.qualification_trades = 0
         previous_state.accepted_trades = 0
+        previous_state.qualification_pnl = 0.0
         previous_state.recent.clear()
 
         for higher in self._higher_stages(stage):
