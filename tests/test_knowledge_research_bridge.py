@@ -3,7 +3,11 @@ from datetime import UTC, datetime, timedelta
 import pytest
 
 from dusty_dragon.backtest.campaign_evaluator import CampaignEvaluation, ExperimentEvaluation
-from dusty_dragon.knowledge.institutional import KnowledgeScope, KnowledgeScopeLevel, KnowledgeStatus
+from dusty_dragon.knowledge.institutional import (
+    KnowledgeScope,
+    KnowledgeScopeLevel,
+    KnowledgeStatus,
+)
 from dusty_dragon.knowledge.research_bridge import CampaignKnowledgeDraftFactory
 
 
