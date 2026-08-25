@@ -1,3 +1,5 @@
+# ruff: noqa: I001
+
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
