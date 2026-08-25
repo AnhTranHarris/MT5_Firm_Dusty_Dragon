@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
-from dusty_dragon.backtest.weekend_protocol import WeekendBacktestProtocol
 from dusty_dragon.backtest.walk_forward import SignalWalkForwardEvaluator
+from dusty_dragon.backtest.weekend_protocol import WeekendBacktestProtocol
 from dusty_dragon.brokers.contracts import MarketBar
 from dusty_dragon.intelligence.kronos_forecast import KronosForecast
 from dusty_dragon.intelligence.research_signal import GeneralistResearchEngine
