@@ -129,6 +129,7 @@ class KnowledgeVerification(BaseModel):
     verifier_desk_id: str
     reproduced: bool
     confidence: float = Field(ge=0.0, le=1.0)
+    counts_as_peer: bool = True
     net_capital_effect_pct: float | None = None
     evidence_ref: str | None = None
     verified_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
@@ -151,17 +152,25 @@ class KnowledgeValidationPolicy:
         finding: KnowledgeFinding,
         verifications: list[KnowledgeVerification],
     ) -> KnowledgeStatus:
-        peer = [
+        eligible = [
             item
             for item in verifications
             if item.verifier_desk_id != finding.source_desk_id
         ]
-        if not peer:
+        if not eligible:
             return KnowledgeStatus.OBSERVED
+
+        if len(eligible) >= self.min_peer_verifications:
+            overall_rate = sum(item.reproduced for item in eligible) / len(eligible)
+            if overall_rate < self.min_reproduction_rate:
+                return KnowledgeStatus.REJECTED
+
+        peer = [item for item in eligible if item.counts_as_peer]
         if len(peer) < self.min_peer_verifications:
             return KnowledgeStatus.PEER_TESTING
-        reproduction_rate = sum(item.reproduced for item in peer) / len(peer)
-        if reproduction_rate >= self.min_reproduction_rate:
+
+        peer_rate = sum(item.reproduced for item in peer) / len(peer)
+        if peer_rate >= self.min_reproduction_rate:
             return KnowledgeStatus.VALIDATED
         return KnowledgeStatus.REJECTED
 
@@ -218,7 +227,7 @@ class InstitutionalKnowledgeStore:
         finding = self.get(verification.finding_id)
         if finding is None:
             raise ValueError(f"finding not found: {verification.finding_id}")
-        if verification.verifier_desk_id == finding.source_desk_id:
+        if verification.counts_as_peer and verification.verifier_desk_id == finding.source_desk_id:
             raise ValueError("source desk cannot count as peer verification")
         with self._connect() as connection:
             connection.execute(
