@@ -1,5 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from dusty_dragon.backtest.walk_forward import SignalWalkForwardEvaluator
 from dusty_dragon.backtest.weekend_protocol import WeekendBacktestProtocol
 from dusty_dragon.brokers.contracts import MarketBar
@@ -57,34 +59,51 @@ def protocol():
     return WeekendBacktestProtocol(evaluator)
 
 
-def test_cross_symbol_uses_same_reference_window():
-    start = datetime(2026, 8, 17, tzinfo=UTC)
-    reference = bars("EURUSD", start, 16)
-    unused = {
-        "GBPUSD": bars("GBPUSD", start, 16),
-        "USDJPY": bars("USDJPY", start, 16),
+def test_multi_run_campaign_builds_repeated_symbol_evidence():
+    reference_start = datetime(2026, 8, 17, tzinfo=UTC)
+    reference = bars("EURUSD", reference_start, 16)
+    long_unused = {
+        "GBPUSD": bars("GBPUSD", reference_start - timedelta(weeks=8), 8 * 7 * 24 * 4),
+        "USDJPY": bars("USDJPY", reference_start - timedelta(weeks=8), 8 * 7 * 24 * 4),
     }
-    historical = bars("EURUSD", start - timedelta(weeks=8), 16 * 8)
+    historical = bars("EURUSD", reference_start - timedelta(weeks=8), 8 * 7 * 24 * 4)
+
+    result = protocol().run(
+        traded_symbol="EURUSD",
+        reference_bars=reference,
+        unused_symbol_bars=long_unused,
+        prior_history_bars=historical,
+        random_seed=7,
+        runs_per_symbol=10,
+    )
+
+    assert result.runs_per_symbol == 10
+    assert len(result.cross_symbol_results) == 20
+    assert len(result.prior_week_results) == 10
+    assert {item.run_number for item in result.prior_week_results} == set(range(1, 11))
+
+
+def test_campaign_uses_varied_historical_windows_for_unused_symbol():
+    reference_start = datetime(2026, 8, 17, tzinfo=UTC)
+    reference = bars("EURUSD", reference_start, 16)
+    history_start = reference_start - timedelta(weeks=8)
+    unused = {"GBPUSD": bars("GBPUSD", history_start, 8 * 7 * 24 * 4)}
+    historical = bars("EURUSD", history_start, 8 * 7 * 24 * 4)
 
     result = protocol().run(
         traded_symbol="EURUSD",
         reference_bars=reference,
         unused_symbol_bars=unused,
         prior_history_bars=historical,
-        random_seed=7,
+        random_seed=13,
+        runs_per_symbol=12,
     )
 
-    assert {item.tested_symbol for item in result.cross_symbol_results} == {
-        "GBPUSD",
-        "USDJPY",
-    }
-    assert all(
-        item.reference_started_at == reference[0].opened_at
-        for item in result.cross_symbol_results
-    )
+    starts = {item.reference_started_at for item in result.cross_symbol_results}
+    assert len(starts) > 1
 
 
-def test_prior_week_replay_is_seeded_between_one_and_eight_weeks():
+def test_prior_week_replays_are_seeded_and_bounded():
     reference_start = datetime(2026, 8, 17, tzinfo=UTC)
     reference = bars("EURUSD", reference_start, 16)
     history_start = reference_start - timedelta(weeks=8)
@@ -96,6 +115,7 @@ def test_prior_week_replay_is_seeded_between_one_and_eight_weeks():
         unused_symbol_bars={},
         prior_history_bars=historical,
         random_seed=19,
+        runs_per_symbol=10,
     )
     second = protocol().run(
         traded_symbol="EURUSD",
@@ -103,27 +123,36 @@ def test_prior_week_replay_is_seeded_between_one_and_eight_weeks():
         unused_symbol_bars={},
         prior_history_bars=historical,
         random_seed=19,
+        runs_per_symbol=10,
     )
 
-    assert first.prior_week_results
-    weeks_back = first.prior_week_results[0].replay_weeks_back
-    assert weeks_back is not None and 1 <= weeks_back <= 8
-    assert second.prior_week_results[0].replay_weeks_back == weeks_back
+    first_offsets = [item.replay_weeks_back for item in first.prior_week_results]
+    second_offsets = [item.replay_weeks_back for item in second.prior_week_results]
+    assert first_offsets == second_offsets
+    assert all(offset is not None and 1 <= offset <= 8 for offset in first_offsets)
+    assert len(set(first_offsets)) > 1
 
 
-def test_sampling_unused_symbols_is_reproducible():
-    start = datetime(2026, 8, 17, tzinfo=UTC)
-    reference = bars("EURUSD", start, 16)
-    unused = {symbol: bars(symbol, start, 16) for symbol in ["GBPUSD", "USDJPY", "AUDUSD"]}
-    historical = bars("EURUSD", start - timedelta(weeks=8), 8 * 7 * 24 * 4)
+def test_run_count_is_restricted_to_ten_through_twenty():
+    reference_start = datetime(2026, 8, 17, tzinfo=UTC)
+    reference = bars("EURUSD", reference_start, 16)
+    historical = bars("EURUSD", reference_start - timedelta(weeks=8), 8 * 7 * 24 * 4)
 
-    result = protocol().run(
-        traded_symbol="EURUSD",
-        reference_bars=reference,
-        unused_symbol_bars=unused,
-        prior_history_bars=historical,
-        random_seed=3,
-        unused_symbol_sample_size=2,
-    )
-
-    assert len(result.cross_symbol_results) == 2
+    with pytest.raises(ValueError, match="runs_per_symbol"):
+        protocol().run(
+            traded_symbol="EURUSD",
+            reference_bars=reference,
+            unused_symbol_bars={},
+            prior_history_bars=historical,
+            random_seed=1,
+            runs_per_symbol=9,
+        )
+    with pytest.raises(ValueError, match="runs_per_symbol"):
+        protocol().run(
+            traded_symbol="EURUSD",
+            reference_bars=reference,
+            unused_symbol_bars={},
+            prior_history_bars=historical,
+            random_seed=1,
+            runs_per_symbol=21,
+        )
