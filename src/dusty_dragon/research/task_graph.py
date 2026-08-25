@@ -11,6 +11,12 @@ from uuid import UUID, uuid4
 from pydantic import BaseModel, Field
 
 
+TASK_COLUMNS = (
+    "id, task_type, strategy_version, payload_json, depends_json, priority, "
+    "status, attempts, max_attempts, created_at, updated_at, last_error"
+)
+
+
 class ResearchTaskStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
@@ -125,7 +131,7 @@ class ResearchTaskGraph:
         with self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             rows = connection.execute(
-                "SELECT * FROM research_tasks WHERE status = ? "
+                f"SELECT {TASK_COLUMNS} FROM research_tasks WHERE status = ? "
                 "ORDER BY priority DESC, created_at, id",
                 (ResearchTaskStatus.PENDING.value,),
             ).fetchall()
@@ -203,14 +209,16 @@ class ResearchTaskGraph:
     def get(self, task_id: UUID) -> ResearchTask | None:
         with self._connect() as connection:
             row = connection.execute(
-                "SELECT * FROM research_tasks WHERE id = ?", (str(task_id),)
+                f"SELECT {TASK_COLUMNS} FROM research_tasks WHERE id = ?",
+                (str(task_id),),
             ).fetchone()
         return self._decode(row) if row else None
 
     def all(self) -> list[ResearchTask]:
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT * FROM research_tasks ORDER BY priority DESC, created_at, id"
+                f"SELECT {TASK_COLUMNS} FROM research_tasks "
+                "ORDER BY priority DESC, created_at, id"
             ).fetchall()
         return [self._decode(row) for row in rows]
 
