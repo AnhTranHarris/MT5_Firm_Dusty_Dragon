@@ -20,7 +20,7 @@ def test_intraday_is_initially_authorized():
     assert engine.states[HoldingStage.OVERNIGHT].authorized is False
 
 
-def test_stage_graduates_at_target_with_85_percent_acceptance():
+def test_stage_graduates_at_target_with_85_percent_acceptance_and_profit():
     engine = HoldingMaturityEngine(policy=MaturityPolicy(qualification_target=20))
 
     for _ in range(17):
@@ -34,8 +34,23 @@ def test_stage_graduates_at_target_with_85_percent_acceptance():
             )
         )
 
-    assert engine.states[HoldingStage.INTRADAY].qualified is True
+    state = engine.states[HoldingStage.INTRADAY]
+    assert state.qualified is True
+    assert state.qualification_pnl > 0
     assert engine.states[HoldingStage.OVERNIGHT].authorized is True
+
+
+def test_good_trade_quality_without_capital_growth_does_not_graduate():
+    engine = HoldingMaturityEngine(policy=MaturityPolicy(qualification_target=20))
+
+    for _ in range(20):
+        engine.record(accepted(HoldingStage.INTRADAY, pnl=-0.01))
+
+    state = engine.states[HoldingStage.INTRADAY]
+    assert state.acceptance_rate == pytest.approx(1.0)
+    assert state.qualification_pnl < 0
+    assert state.qualified is False
+    assert engine.states[HoldingStage.OVERNIGHT].authorized is False
 
 
 def test_catastrophic_trade_resets_current_stage_progress_only():
@@ -55,6 +70,7 @@ def test_catastrophic_trade_resets_current_stage_progress_only():
     state = engine.states[HoldingStage.INTRADAY]
     assert state.qualification_trades == 0
     assert state.accepted_trades == 0
+    assert state.qualification_pnl == 0
     assert state.probation is True
     assert state.authorized is True
 
