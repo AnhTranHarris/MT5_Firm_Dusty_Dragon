@@ -19,8 +19,8 @@ class ResearchCapability(Protocol):
 
 class RuntimeAction(str):
     TRADE_CYCLE = "trade_cycle"
-    WEEKEND_RESEARCH = "weekend_research"
-    SUNDAY_VALIDATION = "sunday_validation"
+    TRADING_CLOSED = "trading_closed"
+    MANUAL_RESEARCH = "manual_research"
 
 
 class FirmRuntimeResult(BaseModel):
@@ -31,17 +31,21 @@ class FirmRuntimeResult(BaseModel):
 
 @dataclass(frozen=True)
 class FirmRuntime:
-    """Route the firm to the capability allowed by its current lifecycle phase.
+    """Route trading authority without owning the research schedule.
 
-    Automaton roadmap: its heartbeat daemon wakes explicit capabilities rather
-    than embedding scheduling inside the reasoning loop. Dusty Dragon mirrors
-    that separation in Python.
+    The original runtime used one weekly phase to choose either trading *or*
+    research. Dusty Dragon now operates those as parallel departments:
 
-    Vibe-Trading roadmap: live/trading operations and research are separate
-    operational domains with governance boundaries.
+    - FirmWeeklyClock still governs when new trading cycles are permitted.
+    - ResearchClock + ResearchRuntimeController independently govern continuous
+      research and machine-resource budgets.
 
-    Kronos remains inside downstream trading/research capabilities. The runtime
-    clock cannot convert a forecast into an order and does not know model APIs.
+    A closed trading window therefore blocks trading; it never wakes research as
+    a side effect. Manual research dispatch remains available for diagnostics and
+    compatibility, but scheduled research belongs to ResearchRuntimeController.
+
+    Kronos remains downstream inside trading/research capabilities and receives
+    no execution, scheduling, or promotion authority here.
     """
 
     weekly_clock: FirmWeeklyClock
@@ -56,7 +60,11 @@ class FirmRuntime:
     ) -> FirmRuntimeResult:
         phase = self.weekly_clock.phase_at(observed_at)
         if phase != FirmPhase.TRADING:
-            return self._dispatch_nontrading(phase, observed_at)
+            return FirmRuntimeResult(
+                phase=phase,
+                action=RuntimeAction.TRADING_CLOSED,
+                payload=None,
+            )
 
         payload = self.trading.run(*args, **kwargs)
         return FirmRuntimeResult(
@@ -66,16 +74,16 @@ class FirmRuntime:
         )
 
     def dispatch_research(self, observed_at: datetime) -> FirmRuntimeResult:
-        phase = self.weekly_clock.phase_at(observed_at)
-        if phase == FirmPhase.TRADING:
-            raise RuntimeError("research dispatch is not permitted during the trading phase")
-        return self._dispatch_nontrading(phase, observed_at)
+        """Run the legacy/manual research capability without schedule authority.
 
-    def _dispatch_nontrading(self, phase: FirmPhase, observed_at: datetime) -> FirmRuntimeResult:
+        Continuous scheduled research must use ResearchRuntimeController. This
+        method intentionally does not reject FirmPhase.TRADING because trading
+        and research may coexist.
+        """
+        phase = self.weekly_clock.phase_at(observed_at)
         payload = self.research.run(phase=phase, observed_at=observed_at)
-        action = (
-            RuntimeAction.SUNDAY_VALIDATION
-            if phase == FirmPhase.SUNDAY_VALIDATION
-            else RuntimeAction.WEEKEND_RESEARCH
+        return FirmRuntimeResult(
+            phase=phase,
+            action=RuntimeAction.MANUAL_RESEARCH,
+            payload=payload,
         )
-        return FirmRuntimeResult(phase=phase, action=action, payload=payload)
