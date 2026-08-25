@@ -25,6 +25,7 @@ class ResearchTask(BaseModel):
     strategy_version: str
     payload: dict = Field(default_factory=dict)
     depends_on: list[UUID] = Field(default_factory=list)
+    priority: int = Field(default=50, ge=0, le=100)
     status: ResearchTaskStatus = ResearchTaskStatus.PENDING
     attempts: int = Field(default=0, ge=0)
     max_attempts: int = Field(default=3, ge=1)
@@ -35,14 +36,17 @@ class ResearchTask(BaseModel):
 
 @dataclass
 class ResearchTaskGraph:
-    """SQLite-backed research queue with explicit dependencies and retries.
+    """SQLite-backed research queue with dependencies, retries, and priority.
 
     Automaton roadmap: durable tasks survive process restarts and expose lifecycle
-    state instead of living only in an agent's transient context.
+    state instead of living only in transient context. Degraded conditions may
+    defer non-essential work without deleting it.
 
-    Vibe-Trading roadmap: each research action remains a bounded, auditable unit.
+    Vibe-Trading roadmap: each research action remains a bounded, auditable unit
+    whose urgency can follow financial/risk evidence.
+
     Kronos roadmap: forecast experiments become tasks; Kronos itself receives no
-    scheduler or promotion authority.
+    scheduler, priority-policy, promotion, or execution authority.
     """
 
     path: Path
@@ -58,6 +62,7 @@ class ResearchTaskGraph:
                     strategy_version TEXT NOT NULL,
                     payload_json TEXT NOT NULL,
                     depends_json TEXT NOT NULL,
+                    priority INTEGER NOT NULL DEFAULT 50,
                     status TEXT NOT NULL,
                     attempts INTEGER NOT NULL,
                     max_attempts INTEGER NOT NULL,
@@ -67,6 +72,14 @@ class ResearchTaskGraph:
                 )
                 """
             )
+            columns = {
+                row[1]
+                for row in connection.execute("PRAGMA table_info(research_tasks)").fetchall()
+            }
+            if "priority" not in columns:
+                connection.execute(
+                    "ALTER TABLE research_tasks ADD COLUMN priority INTEGER NOT NULL DEFAULT 50"
+                )
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path)
@@ -87,8 +100,8 @@ class ResearchTaskGraph:
                 """
                 INSERT INTO research_tasks(
                     id, task_type, strategy_version, payload_json, depends_json,
-                    status, attempts, max_attempts, created_at, updated_at, last_error
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    priority, status, attempts, max_attempts, created_at, updated_at, last_error
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     str(task.id),
@@ -96,6 +109,7 @@ class ResearchTaskGraph:
                     task.strategy_version,
                     json.dumps(task.payload, sort_keys=True),
                     json.dumps([str(item) for item in task.depends_on]),
+                    task.priority,
                     task.status.value,
                     task.attempts,
                     task.max_attempts,
@@ -107,23 +121,32 @@ class ResearchTaskGraph:
         return task
 
     def claim_next(self) -> ResearchTask | None:
-        """Atomically claim the oldest runnable task."""
+        """Atomically claim the highest-priority oldest runnable task."""
         with self._connect() as connection:
             connection.execute("BEGIN IMMEDIATE")
             rows = connection.execute(
-                "SELECT * FROM research_tasks WHERE status = ? ORDER BY created_at, id",
+                "SELECT * FROM research_tasks WHERE status = ? "
+                "ORDER BY priority DESC, created_at, id",
                 (ResearchTaskStatus.PENDING.value,),
             ).fetchall()
             for row in rows:
                 task = self._decode(row)
-                dependency_statuses = [self._status(connection, item) for item in task.depends_on]
-                if any(status in {ResearchTaskStatus.FAILED, ResearchTaskStatus.BLOCKED} for status in dependency_statuses):
+                dependency_statuses = [
+                    self._status(connection, item) for item in task.depends_on
+                ]
+                if any(
+                    status in {ResearchTaskStatus.FAILED, ResearchTaskStatus.BLOCKED}
+                    for status in dependency_statuses
+                ):
                     self._set_status(connection, task.id, ResearchTaskStatus.BLOCKED)
                     continue
-                if not all(status == ResearchTaskStatus.SUCCEEDED for status in dependency_statuses):
+                if not all(
+                    status == ResearchTaskStatus.SUCCEEDED
+                    for status in dependency_statuses
+                ):
                     continue
                 now = datetime.now(UTC)
-                connection.execute(
+                cursor = connection.execute(
                     """
                     UPDATE research_tasks
                     SET status = ?, attempts = attempts + 1, updated_at = ?, last_error = NULL
@@ -136,10 +159,30 @@ class ResearchTaskGraph:
                         ResearchTaskStatus.PENDING.value,
                     ),
                 )
+                if cursor.rowcount != 1:
+                    continue
                 connection.commit()
                 return self.get(task.id)
             connection.commit()
         return None
+
+    def set_priority(self, task_id: UUID, priority: int) -> ResearchTask:
+        if not 0 <= priority <= 100:
+            raise ValueError("priority must be between 0 and 100")
+        task = self.get(task_id)
+        if task is None:
+            raise ValueError(f"task not found: {task_id}")
+        if task.status != ResearchTaskStatus.PENDING:
+            raise ValueError("only a pending task may be reprioritized")
+        with self._connect() as connection:
+            connection.execute(
+                "UPDATE research_tasks SET priority = ?, updated_at = ? WHERE id = ?",
+                (priority, datetime.now(UTC).isoformat(), str(task_id)),
+            )
+        updated = self.get(task_id)
+        if updated is None:
+            raise RuntimeError("research task disappeared")
+        return updated
 
     def succeed(self, task_id: UUID) -> ResearchTask:
         return self._finish(task_id, ResearchTaskStatus.SUCCEEDED, None)
@@ -167,7 +210,7 @@ class ResearchTaskGraph:
     def all(self) -> list[ResearchTask]:
         with self._connect() as connection:
             rows = connection.execute(
-                "SELECT * FROM research_tasks ORDER BY created_at, id"
+                "SELECT * FROM research_tasks ORDER BY priority DESC, created_at, id"
             ).fetchall()
         return [self._decode(row) for row in rows]
 
@@ -215,10 +258,11 @@ class ResearchTaskGraph:
             strategy_version=row[2],
             payload=json.loads(row[3]),
             depends_on=json.loads(row[4]),
-            status=row[5],
-            attempts=row[6],
-            max_attempts=row[7],
-            created_at=row[8],
-            updated_at=row[9],
-            last_error=row[10],
+            priority=row[5],
+            status=row[6],
+            attempts=row[7],
+            max_attempts=row[8],
+            created_at=row[9],
+            updated_at=row[10],
+            last_error=row[11],
         )
