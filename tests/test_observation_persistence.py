@@ -1,3 +1,4 @@
+import sqlite3
 from datetime import UTC, datetime
 
 import pytest
@@ -109,5 +110,5 @@ def test_equity_snapshot_rejects_unknown_account_lineage() -> None:
         free_margin=20_000.0,
     )
 
-    with pytest.raises(Exception):
+    with pytest.raises(sqlite3.IntegrityError):
         repository.persist_equity_snapshot(snapshot, policy_id="financial_v1")
