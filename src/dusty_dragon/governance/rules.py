@@ -13,7 +13,6 @@ from dusty_dragon.domain.models import (
     RiskAssessment,
 )
 
-
 _GRADUATION_ORDER = {
     GraduationLevel.INTRADAY: 0,
     GraduationLevel.HOLD_2D: 1,
