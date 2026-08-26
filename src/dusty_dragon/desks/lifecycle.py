@@ -122,7 +122,7 @@ class DeskLifecycle:
     desk_id: str
     state: DeskLifecycleState
 
-    def transition(self, target: DeskLifecycleState) -> "DeskLifecycle":
+    def transition(self, target: DeskLifecycleState) -> DeskLifecycle:
         if target not in _ALLOWED_TRANSITIONS[self.state]:
             raise ValueError(f"invalid desk lifecycle transition: {self.state} -> {target}")
         return DeskLifecycle(desk_id=self.desk_id, state=target)
