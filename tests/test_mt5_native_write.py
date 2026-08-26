@@ -4,6 +4,8 @@ import pytest
 
 from dusty_dragon.brokers.mt5_native_write import (
     MetaTrader5OrderSendTransport,
+    MT5PreflightError,
+    MT5SubmissionUncertainError,
     MT5WriteCapability,
 )
 from dusty_dragon.brokers.mt5_write import MT5WriteRequest
@@ -41,16 +43,22 @@ class FakeMT5:
         self.symbol = SymbolInfo()
         self.check_result: Result | None = Result(retcode=0, comment="Done")
         self.send_result: Result | None = Result(retcode=10009, comment="Done", order=42)
+        self.check_error: Exception | None = None
+        self.send_error: Exception | None = None
 
     def symbol_info(self, symbol: str) -> SymbolInfo | None:
         return self.symbol if symbol == "EURUSD" else None
 
     def order_check(self, request: dict[str, object]) -> Result | None:
         self.check_calls.append(request)
+        if self.check_error is not None:
+            raise self.check_error
         return self.check_result
 
     def order_send(self, request: dict[str, object]) -> Result | None:
         self.send_calls.append(request)
+        if self.send_error is not None:
+            raise self.send_error
         return self.send_result
 
     def last_error(self) -> object:
@@ -67,6 +75,10 @@ def request() -> MT5WriteRequest:
         take_profit=1.12,
         deviation_points=10,
     )
+
+
+def enabled_transport(mt5: FakeMT5) -> MetaTrader5OrderSendTransport:
+    return MetaTrader5OrderSendTransport(mt5, MT5WriteCapability(enabled=True))
 
 
 def test_native_transport_is_disabled_by_default() -> None:
@@ -98,27 +110,56 @@ def test_native_transport_checks_before_send() -> None:
     assert result.order_id == "42"
 
 
-def test_order_check_rejection_blocks_order_send() -> None:
+def test_order_check_rejection_is_preflight_failure() -> None:
     mt5 = FakeMT5()
     mt5.check_result = Result(retcode=10019, comment="No money")
-    transport = MetaTrader5OrderSendTransport(mt5, MT5WriteCapability(enabled=True))
 
-    with pytest.raises(ValueError, match="order_check rejected"):
-        transport.submit_request(request())
+    with pytest.raises(MT5PreflightError, match="order_check rejected"):
+        enabled_transport(mt5).submit_request(request())
 
     assert len(mt5.check_calls) == 1
     assert mt5.send_calls == []
 
 
-def test_missing_order_check_result_blocks_order_send() -> None:
+def test_order_check_exception_is_preflight_failure() -> None:
     mt5 = FakeMT5()
-    mt5.check_result = None
-    transport = MetaTrader5OrderSendTransport(mt5, MT5WriteCapability(enabled=True))
+    mt5.check_error = OSError("terminal unavailable")
 
-    with pytest.raises(RuntimeError, match="order_check returned no result"):
-        transport.submit_request(request())
+    with pytest.raises(MT5PreflightError, match="order_check failed"):
+        enabled_transport(mt5).submit_request(request())
 
     assert mt5.send_calls == []
+
+
+def test_missing_order_check_result_is_preflight_failure() -> None:
+    mt5 = FakeMT5()
+    mt5.check_result = None
+
+    with pytest.raises(MT5PreflightError, match="order_check returned no result"):
+        enabled_transport(mt5).submit_request(request())
+
+    assert mt5.send_calls == []
+
+
+def test_order_send_exception_is_uncertain_after_submission() -> None:
+    mt5 = FakeMT5()
+    mt5.send_error = ConnectionError("connection lost")
+
+    with pytest.raises(MT5SubmissionUncertainError, match="order_send failed"):
+        enabled_transport(mt5).submit_request(request())
+
+    assert len(mt5.check_calls) == 1
+    assert len(mt5.send_calls) == 1
+
+
+def test_missing_order_send_result_is_uncertain_after_submission() -> None:
+    mt5 = FakeMT5()
+    mt5.send_result = None
+
+    with pytest.raises(MT5SubmissionUncertainError, match="order_send returned no result"):
+        enabled_transport(mt5).submit_request(request())
+
+    assert len(mt5.send_calls) == 1
 
 
 def test_market_execution_without_supported_filling_mode_fails_closed() -> None:
@@ -128,10 +169,9 @@ def test_market_execution_without_supported_filling_mode_fails_closed() -> None:
         filling_mode=0,
         trade_exemode=mt5.SYMBOL_TRADE_EXECUTION_MARKET,
     )
-    transport = MetaTrader5OrderSendTransport(mt5, MT5WriteCapability(enabled=True))
 
-    with pytest.raises(ValueError, match="no supported filling mode"):
-        transport.submit_request(request())
+    with pytest.raises(MT5PreflightError, match="no supported filling mode"):
+        enabled_transport(mt5).submit_request(request())
 
     assert mt5.check_calls == []
     assert mt5.send_calls == []
@@ -140,9 +180,8 @@ def test_market_execution_without_supported_filling_mode_fails_closed() -> None:
 def test_non_market_execution_can_use_return_filling() -> None:
     mt5 = FakeMT5()
     mt5.symbol = SymbolInfo(visible=True, filling_mode=0, trade_exemode=0)
-    transport = MetaTrader5OrderSendTransport(mt5, MT5WriteCapability(enabled=True))
 
-    transport.submit_request(request())
+    enabled_transport(mt5).submit_request(request())
 
     assert mt5.send_calls[0]["type_filling"] == mt5.ORDER_FILLING_RETURN
 
@@ -150,10 +189,9 @@ def test_non_market_execution_can_use_return_filling() -> None:
 def test_hidden_symbol_fails_before_order_check() -> None:
     mt5 = FakeMT5()
     mt5.symbol.visible = False
-    transport = MetaTrader5OrderSendTransport(mt5, MT5WriteCapability(enabled=True))
 
     with pytest.raises(PermissionError, match="not visible"):
-        transport.submit_request(request())
+        enabled_transport(mt5).submit_request(request())
 
     assert mt5.check_calls == []
     assert mt5.send_calls == []
