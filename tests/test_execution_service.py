@@ -9,6 +9,11 @@ from dusty_dragon.persistence.authorization_lease import (
     LeaseConsumeStatus,
 )
 from dusty_dragon.persistence.execution_audit import ExecutionAuditRepository
+from dusty_dragon.persistence.execution_reconciliation import (
+    ExecutionReconciliationRepository,
+    ExecutionReconciliationSource,
+    ExecutionReconciliationState,
+)
 from dusty_dragon.persistence.sqlite import connect, initialize
 
 
@@ -75,6 +80,7 @@ def service(repository, transport) -> ExecutionService:
     return ExecutionService(
         repository,
         ExecutionAuditRepository(repository.connection),
+        ExecutionReconciliationRepository(repository.connection),
         transport,
     )
 
@@ -93,6 +99,9 @@ def test_fresh_lease_is_consumed_audited_and_submitted_once() -> None:
     assert result.lease_status is LeaseConsumeStatus.CONSUMED
     assert result.submitted
     assert result.requires_broker_reconciliation
+    assert result.reconciliation is not None
+    assert result.reconciliation.source_status is ExecutionReconciliationSource.ACCEPTED
+    assert result.reconciliation.state is ExecutionReconciliationState.UNRESOLVED
     assert len(transport.orders) == 1
     row = repository.connection.execute(
         "SELECT payload_json FROM audit_events WHERE event_id = ?",
@@ -118,6 +127,8 @@ def test_expired_and_missing_leases_never_reach_transport() -> None:
 
     assert expired.lease_status is LeaseConsumeStatus.EXPIRED
     assert missing.lease_status is LeaseConsumeStatus.NOT_FOUND
+    assert expired.reconciliation is None
+    assert missing.reconciliation is None
     assert transport.orders == []
 
 
@@ -133,6 +144,7 @@ def test_replayed_lease_never_reaches_transport_twice() -> None:
 
     assert first.lease_status is LeaseConsumeStatus.CONSUMED
     assert second.lease_status is LeaseConsumeStatus.ALREADY_CONSUMED
+    assert second.reconciliation is None
     assert len(transport.orders) == 1
 
 
@@ -149,9 +161,10 @@ def test_explicit_rejection_is_audited_without_reconciliation_requirement() -> N
     assert result.receipt is not None
     assert result.receipt.status is ExecutionStatus.REJECTED
     assert not result.requires_broker_reconciliation
+    assert result.reconciliation is None
 
 
-def test_ambiguous_response_requires_broker_reconciliation() -> None:
+def test_ambiguous_response_opens_unresolved_reconciliation() -> None:
     repository = seeded_repository()
     lease = issue(repository)
     transport = FakeExecutionTransport(status=ExecutionStatus.AMBIGUOUS)
@@ -163,10 +176,11 @@ def test_ambiguous_response_requires_broker_reconciliation() -> None:
 
     assert result.receipt is not None
     assert result.receipt.status is ExecutionStatus.AMBIGUOUS
-    assert result.requires_broker_reconciliation
+    assert result.reconciliation is not None
+    assert result.reconciliation.source_status is ExecutionReconciliationSource.AMBIGUOUS
 
 
-def test_transport_failure_is_audited_as_uncertain_and_never_blindly_retried() -> None:
+def test_transport_failure_opens_reconciliation_and_is_never_blindly_retried() -> None:
     repository = seeded_repository()
     lease = issue(repository)
     transport = FailingExecutionTransport()
@@ -177,6 +191,8 @@ def test_transport_failure_is_audited_as_uncertain_and_never_blindly_retried() -
     replay = execution.execute(lease.lease_id, consumed_at_utc=execution_time)
 
     assert first.transport_error == "RuntimeError: connection lost after submission"
-    assert first.requires_broker_reconciliation
+    assert first.reconciliation is not None
+    assert first.reconciliation.source_status is ExecutionReconciliationSource.TRANSPORT_ERROR
     assert replay.lease_status is LeaseConsumeStatus.ALREADY_CONSUMED
+    assert replay.reconciliation is None
     assert len(transport.orders) == 1
