@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -34,6 +35,7 @@ class DemoLeaseExecutionService:
     audit_repository: ExecutionAuditRepository
     reconciliation_repository: ExecutionReconciliationRepository
     demo_service: DemoExecutionService
+    session_validator: Callable[[], None] | None = None
 
     def execute(
         self,
@@ -47,6 +49,9 @@ class DemoLeaseExecutionService:
         arm: DemoExecutionArm | None = None,
         consumed_at_utc: datetime,
     ) -> ExecutionAttempt:
+        if self.session_validator is not None:
+            self.session_validator()
+
         consumed = self.lease_repository.consume(
             lease_id,
             consumed_at_utc=consumed_at_utc,
