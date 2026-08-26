@@ -10,6 +10,8 @@ Both interfaces consume `FirmExecutionReadService`.
 
 The service composes broker-neutral desk status providers into immutable layer and firm snapshots and can emit a JSON-safe payload. Presentation code must not read MetaTrader5 objects, SQLite connections, repositories, transports, or authorization leases directly.
 
+Every firm payload includes `contract_version: "1"`. Layers are ordered numerically and desks inside a layer are ordered by `desk_id`, so frontend rendering does not depend on runtime/provider registration order.
+
 ### Desk operational fields
 
 `DemoExecutionStatus` currently exposes:
@@ -91,4 +93,4 @@ The UI design session may now define the required performance panels, time horiz
 
 ## 7. Versioning rule
 
-Changes that expand UI authority, expose broker/runtime objects, weaken DEMO-only execution controls, or alter the meaning of `execution_ready` require an explicit contract version change and constitutional QC review.
+Changes that expand UI authority, expose broker/runtime objects, weaken DEMO-only execution controls, alter the meaning of `execution_ready`, or make a breaking payload change require an explicit contract-version change and constitutional QC review.
