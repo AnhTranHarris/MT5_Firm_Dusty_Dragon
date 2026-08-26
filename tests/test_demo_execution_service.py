@@ -87,13 +87,20 @@ def active_arm(now: datetime) -> DemoExecutionArm:
     )
 
 
-def service() -> tuple[DemoExecutionService, FakeTransport]:
-    transport = FakeTransport()
-    return DemoExecutionService(DryRunMT5WriteAdapter(transport)), transport
+def service(*, with_demo_write: bool = True):
+    dry_transport = FakeTransport()
+    write_transport = FakeTransport()
+    dry_adapter = DryRunMT5WriteAdapter(dry_transport)
+    write_adapter = DryRunMT5WriteAdapter(write_transport) if with_demo_write else None
+    return (
+        DemoExecutionService(dry_adapter, write_adapter),
+        dry_transport,
+        write_transport,
+    )
 
 
 def test_dry_run_requires_demo_account_but_not_arm() -> None:
-    executor, transport = service()
+    executor, dry_transport, write_transport = service()
     receipt = executor.submit(
         order(),
         account=account(),
@@ -104,11 +111,12 @@ def test_dry_run_requires_demo_account_but_not_arm() -> None:
     )
 
     assert receipt.status is ExecutionStatus.ACCEPTED
-    assert len(transport.requests) == 1
+    assert len(dry_transport.requests) == 1
+    assert write_transport.requests == []
 
 
 def test_demo_write_requires_active_arm() -> None:
-    executor, transport = service()
+    executor, dry_transport, write_transport = service()
     now = datetime(2026, 8, 26, 19, 1, tzinfo=UTC)
 
     with pytest.raises(PermissionError, match="disarmed"):
@@ -122,7 +130,8 @@ def test_demo_write_requires_active_arm() -> None:
             now_utc=now,
         )
 
-    assert transport.requests == []
+    assert dry_transport.requests == []
+    assert write_transport.requests == []
 
     receipt = executor.submit(
         order(),
@@ -136,11 +145,32 @@ def test_demo_write_requires_active_arm() -> None:
     )
 
     assert receipt.status is ExecutionStatus.ACCEPTED
-    assert len(transport.requests) == 1
+    assert dry_transport.requests == []
+    assert len(write_transport.requests) == 1
+
+
+def test_demo_write_requires_configured_write_adapter() -> None:
+    executor, dry_transport, write_transport = service(with_demo_write=False)
+    now = datetime(2026, 8, 26, 19, 1, tzinfo=UTC)
+
+    with pytest.raises(PermissionError, match="not configured"):
+        executor.submit(
+            order(),
+            account=account(),
+            instrument=instrument(),
+            spec=spec(),
+            parameters=parameters(),
+            mode=ExecutionMode.DEMO_WRITE,
+            arm=active_arm(now),
+            now_utc=now,
+        )
+
+    assert dry_transport.requests == []
+    assert write_transport.requests == []
 
 
 def test_live_account_and_identity_mismatches_fail_before_transport() -> None:
-    executor, transport = service()
+    executor, dry_transport, write_transport = service()
     now = datetime(2026, 8, 26, 19, 1, tzinfo=UTC)
 
     with pytest.raises(PermissionError, match="LIVE_ACCOUNT_BLOCKED"):
@@ -163,4 +193,5 @@ def test_live_account_and_identity_mismatches_fail_before_transport() -> None:
             now_utc=now,
         )
 
-    assert transport.requests == []
+    assert dry_transport.requests == []
+    assert write_transport.requests == []
