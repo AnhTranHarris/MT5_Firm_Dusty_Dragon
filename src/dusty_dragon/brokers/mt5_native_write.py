@@ -6,14 +6,6 @@ from typing import Any, Protocol
 from dusty_dragon.brokers.mt5_write import MT5RawWriteResult, MT5WriteRequest
 
 
-class MT5PreflightError(RuntimeError):
-    """Request was blocked before MT5 order_send could be invoked."""
-
-
-class MT5SubmissionUncertainError(RuntimeError):
-    """MT5 order_send may have reached the broker, but the client lacks certainty."""
-
-
 class MetaTrader5WriteModule(Protocol):
     TRADE_ACTION_DEAL: int
     ORDER_TYPE_BUY: int
@@ -56,28 +48,18 @@ class MetaTrader5OrderSendTransport:
             raise PermissionError("native MT5 write capability is disabled")
 
         native_request = self._build_native_request(request)
-        try:
-            check_result = self.mt5.order_check(native_request)
-        except Exception as exc:
-            raise MT5PreflightError(f"MT5 order_check failed: {exc}") from exc
+        check_result = self.mt5.order_check(native_request)
         if check_result is None:
-            raise MT5PreflightError(
-                f"MT5 order_check returned no result: {self.mt5.last_error()!r}"
-            )
+            raise RuntimeError(f"MT5 order_check returned no result: {self.mt5.last_error()!r}")
         if int(check_result.retcode) != 0:
-            raise MT5PreflightError(
+            raise ValueError(
                 "MT5 order_check rejected request: "
                 f"retcode={check_result.retcode}, comment={check_result.comment}"
             )
 
-        try:
-            result = self.mt5.order_send(native_request)
-        except Exception as exc:
-            raise MT5SubmissionUncertainError(f"MT5 order_send failed: {exc}") from exc
+        result = self.mt5.order_send(native_request)
         if result is None:
-            raise MT5SubmissionUncertainError(
-                f"MT5 order_send returned no result: {self.mt5.last_error()!r}"
-            )
+            raise RuntimeError(f"MT5 order_send returned no result: {self.mt5.last_error()!r}")
 
         order_value = getattr(result, "order", None)
         order_id = None if order_value in {None, 0} else str(order_value)
@@ -90,7 +72,7 @@ class MetaTrader5OrderSendTransport:
     def _build_native_request(self, request: MT5WriteRequest) -> dict[str, object]:
         symbol_info = self.mt5.symbol_info(request.symbol)
         if symbol_info is None:
-            raise MT5PreflightError(f"MT5 symbol is unavailable: {request.symbol}")
+            raise ValueError(f"MT5 symbol is unavailable: {request.symbol}")
         if not bool(getattr(symbol_info, "visible", False)):
             raise PermissionError(f"MT5 symbol is not visible in Market Watch: {request.symbol}")
 
@@ -126,4 +108,4 @@ class MetaTrader5OrderSendTransport:
         if execution_mode != self.mt5.SYMBOL_TRADE_EXECUTION_MARKET:
             return self.mt5.ORDER_FILLING_RETURN
 
-        raise MT5PreflightError("MT5 symbol exposes no supported filling mode")
+        raise ValueError("MT5 symbol exposes no supported filling mode")
