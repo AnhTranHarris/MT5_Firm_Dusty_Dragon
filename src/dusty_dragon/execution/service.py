@@ -9,6 +9,10 @@ from dusty_dragon.persistence.authorization_lease import (
     LeaseConsumeStatus,
 )
 from dusty_dragon.persistence.execution_audit import ExecutionAuditRepository
+from dusty_dragon.persistence.execution_reconciliation import (
+    ExecutionReconciliationRecord,
+    ExecutionReconciliationRepository,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,6 +20,7 @@ class ExecutionAttempt:
     lease_status: LeaseConsumeStatus
     receipt: ExecutionReceipt | None
     audit_event_id: str
+    reconciliation: ExecutionReconciliationRecord | None
     transport_error: str | None = None
 
     @property
@@ -24,22 +29,22 @@ class ExecutionAttempt:
 
     @property
     def requires_broker_reconciliation(self) -> bool:
-        if self.transport_error is not None:
-            return True
-        return self.receipt is not None and self.receipt.requires_reconciliation
+        return self.reconciliation is not None
 
 
 class ExecutionService:
-    """Consume one-time authority, invoke transport, and immutably audit the outcome."""
+    """Consume authority, invoke transport, audit outcome, and track unresolved broker truth."""
 
     def __init__(
         self,
         lease_repository: AuthorizationLeaseRepository,
         audit_repository: ExecutionAuditRepository,
+        reconciliation_repository: ExecutionReconciliationRepository,
         transport: ExecutionTransport,
     ) -> None:
         self._lease_repository = lease_repository
         self._audit_repository = audit_repository
+        self._reconciliation_repository = reconciliation_repository
         self._transport = transport
 
     def execute(self, lease_id: str, *, consumed_at_utc: datetime) -> ExecutionAttempt:
@@ -59,14 +64,28 @@ class ExecutionService:
                 lease_status=consumed.status,
                 receipt=None,
                 audit_event_id=event_id,
+                reconciliation=None,
             )
 
         receipt: ExecutionReceipt | None = None
         transport_error: str | None = None
+        reconciliation: ExecutionReconciliationRecord | None = None
         try:
             receipt = self._transport.submit(consumed.lease.order)
-        except Exception as exc:  # transport uncertainty must be reconciled, never retried blindly
+        except Exception as exc:  # uncertain broker outcome must never be retried blindly
             transport_error = f"{type(exc).__name__}: {exc}"
+            reconciliation = self._reconciliation_repository.open_for_transport_error(
+                lease_id=lease_id,
+                order=consumed.lease.order,
+                opened_at_utc=consumed_at_utc,
+            )
+        else:
+            reconciliation = self._reconciliation_repository.open_for_receipt(
+                lease_id=lease_id,
+                order=consumed.lease.order,
+                receipt=receipt,
+                opened_at_utc=consumed_at_utc,
+            )
 
         event_id = self._audit_repository.record(
             lease_id=lease_id,
@@ -79,5 +98,6 @@ class ExecutionService:
             lease_status=LeaseConsumeStatus.CONSUMED,
             receipt=receipt,
             audit_event_id=event_id,
+            reconciliation=reconciliation,
             transport_error=transport_error,
         )
