@@ -115,6 +115,44 @@ def test_runtime_validation_detects_environment_and_permission_drift() -> None:
         session.validate_current()
 
 
+def test_fault_latch_cannot_be_cleared_by_terminal_recovery() -> None:
+    mt5 = FakeMT5()
+    session = MT5DemoSession(mt5, account())
+    session.open()
+
+    mt5.account.trade_mode = 2
+    with pytest.raises(PermissionError, match="no longer demo"):
+        session.validate_current()
+
+    assert session.faulted
+    assert not session.opened
+    assert session.fault_reason == "connected MT5 account is no longer demo"
+    assert mt5.shutdown_calls == 1
+
+    mt5.account.trade_mode = mt5.ACCOUNT_TRADE_MODE_DEMO
+    with pytest.raises(RuntimeError, match="fault is latched"):
+        session.open()
+    assert mt5.initialize_calls == [(25115284, 60_000)]
+
+
+def test_recovery_requires_new_verified_session() -> None:
+    mt5 = FakeMT5()
+    failed_session = MT5DemoSession(mt5, account())
+    failed_session.open()
+    mt5.account.trade_allowed = False
+
+    with pytest.raises(PermissionError, match="no longer allows trading"):
+        failed_session.validate_current()
+
+    mt5.account.trade_allowed = True
+    recovered_session = MT5DemoSession(mt5, account())
+    recovered_session.open()
+
+    assert recovered_session.opened
+    assert not recovered_session.faulted
+    assert mt5.initialize_calls == [(25115284, 60_000), (25115284, 60_000)]
+
+
 def test_context_manager_always_shuts_down() -> None:
     mt5 = FakeMT5()
 
