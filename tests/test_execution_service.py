@@ -1,3 +1,4 @@
+import json
 from datetime import UTC, datetime
 
 from dusty_dragon.domain.models import ApprovedOrder
@@ -7,20 +8,31 @@ from dusty_dragon.persistence.authorization_lease import (
     AuthorizationLeaseRepository,
     LeaseConsumeStatus,
 )
+from dusty_dragon.persistence.execution_audit import ExecutionAuditRepository
 from dusty_dragon.persistence.sqlite import connect, initialize
 
 
 class FakeExecutionTransport:
+    def __init__(self, *, status: ExecutionStatus = ExecutionStatus.ACCEPTED) -> None:
+        self.orders: list[ApprovedOrder] = []
+        self.status = status
+
+    def submit(self, order: ApprovedOrder) -> ExecutionReceipt:
+        self.orders.append(order)
+        return ExecutionReceipt(
+            status=self.status,
+            broker_order_id="FAKE-1" if self.status is ExecutionStatus.ACCEPTED else None,
+            message=f"fake transport {self.status.value.lower()}",
+        )
+
+
+class FailingExecutionTransport:
     def __init__(self) -> None:
         self.orders: list[ApprovedOrder] = []
 
     def submit(self, order: ApprovedOrder) -> ExecutionReceipt:
         self.orders.append(order)
-        return ExecutionReceipt(
-            status=ExecutionStatus.ACCEPTED,
-            broker_order_id="FAKE-1",
-            message="accepted by fake transport",
-        )
+        raise RuntimeError("connection lost after submission")
 
 
 def seeded_repository() -> AuthorizationLeaseRepository:
@@ -59,36 +71,53 @@ def issue(repository: AuthorizationLeaseRepository, *, ttl_seconds: int = 10):
     )
 
 
-def test_fresh_lease_is_consumed_before_transport_submission() -> None:
+def service(repository, transport) -> ExecutionService:
+    return ExecutionService(
+        repository,
+        ExecutionAuditRepository(repository.connection),
+        transport,
+    )
+
+
+def test_fresh_lease_is_consumed_audited_and_submitted_once() -> None:
     repository = seeded_repository()
     lease = issue(repository)
     transport = FakeExecutionTransport()
-    service = ExecutionService(repository, transport)
+    execution = service(repository, transport)
 
-    result = service.execute(
+    result = execution.execute(
         lease.lease_id,
         consumed_at_utc=datetime(2026, 8, 26, 13, 0, 5, tzinfo=UTC),
     )
 
     assert result.lease_status is LeaseConsumeStatus.CONSUMED
     assert result.submitted
+    assert result.requires_broker_reconciliation
     assert len(transport.orders) == 1
-    assert transport.orders[0] == lease.order
+    row = repository.connection.execute(
+        "SELECT payload_json FROM audit_events WHERE event_id = ?",
+        (result.audit_event_id,),
+    ).fetchone()
+    assert json.loads(row["payload_json"])["receipt"]["status"] == "ACCEPTED"
 
 
-def test_expired_lease_never_reaches_transport() -> None:
+def test_expired_and_missing_leases_never_reach_transport() -> None:
     repository = seeded_repository()
     lease = issue(repository)
     transport = FakeExecutionTransport()
-    service = ExecutionService(repository, transport)
+    execution = service(repository, transport)
 
-    result = service.execute(
+    expired = execution.execute(
         lease.lease_id,
         consumed_at_utc=datetime(2026, 8, 26, 13, 0, 11, tzinfo=UTC),
     )
+    missing = execution.execute(
+        "missing",
+        consumed_at_utc=datetime(2026, 8, 26, 13, 0, 5, tzinfo=UTC),
+    )
 
-    assert result.lease_status is LeaseConsumeStatus.EXPIRED
-    assert not result.submitted
+    assert expired.lease_status is LeaseConsumeStatus.EXPIRED
+    assert missing.lease_status is LeaseConsumeStatus.NOT_FOUND
     assert transport.orders == []
 
 
@@ -96,27 +125,58 @@ def test_replayed_lease_never_reaches_transport_twice() -> None:
     repository = seeded_repository()
     lease = issue(repository)
     transport = FakeExecutionTransport()
-    service = ExecutionService(repository, transport)
+    execution = service(repository, transport)
     execution_time = datetime(2026, 8, 26, 13, 0, 5, tzinfo=UTC)
 
-    first = service.execute(lease.lease_id, consumed_at_utc=execution_time)
-    second = service.execute(lease.lease_id, consumed_at_utc=execution_time)
+    first = execution.execute(lease.lease_id, consumed_at_utc=execution_time)
+    second = execution.execute(lease.lease_id, consumed_at_utc=execution_time)
 
     assert first.lease_status is LeaseConsumeStatus.CONSUMED
     assert second.lease_status is LeaseConsumeStatus.ALREADY_CONSUMED
     assert len(transport.orders) == 1
 
 
-def test_missing_lease_never_reaches_transport() -> None:
+def test_explicit_rejection_is_audited_without_reconciliation_requirement() -> None:
     repository = seeded_repository()
-    transport = FakeExecutionTransport()
-    service = ExecutionService(repository, transport)
+    lease = issue(repository)
+    transport = FakeExecutionTransport(status=ExecutionStatus.REJECTED)
 
-    result = service.execute(
-        "missing",
+    result = service(repository, transport).execute(
+        lease.lease_id,
         consumed_at_utc=datetime(2026, 8, 26, 13, 0, 5, tzinfo=UTC),
     )
 
-    assert result.lease_status is LeaseConsumeStatus.NOT_FOUND
-    assert not result.submitted
-    assert transport.orders == []
+    assert result.receipt is not None
+    assert result.receipt.status is ExecutionStatus.REJECTED
+    assert not result.requires_broker_reconciliation
+
+
+def test_ambiguous_response_requires_broker_reconciliation() -> None:
+    repository = seeded_repository()
+    lease = issue(repository)
+    transport = FakeExecutionTransport(status=ExecutionStatus.AMBIGUOUS)
+
+    result = service(repository, transport).execute(
+        lease.lease_id,
+        consumed_at_utc=datetime(2026, 8, 26, 13, 0, 5, tzinfo=UTC),
+    )
+
+    assert result.receipt is not None
+    assert result.receipt.status is ExecutionStatus.AMBIGUOUS
+    assert result.requires_broker_reconciliation
+
+
+def test_transport_failure_is_audited_as_uncertain_and_never_blindly_retried() -> None:
+    repository = seeded_repository()
+    lease = issue(repository)
+    transport = FailingExecutionTransport()
+    execution = service(repository, transport)
+    execution_time = datetime(2026, 8, 26, 13, 0, 5, tzinfo=UTC)
+
+    first = execution.execute(lease.lease_id, consumed_at_utc=execution_time)
+    replay = execution.execute(lease.lease_id, consumed_at_utc=execution_time)
+
+    assert first.transport_error == "RuntimeError: connection lost after submission"
+    assert first.requires_broker_reconciliation
+    assert replay.lease_status is LeaseConsumeStatus.ALREADY_CONSUMED
+    assert len(transport.orders) == 1
