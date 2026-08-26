@@ -12,7 +12,11 @@ class PortfolioDecision:
     reason: str
 
 
-def evaluate_incremental_risk(*, desk_signal_valid: bool, portfolio_capacity_available: bool) -> PortfolioDecision:
+def evaluate_incremental_risk(
+    *,
+    desk_signal_valid: bool,
+    portfolio_capacity_available: bool,
+) -> PortfolioDecision:
     """Classify a signal without contaminating strategy-quality evidence."""
 
     if not desk_signal_valid:
