@@ -105,8 +105,9 @@ def repositories():
 
 def test_stack_defaults_native_write_to_disabled() -> None:
     lease_repository, audit_repository, reconciliation_repository = repositories()
+    mt5 = FakeMT5()
     stack = build_demo_execution_stack(
-        mt5=FakeMT5(),
+        mt5=mt5,
         expected_account=account(),
         dry_run_adapter=DryRunMT5WriteAdapter(FakeDryRunTransport()),
         lease_repository=lease_repository,
@@ -115,9 +116,15 @@ def test_stack_defaults_native_write_to_disabled() -> None:
     )
 
     assert stack.native_write_enabled is False
+    assert stack.session.opened
+    assert mt5.initialize_calls == [(25115284, 60_000)]
     assert stack.executor.lease_repository is lease_repository
     assert stack.executor.audit_repository is audit_repository
     assert stack.executor.reconciliation_repository is reconciliation_repository
+
+    stack.close()
+    stack.close()
+    assert mt5.shutdown_calls == 1
 
 
 def test_stack_can_explicitly_enable_native_demo_write() -> None:
@@ -136,12 +143,13 @@ def test_stack_can_explicitly_enable_native_demo_write() -> None:
     assert stack.native_write_enabled is True
 
 
-def test_stack_refuses_live_expected_account() -> None:
+def test_stack_refuses_live_expected_account_before_mt5_initialize() -> None:
     lease_repository, audit_repository, reconciliation_repository = repositories()
+    mt5 = FakeMT5()
 
     try:
         build_demo_execution_stack(
-            mt5=FakeMT5(),
+            mt5=mt5,
             expected_account=account(AccountEnvironment.LIVE),
             dry_run_adapter=DryRunMT5WriteAdapter(FakeDryRunTransport()),
             lease_repository=lease_repository,
@@ -152,3 +160,5 @@ def test_stack_refuses_live_expected_account() -> None:
         assert "not DEMO" in str(exc)
     else:
         raise AssertionError("live expected account must fail closed")
+
+    assert mt5.initialize_calls == []
