@@ -13,6 +13,10 @@ class PolicyBundle:
     raw: dict[str, Any]
 
     @property
+    def desk(self) -> dict[str, Any]:
+        return self.raw["desk"]
+
+    @property
     def demo(self) -> dict[str, Any]:
         return self.raw["demo"]
 
