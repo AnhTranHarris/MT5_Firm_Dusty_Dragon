@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Secrets / local config
+.env
+.env.*
+!.env.example
+config/local*.toml
+secrets/
+credentials*.json
+token*.json
+
+# Trading/runtime state
+*.db
+*.sqlite
+*.sqlite3
+logs/
+reports/generated/
+data/raw/
+data/cache/
+data/archive_staging/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
