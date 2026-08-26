@@ -107,7 +107,7 @@ def test_frozen_dataset_manifest_requires_canonical_uri_and_checksum() -> None:
 def test_sqlite_schema_enforces_desk_account_lineage_and_broker_symbols() -> None:
     connection = connect(":memory:")
     initialize(connection)
-    assert schema_version(connection) == 1
+    assert schema_version(connection) == 2
 
     connection.execute(
         "INSERT INTO brokers(broker_id, name) VALUES (?, ?)",
