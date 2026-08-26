@@ -7,3 +7,7 @@ drift_restrict_count = 2
 drift_halt_count = 3
 invalid_halts_immediately = true
 match_resets_drift_count = true
+
+[authorization]
+lease_ttl_seconds = 10
+single_use = true
