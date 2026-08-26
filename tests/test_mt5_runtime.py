@@ -1,3 +1,5 @@
+"""QC coverage for the native MT5 demo-account runtime guard."""
+
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
