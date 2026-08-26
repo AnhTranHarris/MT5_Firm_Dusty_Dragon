@@ -15,6 +15,8 @@ from dusty_dragon.execution.status import DemoExecutionStatus, build_demo_execut
 from dusty_dragon.execution.status_serialization import execution_status_to_dict
 from dusty_dragon.persistence.execution_reconciliation import ExecutionReconciliationRepository
 
+UI_BACKEND_CONTRACT_VERSION = "1"
+
 
 class DeskExecutionStatusProvider(Protocol):
     layer: int
@@ -58,10 +60,14 @@ class FirmExecutionReadService:
             grouped[provider.layer].append(status)
 
         layers = tuple(
-            build_layer_execution_status(layer, tuple(grouped[layer]))
+            build_layer_execution_status(
+                layer,
+                tuple(sorted(grouped[layer], key=lambda status: status.desk_id)),
+            )
             for layer in sorted(grouped)
         )
         return build_firm_execution_status(layers)
 
     def payload(self) -> dict[str, object]:
-        return execution_status_to_dict(self.snapshot())
+        payload = execution_status_to_dict(self.snapshot())
+        return {"contract_version": UI_BACKEND_CONTRACT_VERSION, **payload}
