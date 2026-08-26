@@ -5,7 +5,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
+from dusty_dragon.analytics.firm_health import FirmHealthReport
 from dusty_dragon.research.executor import ResearchTaskExecutor, ResearchTaskResult
+from dusty_dragon.research.priority_policy import ResearchPriorityPolicy
 from dusty_dragon.runtime.compute_governor import (
     ComputeSnapshot,
     ResearchComputeBudget,
@@ -20,6 +22,7 @@ class ResearchHeartbeatResult(BaseModel):
     mode: ResearchMode
     budget: ResearchComputeBudget
     completed_task_ids: list[str] = Field(default_factory=list)
+    reprioritized_tasks: int = Field(default=0, ge=0)
 
     @property
     def completed_count(self) -> int:
@@ -28,17 +31,18 @@ class ResearchHeartbeatResult(BaseModel):
 
 @dataclass
 class ResearchRuntimeController:
-    """Run the durable research DAG under schedule and machine-resource policy.
+    """Run the durable research DAG under schedule, health, and compute policy.
 
-    The controller combines three intentionally separate concerns:
+    The controller keeps four responsibilities separate:
     - ResearchClock decides *when* research is scheduled.
+    - Firm health may change *what pending research matters most*.
     - TradingPriorityComputeGovernor decides *how much* research capacity is safe.
-    - ResearchTaskExecutor decides *what runnable durable task* executes next.
+    - ResearchTaskExecutor executes the highest-priority runnable durable task.
 
-    Firm health is intentionally absent. HEALTHY, CAUTION, or HALT may change
-    trading risk and research priority, but they never disable the research
-    department. Machine pressure may temporarily pause research to protect the
-    trading process and system stability.
+    HEALTHY, CAUTION, or HALT never disable the research department. They may
+    only reorder pending work. Machine pressure may temporarily pause execution
+    to protect trading and system stability. Completed evidence is never
+    reprioritized or rewritten.
 
     `max_parallel_workers` is currently used as a bounded tasks-per-heartbeat
     quota because ResearchTaskExecutor is deliberately sequential. A future
@@ -48,17 +52,31 @@ class ResearchRuntimeController:
     clock: ResearchClock
     governor: TradingPriorityComputeGovernor
     executor: ResearchTaskExecutor
+    priority_policy: ResearchPriorityPolicy | None = None
 
     def heartbeat(
         self,
         moment: datetime,
         snapshot: ComputeSnapshot,
+        *,
+        health_report: FirmHealthReport | None = None,
     ) -> ResearchHeartbeatResult:
         mode = self.clock.mode_at(moment)
         budget = self.governor.budget(mode, snapshot)
 
+        reprioritized = 0
+        if health_report is not None and self.priority_policy is not None:
+            reprioritized = self.priority_policy.apply(
+                self.executor.graph,
+                health_report,
+            )
+
         if budget.max_parallel_workers == 0:
-            return ResearchHeartbeatResult(mode=mode, budget=budget)
+            return ResearchHeartbeatResult(
+                mode=mode,
+                budget=budget,
+                reprioritized_tasks=reprioritized,
+            )
 
         completed: list[ResearchTaskResult] = self.executor.run_until_idle(
             max_tasks=budget.max_parallel_workers
@@ -67,4 +85,5 @@ class ResearchRuntimeController:
             mode=mode,
             budget=budget,
             completed_task_ids=[str(result.task_id) for result in completed],
+            reprioritized_tasks=reprioritized,
         )
