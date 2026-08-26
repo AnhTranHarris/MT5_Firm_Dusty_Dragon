@@ -23,7 +23,11 @@ class ExecutionAuditRepository:
         transport_error: str | None,
         occurred_at_utc: datetime,
     ) -> str:
-        if occurred_at_utc.tzinfo is None or occurred_at_utc.utcoffset() != UTC.utcoffset(occurred_at_utc):
+        invalid_timezone = (
+            occurred_at_utc.tzinfo is None
+            or occurred_at_utc.utcoffset() != UTC.utcoffset(occurred_at_utc)
+        )
+        if invalid_timezone:
             raise ValueError("occurred_at_utc must be timezone-aware UTC")
 
         event_id = f"execution-{uuid4()}"
