@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 
 _SCHEMA = """
 PRAGMA foreign_keys = ON;
@@ -70,6 +70,32 @@ CREATE TABLE IF NOT EXISTS equity_snapshots (
     equity REAL NOT NULL,
     policy_id TEXT NOT NULL,
     UNIQUE (account_id, observed_at_utc)
+);
+
+CREATE TABLE IF NOT EXISTS expected_account_states (
+    account_id TEXT PRIMARY KEY REFERENCES broker_accounts(account_id),
+    desk_id TEXT NOT NULL REFERENCES desks(desk_id),
+    broker_id TEXT NOT NULL REFERENCES brokers(broker_id),
+    environment TEXT NOT NULL CHECK (environment IN ('DEMO', 'LIVE')),
+    as_of_utc TEXT NOT NULL,
+    balance REAL NOT NULL CHECK (balance >= 0),
+    equity REAL NOT NULL CHECK (equity >= 0),
+    margin REAL NOT NULL CHECK (margin >= 0),
+    free_margin REAL NOT NULL CHECK (free_margin >= 0),
+    policy_id TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS expected_positions (
+    account_id TEXT NOT NULL REFERENCES broker_accounts(account_id),
+    position_id TEXT NOT NULL,
+    instrument_id TEXT NOT NULL REFERENCES instruments(instrument_id),
+    side TEXT NOT NULL CHECK (side IN ('LONG', 'SHORT')),
+    volume REAL NOT NULL CHECK (volume > 0),
+    open_price REAL NOT NULL CHECK (open_price > 0),
+    current_price REAL NOT NULL CHECK (current_price > 0),
+    unrealized_pnl REAL NOT NULL,
+    observed_at_utc TEXT NOT NULL,
+    PRIMARY KEY (account_id, position_id)
 );
 
 CREATE TABLE IF NOT EXISTS capital_flows (
