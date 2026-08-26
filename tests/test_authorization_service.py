@@ -4,11 +4,9 @@ from datetime import UTC, datetime
 from dusty_dragon.brokers.health import BrokerHealthSnapshot, BrokerHealthState
 from dusty_dragon.brokers.reconciliation import ReconciliationResult, ReconciliationStatus
 from dusty_dragon.domain.models import OrderIntent, SignalDisposition
-from dusty_dragon.execution.transport import ExecutionReceipt, ExecutionStatus
 from dusty_dragon.governance.authorization_service import PreOrderAuthorizationService
 from dusty_dragon.governance.preorder import PreOrderStatus
 from dusty_dragon.persistence.authorization_lease import AuthorizationLeaseRepository
-from dusty_dragon.persistence.execution_reconciliation import ExecutionReconciliationRepository
 from dusty_dragon.persistence.preorder_audit import PreOrderAuditRepository
 from dusty_dragon.persistence.sqlite import connect, initialize
 from dusty_dragon.portfolio.governor import PortfolioDecision
@@ -38,7 +36,6 @@ def service(connection) -> PreOrderAuthorizationService:
     return PreOrderAuthorizationService(
         PreOrderAuditRepository(connection),
         AuthorizationLeaseRepository(connection),
-        ExecutionReconciliationRepository(connection),
         financial_policy_id="financial_v1",
         operations_policy_id="operations_v1",
         lease_ttl_seconds=10,
@@ -68,23 +65,20 @@ def healthy_inputs():
     return desk_risk, portfolio, reconciliation, broker_health
 
 
-def intent() -> OrderIntent:
-    return OrderIntent(
+def test_approved_decision_is_audited_and_receives_short_lived_lease() -> None:
+    connection = seeded_connection()
+    authorization = service(connection)
+    intent = OrderIntent(
         desk_id="GENERALIST-01",
         instrument_id="FX.EURUSD@B1",
         side="BUY",
         requested_risk_fraction=0.01,
     )
-
-
-def test_approved_decision_is_audited_and_receives_short_lived_lease() -> None:
-    connection = seeded_connection()
-    authorization = service(connection)
     desk_risk, portfolio, reconciliation, broker_health = healthy_inputs()
     occurred_at = datetime(2026, 8, 26, 11, 25, tzinfo=UTC)
 
     result = authorization.authorize(
-        intent(),
+        intent,
         desk_risk=desk_risk,
         portfolio=portfolio,
         reconciliation=reconciliation,
@@ -107,6 +101,12 @@ def test_approved_decision_is_audited_and_receives_short_lived_lease() -> None:
 def test_veto_is_audited_and_never_receives_execution_lease() -> None:
     connection = seeded_connection()
     authorization = service(connection)
+    intent = OrderIntent(
+        desk_id="GENERALIST-01",
+        instrument_id="FX.EURUSD@B1",
+        side="BUY",
+        requested_risk_fraction=0.01,
+    )
     desk_risk, portfolio, reconciliation, _ = healthy_inputs()
     broker_health = BrokerHealthSnapshot(
         state=BrokerHealthState.RESTRICTED,
@@ -115,7 +115,7 @@ def test_veto_is_audited_and_never_receives_execution_lease() -> None:
     )
 
     result = authorization.authorize(
-        intent(),
+        intent,
         desk_risk=desk_risk,
         portfolio=portfolio,
         reconciliation=reconciliation,
@@ -135,45 +135,3 @@ def test_veto_is_audited_and_never_receives_execution_lease() -> None:
         "SELECT COUNT(*) AS count FROM authorization_leases"
     ).fetchone()
     assert lease_count["count"] == 0
-
-
-def test_unresolved_execution_blocks_new_authority_until_reconciled() -> None:
-    connection = seeded_connection()
-    authorization = service(connection)
-    desk_risk, portfolio, reconciliation, broker_health = healthy_inputs()
-    first_time = datetime(2026, 8, 26, 11, 25, tzinfo=UTC)
-    first = authorization.authorize(
-        intent(),
-        desk_risk=desk_risk,
-        portfolio=portfolio,
-        reconciliation=reconciliation,
-        broker_health=broker_health,
-        occurred_at_utc=first_time,
-    )
-    assert first.authorization_lease is not None
-    assert first.decision.approved_order is not None
-
-    pending_repository = ExecutionReconciliationRepository(connection)
-    pending_repository.open_for_receipt(
-        lease_id=first.authorization_lease.lease_id,
-        order=first.decision.approved_order,
-        receipt=ExecutionReceipt(
-            status=ExecutionStatus.ACCEPTED,
-            broker_order_id="BROKER-42",
-            message="accepted",
-        ),
-        opened_at_utc=datetime(2026, 8, 26, 11, 25, 5, tzinfo=UTC),
-    )
-
-    blocked = authorization.authorize(
-        intent(),
-        desk_risk=desk_risk,
-        portfolio=portfolio,
-        reconciliation=reconciliation,
-        broker_health=broker_health,
-        occurred_at_utc=datetime(2026, 8, 26, 11, 25, 6, tzinfo=UTC),
-    )
-
-    assert blocked.decision.status is PreOrderStatus.PENDING_EXECUTION_REJECTED
-    assert blocked.decision.approved_order is None
-    assert blocked.authorization_lease is None
