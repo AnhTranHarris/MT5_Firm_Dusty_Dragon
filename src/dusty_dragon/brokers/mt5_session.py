@@ -22,11 +22,8 @@ class MT5DemoSession:
     expected_account: AccountSnapshot
     timeout_ms: int = 60_000
     _opened: bool = False
-    _fault_reason: str | None = None
 
     def open(self) -> None:
-        if self._fault_reason is not None:
-            raise RuntimeError(f"MT5 session fault is latched: {self._fault_reason}")
         if self._opened:
             self.validate_current()
             return
@@ -51,18 +48,9 @@ class MT5DemoSession:
             raise
 
     def validate_current(self) -> None:
-        if self._fault_reason is not None:
-            raise RuntimeError(f"MT5 session fault is latched: {self._fault_reason}")
         if not self._opened:
             raise RuntimeError("MT5 session is not open")
 
-        try:
-            self._validate_native_account()
-        except (PermissionError, RuntimeError) as exc:
-            self._latch_fault(str(exc))
-            raise
-
-    def _validate_native_account(self) -> None:
         account = self.mt5.account_info()
         if account is None:
             raise RuntimeError(f"MT5 account_info returned no result: {self.mt5.last_error()!r}")
@@ -75,10 +63,6 @@ class MT5DemoSession:
         if not bool(account.trade_expert):
             raise PermissionError("connected MT5 account no longer allows expert trading")
 
-    def _latch_fault(self, reason: str) -> None:
-        self._fault_reason = reason
-        self.close()
-
     def close(self) -> None:
         if not self._opened:
             return
@@ -88,14 +72,6 @@ class MT5DemoSession:
     @property
     def opened(self) -> bool:
         return self._opened
-
-    @property
-    def faulted(self) -> bool:
-        return self._fault_reason is not None
-
-    @property
-    def fault_reason(self) -> str | None:
-        return self._fault_reason
 
     def __enter__(self) -> MT5DemoSession:
         self.open()
