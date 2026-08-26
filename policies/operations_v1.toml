@@ -1,0 +1,9 @@
+policy_id = "operations_v1"
+constitution_version = "1.0"
+
+[broker_health]
+drift_watch_count = 1
+drift_restrict_count = 2
+drift_halt_count = 3
+invalid_halts_immediately = true
+match_resets_drift_count = true
