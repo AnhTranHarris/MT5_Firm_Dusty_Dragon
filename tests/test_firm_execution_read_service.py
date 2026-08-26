@@ -76,12 +76,12 @@ def reconciliation_repository() -> ExecutionReconciliationRepository:
     return ExecutionReconciliationRepository(connection)
 
 
-def test_read_service_groups_providers_by_layer_and_returns_pure_payload() -> None:
+def test_read_service_groups_and_sorts_providers_into_versioned_payload() -> None:
     service = FirmExecutionReadService(
         providers=(
             FakeProvider(1, status("DESK-03", ready=False)),
-            FakeProvider(0, status("DESK-01")),
             FakeProvider(0, status("DESK-02")),
+            FakeProvider(0, status("DESK-01")),
         )
     )
 
@@ -89,9 +89,12 @@ def test_read_service_groups_providers_by_layer_and_returns_pure_payload() -> No
     payload = service.payload()
 
     assert tuple(layer.layer for layer in snapshot.layers) == (0, 1)
+    assert tuple(desk.desk_id for desk in snapshot.layers[0].desks) == ("DESK-01", "DESK-02")
     assert snapshot.desk_count == 3
     assert not snapshot.execution_ready
+    assert payload["contract_version"] == "1"
     assert payload["layers"][0]["desk_count"] == 2
+    assert payload["layers"][0]["desks"][0]["desk_id"] == "DESK-01"
     assert payload["layers"][1]["desks"][0]["desk_id"] == "DESK-03"
 
 
@@ -106,6 +109,7 @@ def test_concrete_demo_provider_reaches_json_safe_firm_payload() -> None:
 
     payload = service.payload()
 
+    assert payload["contract_version"] == "1"
     assert payload["desk_count"] == 1
     assert payload["layers"][0]["desks"][0]["desk_id"] == "DEMO-01"
     assert payload["layers"][0]["desks"][0]["environment"] == "DEMO"
