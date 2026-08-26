@@ -1,0 +1,67 @@
+policy_id = "financial_v1"
+constitution_version = "1.0"
+
+[desk]
+preferred_stretch_growth = 0.25
+per_trade_risk_min = 0.01
+per_trade_risk_max = 0.02
+daily_loss_normal = 0.03
+daily_loss_emergency = 0.05
+active_exposure_min = 0.20
+active_exposure_max = 0.30
+trade_management_quality_min = 0.85
+gain_preservation_realized_giveback = 0.10
+gain_preservation_peak_equity_giveback = 0.15
+weekly_caution_drawdown = 0.05
+weekly_defensive_drawdown_low = 0.08
+weekly_defensive_drawdown_high = 0.10
+weekly_halt_drawdown_low = 0.10
+weekly_halt_drawdown_high = 0.15
+weekly_catastrophic_drawdown = 0.25
+rehabilitation_trading_days = 10
+
+[demo]
+initial_capital = 20000.0
+bootstrap_forward_days = 30
+selected_risk_multiplier = 1.10
+qualification_forward_days = 25
+sunday_capital_compression_factor = 0.75
+minimum_layer0_passes = 6
+minimum_graduation_level = "MULTIDAY"
+
+[live_expansion]
+minimum_closing_equity = 5000.0
+maintenance_trading_days = 7
+review_day = "SUNDAY"
+
+[portfolio]
+preferred_monthly_realized_growth = 0.05
+capital_sharing_allowed = false
+aggregate_equity_is_spendable = false
+
+[challenge]
+full_layer_baseline_trading_days = 7
+campaign_trading_days = 30
+different_layer_interval_trading_days = 90
+formal_challenge_authority_layer = 0
+
+[layer2]
+slots = 6
+hardware_deferred_styles = ["SCALPING"]
+active_candidates = [
+  "TREND_FOLLOWING",
+  "MOMENTUM",
+  "BREAKOUT",
+  "MEAN_REVERSION",
+  "SWING",
+  "RANGE",
+  "REVERSAL",
+  "EVENT_CATALYST",
+  "STATISTICAL_RELATIVE_VALUE",
+]
+
+[layer3]
+slots = 6
+minimum_sibling_variation = 0.20
+duplicate_sectors_allowed = true
+broker_aware = true
