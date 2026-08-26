@@ -11,6 +11,9 @@ from dusty_dragon.persistence.authorization_lease import (
     AuthorizationLease,
     AuthorizationLeaseRepository,
 )
+from dusty_dragon.persistence.execution_reconciliation import (
+    ExecutionReconciliationRepository,
+)
 from dusty_dragon.persistence.preorder_audit import PreOrderAuditRepository
 from dusty_dragon.portfolio.governor import PortfolioDecision
 from dusty_dragon.risk.desk import DeskRiskDecision
@@ -30,6 +33,7 @@ class PreOrderAuthorizationService:
         self,
         audit_repository: PreOrderAuditRepository,
         lease_repository: AuthorizationLeaseRepository,
+        execution_reconciliation_repository: ExecutionReconciliationRepository,
         *,
         financial_policy_id: str,
         operations_policy_id: str,
@@ -43,6 +47,7 @@ class PreOrderAuthorizationService:
             raise ValueError("lease_ttl_seconds must be positive")
         self._audit_repository = audit_repository
         self._lease_repository = lease_repository
+        self._execution_reconciliation_repository = execution_reconciliation_repository
         self._financial_policy_id = financial_policy_id
         self._operations_policy_id = operations_policy_id
         self._lease_ttl_seconds = lease_ttl_seconds
@@ -58,6 +63,7 @@ class PreOrderAuthorizationService:
         occurred_at_utc: datetime | None = None,
     ) -> AuditedPreOrderDecision:
         occurred_at = occurred_at_utc or datetime.now(UTC)
+        pending = self._execution_reconciliation_repository.unresolved_for_desk(intent.desk_id)
         decision = authorize_preorder(
             intent,
             desk_risk=desk_risk,
@@ -65,6 +71,7 @@ class PreOrderAuthorizationService:
             reconciliation=reconciliation,
             broker_health=broker_health,
             policy_id=self._financial_policy_id,
+            has_pending_execution=bool(pending),
         )
         event_id = self._audit_repository.record(
             intent=intent,
