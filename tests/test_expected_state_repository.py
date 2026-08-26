@@ -68,10 +68,10 @@ def state(*, equity: float = 20_025.0) -> BrokerReadState:
     )
 
 
-def test_schema_version_includes_execution_reconciliation_tables() -> None:
+def test_schema_version_includes_authorization_lease_tables() -> None:
     connection = seeded_connection()
 
-    assert schema_version(connection) == 4
+    assert schema_version(connection) == 3
 
 
 def test_expected_state_round_trips() -> None:
