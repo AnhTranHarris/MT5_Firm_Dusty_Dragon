@@ -2,6 +2,7 @@ from datetime import UTC, datetime
 
 from dusty_dragon.brokers.mt5_read import BrokerReadState
 from dusty_dragon.domain.accounts import AccountSnapshot, PositionSide, PositionSnapshot
+from dusty_dragon.domain.market import AccountEnvironment
 from dusty_dragon.persistence.expected_state import ExpectedStateRepository
 from dusty_dragon.persistence.sqlite import connect, initialize, schema_version
 
@@ -44,7 +45,7 @@ def state(*, equity: float = 20_025.0) -> BrokerReadState:
             account_id="A1",
             desk_id="GENERALIST-01",
             broker_id="B1",
-            environment="DEMO",
+            environment=AccountEnvironment.DEMO,
             observed_at_utc=observed_at,
             balance=20_000.0,
             equity=equity,
