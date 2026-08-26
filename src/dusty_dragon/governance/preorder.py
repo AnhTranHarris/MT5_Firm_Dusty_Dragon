@@ -16,7 +16,6 @@ class PreOrderStatus(StrEnum):
     PORTFOLIO_RISK_REJECTED = "PORTFOLIO_RISK_REJECTED"
     RECONCILIATION_REJECTED = "RECONCILIATION_REJECTED"
     BROKER_HEALTH_REJECTED = "BROKER_HEALTH_REJECTED"
-    PENDING_EXECUTION_REJECTED = "PENDING_EXECUTION_REJECTED"
     INVALID_INTENT = "INVALID_INTENT"
 
 
@@ -39,7 +38,6 @@ def authorize_preorder(
     reconciliation: ReconciliationResult,
     broker_health: BrokerHealthSnapshot,
     policy_id: str,
-    has_pending_execution: bool = False,
 ) -> PreOrderDecision:
     """Authorize capital exposure only when every independent safety authority passes."""
 
@@ -48,13 +46,6 @@ def authorize_preorder(
             status=PreOrderStatus.INVALID_INTENT,
             approved_order=None,
             reasons=("policy_id and positive requested risk are required",),
-        )
-
-    if has_pending_execution:
-        return PreOrderDecision(
-            status=PreOrderStatus.PENDING_EXECUTION_REJECTED,
-            approved_order=None,
-            reasons=("desk has unresolved broker execution outcome",),
         )
 
     if not desk_risk.may_add_new_risk:
