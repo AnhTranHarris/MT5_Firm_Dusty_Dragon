@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-_SCHEMA_VERSION = 2
+_SCHEMA_VERSION = 3
 
 _SCHEMA = """
 PRAGMA foreign_keys = ON;
@@ -123,6 +123,20 @@ CREATE TABLE IF NOT EXISTS datasets (
     schema_version TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS authorization_leases (
+    lease_id TEXT PRIMARY KEY,
+    desk_id TEXT NOT NULL REFERENCES desks(desk_id),
+    instrument_id TEXT NOT NULL REFERENCES instruments(instrument_id),
+    side TEXT NOT NULL,
+    approved_risk_fraction REAL NOT NULL CHECK (approved_risk_fraction > 0),
+    financial_policy_id TEXT NOT NULL,
+    operations_policy_id TEXT NOT NULL,
+    authorized_at_utc TEXT NOT NULL,
+    expires_at_utc TEXT NOT NULL,
+    consumed_at_utc TEXT,
+    audit_event_id TEXT NOT NULL UNIQUE
+);
+
 CREATE TABLE IF NOT EXISTS audit_events (
     event_id TEXT PRIMARY KEY,
     occurred_at_utc TEXT NOT NULL,
@@ -147,7 +161,7 @@ def connect(path: str | Path) -> sqlite3.Connection:
 
 
 def initialize(connection: sqlite3.Connection) -> None:
-    """Create the v1 institutional ledger schema idempotently."""
+    """Create the institutional ledger schema idempotently."""
 
     with connection:
         connection.executescript(_SCHEMA)
