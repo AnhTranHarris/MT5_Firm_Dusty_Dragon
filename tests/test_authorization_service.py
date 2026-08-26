@@ -131,5 +131,7 @@ def test_veto_is_audited_and_never_receives_execution_lease() -> None:
         (result.audit_event_id,),
     ).fetchone()
     assert json.loads(row["payload_json"])["status"] == "BROKER_HEALTH_REJECTED"
-    lease_count = connection.execute("SELECT COUNT(*) AS count FROM authorization_leases").fetchone()
+    lease_count = connection.execute(
+        "SELECT COUNT(*) AS count FROM authorization_leases"
+    ).fetchone()
     assert lease_count["count"] == 0
