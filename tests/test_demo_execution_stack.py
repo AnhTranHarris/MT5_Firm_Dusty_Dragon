@@ -48,6 +48,15 @@ class FakeMT5:
 
     def __init__(self) -> None:
         self.account = AccountInfo()
+        self.initialize_calls: list[tuple[int, int]] = []
+        self.shutdown_calls = 0
+
+    def initialize(self, *, login: int, timeout: int) -> bool:
+        self.initialize_calls.append((login, timeout))
+        return True
+
+    def shutdown(self) -> None:
+        self.shutdown_calls += 1
 
     def account_info(self):
         return self.account
