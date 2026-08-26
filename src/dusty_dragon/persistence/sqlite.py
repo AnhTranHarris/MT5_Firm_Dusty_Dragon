@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-_SCHEMA_VERSION = 4
+_SCHEMA_VERSION = 3
 
 _SCHEMA = """
 PRAGMA foreign_keys = ON;
@@ -135,29 +135,6 @@ CREATE TABLE IF NOT EXISTS authorization_leases (
     expires_at_utc TEXT NOT NULL,
     consumed_at_utc TEXT,
     audit_event_id TEXT NOT NULL UNIQUE
-);
-
-CREATE TABLE IF NOT EXISTS execution_reconciliations (
-    reconciliation_id TEXT PRIMARY KEY,
-    lease_id TEXT NOT NULL UNIQUE REFERENCES authorization_leases(lease_id),
-    desk_id TEXT NOT NULL REFERENCES desks(desk_id),
-    instrument_id TEXT NOT NULL REFERENCES instruments(instrument_id),
-    broker_order_id TEXT,
-    source_status TEXT NOT NULL CHECK (
-        source_status IN ('ACCEPTED', 'AMBIGUOUS', 'TRANSPORT_ERROR')
-    ),
-    state TEXT NOT NULL CHECK (
-        state IN ('UNRESOLVED', 'CONFIRMED_EXECUTED', 'CONFIRMED_NOT_EXECUTED')
-    ),
-    opened_at_utc TEXT NOT NULL,
-    resolved_at_utc TEXT,
-    resolution_evidence_id TEXT,
-    CHECK (
-        (state = 'UNRESOLVED' AND resolved_at_utc IS NULL AND resolution_evidence_id IS NULL)
-        OR
-        (state != 'UNRESOLVED' AND resolved_at_utc IS NOT NULL
-            AND length(trim(resolution_evidence_id)) > 0)
-    )
 );
 
 CREATE TABLE IF NOT EXISTS audit_events (
