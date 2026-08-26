@@ -44,7 +44,7 @@ def _all_keys(value: object) -> set[str]:
     return set()
 
 
-def test_website_read_boundary_exposes_data_not_runtime_infrastructure() -> None:
+def test_website_read_boundary_exposes_versioned_data_not_runtime_infrastructure() -> None:
     service = FirmExecutionReadService(providers=(Provider(),))
     payload = service.payload()
     forbidden_keys = {
@@ -57,6 +57,7 @@ def test_website_read_boundary_exposes_data_not_runtime_infrastructure() -> None
         "stack",
     }
 
+    assert payload["contract_version"] == "1"
     assert forbidden_keys.isdisjoint(_all_keys(payload))
     assert not hasattr(service, "execute")
     assert not hasattr(service, "order_send")
