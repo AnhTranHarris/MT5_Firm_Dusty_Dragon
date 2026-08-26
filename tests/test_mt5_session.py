@@ -96,17 +96,20 @@ def test_runtime_validation_detects_environment_and_permission_drift() -> None:
     mt5 = FakeMT5()
     session = MT5DemoSession(mt5, account())
     session.open()
-
     mt5.account.trade_mode = 2
     with pytest.raises(PermissionError, match="no longer demo"):
         session.validate_current()
 
-    mt5.account.trade_mode = mt5.ACCOUNT_TRADE_MODE_DEMO
+    mt5 = FakeMT5()
+    session = MT5DemoSession(mt5, account())
+    session.open()
     mt5.account.trade_allowed = False
     with pytest.raises(PermissionError, match="no longer allows trading"):
         session.validate_current()
 
-    mt5.account.trade_allowed = True
+    mt5 = FakeMT5()
+    session = MT5DemoSession(mt5, account())
+    session.open()
     mt5.account.trade_expert = False
     with pytest.raises(PermissionError, match="no longer allows expert trading"):
         session.validate_current()
