@@ -9,9 +9,9 @@
 <body class="spatial-mode">
   <div class="scanlines" aria-hidden="true"></div>
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">DD</span><div><b>DUSTY DRAGON</b><small>PC COMMAND CENTER / UI LAB v1</small></div></div>
+    <div class="brand"><span class="brand-mark">DD</span><div><b>DUSTY DRAGON</b><small>PC COMMAND CENTER / UI LAB v1.1</small></div></div>
     <div id="serviceStrip" class="service-strip"></div>
-    <div class="top-actions"><span id="clock">06:31:42 CT</span><button id="modeButton" class="ghost">F2 ANALYTICAL</button></div>
+    <div class="top-actions"><span id="clock">--:--:--</span><button id="modeButton" class="ghost">F2 ANALYTICAL</button></div>
   </header>
 
   <nav class="workspace-nav" aria-label="Workspaces">
@@ -27,10 +27,11 @@
   <main>
     <section id="command" class="workspace active">
       <div class="brief-row">
-        <article class="hero-card">
-          <span class="eyebrow">MORNING COMMAND BRIEF</span>
+        <article class="hero-card command-brief">
+          <span class="eyebrow">COMMAND BRIEF</span>
           <h1>Firm operational. One execution incident requires attention.</h1>
           <div id="firmMetrics" class="metric-grid"></div>
+          <div class="brief-ticker"><span class="ticker-label">FIRM WIRE</span><div class="ticker-viewport"><div id="firmTicker" class="ticker-track"></div></div></div>
         </article>
         <article class="attention-card panel">
           <header><span>TOP ATTENTION</span><span class="severity critical">1 CRITICAL</span></header>
@@ -40,46 +41,86 @@
 
       <div class="command-grid">
         <aside class="left-stack">
-          <article class="panel"><header>OVERNIGHT TIMELINE</header><div id="timeline" class="timeline"></div></article>
+          <article class="panel"><header>FIRM EVENT TIMELINE</header><div id="timeline" class="timeline"></div></article>
           <article class="panel compact"><header>RESEARCH DELTA</header><div id="researchDelta"></div></article>
         </aside>
 
-        <section class="firm-stage panel" aria-label="3D firm core">
-          <header><span>FIRM CORE</span><span id="focusLabel">SELECT DESK</span></header>
+        <section class="firm-stage panel" aria-label="spatial firm core">
+          <header><span id="stageTitle">FIRM CORE / GENERALIST SYSTEM</span><span id="focusLabel">ORBITAL VIEW</span></header>
           <div class="space-grid" aria-hidden="true"></div>
-          <div class="core-scene">
-            <div class="orbit orbit-one"></div>
-            <div class="orbit orbit-two"></div>
-            <button class="core-node firm-node" data-focus="FIRM"><span>DUSTY</span><strong>CORE</strong><small>OPERATIONAL</small></button>
-            <div id="deskNodes"></div>
+          <div id="coreScene" class="core-scene">
+            <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="orbit orbit-c"></div>
+            <button id="coreNode" class="core-node firm-node" data-focus="FIRM"><span>DUSTY</span><strong>CORE</strong><small>OPERATIONAL</small></button>
+            <div id="deskNodes" class="orbital-system"></div>
           </div>
+          <button id="backToFirm" class="back-to-firm ghost" hidden>← RETURN TO FIRM</button>
           <div id="deskDossier" class="dossier"></div>
         </section>
 
         <aside class="right-stack">
           <article class="panel"><header>DESK MATRIX</header><div id="deskMatrix" class="desk-matrix"></div></article>
           <article class="panel compact"><header>REJECTED OPPORTUNITIES</header><div id="rejectedSummary"></div></article>
-          <article class="panel authority-zone">
-            <header>COMMAND AUTHORITY <span>PC ONLY</span></header>
-            <p>Prototype controls mirror the current Backend Contract v1 authority only.</p>
-            <button data-command="REQUEST_SESSION_REBUILD">REQUEST SESSION REBUILD</button>
-            <button data-command="SHUTDOWN_EXECUTION" class="danger">SHUTDOWN EXECUTION</button>
-          </article>
+          <article class="panel authority-zone"><header>COMMAND AUTHORITY <span>PC ONLY</span></header><p>Mock controls mirror Backend Contract v1 authority only.</p><button data-command="REQUEST_SESSION_REBUILD">REQUEST SESSION REBUILD</button><button data-command="SHUTDOWN_EXECUTION" class="danger">SHUTDOWN EXECUTION</button></article>
         </aside>
       </div>
     </section>
 
-    <section id="trading" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>TRADING WORKSPACE</header><h2>Operational execution supervision</h2><p>Planned modules: symbol matrix, primary chart, open positions, decision anatomy, spread/cost state, and portfolio capacity. Dusty supervises approved execution; this lab does not place orders.</p></article><article class="panel"><header>DECISION ANATOMY</header><p>Forecast evidence → research evidence → desk risk → portfolio risk → ApprovedOrder.</p></article></div></section>
-    <section id="risk" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>3D RISK UNIVERSE</header><div class="risk-cloud"><span style="--x:20%;--y:30%;--s:1.4">USD</span><span style="--x:65%;--y:26%;--s:1">GOLD</span><span style="--x:38%;--y:68%;--s:.8">EUR</span><span style="--x:78%;--y:70%;--s:.7">JPY</span></div></article><article class="panel"><header>PORTFOLIO RISK</header><p>Risk contribution, correlation, concentration, drawdown correlation, signal agreement, and simultaneous-loss frequency.</p></article></div></section>
-    <section id="performance" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>PERFORMANCE ACCOUNTABILITY</header><p>ForexFactory/Myfxbook-inspired account comparison with Dusty-specific desk independence, drawdown, expectancy, Profit Factor, Sharpe/Sortino, MAE/MFE, and growth efficiency.</p></article><article class="panel"><header>ATTRIBUTION</header><p>Layer · Desk · Style · Sector · Symbol · Broker · Regime · Session · Holding period.</p></article></div></section>
-    <section id="research" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>RESEARCH OPERATIONS</header><p>Durable research queue, dataset lineage, Kronos forecast evidence, Vibe research evidence, holdout status, challenger candidates, and rejected hypotheses.</p></article><article class="panel"><header>EVIDENCE QUALITY</header><p>Observed → peer testing → validated / rejected → aging → stale.</p></article></div></section>
-    <section id="lab" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>LAYER 0 ADVERSARIAL LAB</header><div class="evolution-tree"><div>INCUMBENT</div><div class="branches"><span>Candidate 17<br><b>HOLDOUT PASS</b></span><span>Candidate 23<br><b>REJECTED</b></span><span>Candidate 31<br><b>FORWARD TEST</b></span></div></div></article><article class="panel"><header>CHALLENGE</header><p>Day 11 / 30. Current verdict: <b>TOO EARLY</b>. Raw return alone can never determine a winner.</p></article></div></section>
-    <section id="system" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>SYSTEM / INFRASTRUCTURE</header><p>MT5 terminal health, session-latch state, native-write state, resource governor, data integrity, research degradation, unresolved execution reconciliation, and audit history.</p></article><article class="panel"><header>RENDER PRIORITY</header><p>Spatial Full → Spatial Reduced → Animation Off → Analytical 2D. GUI compute yields before safety, trading, evidence capture, and reconciliation.</p></article></div></section>
+    <section id="trading" class="workspace">
+      <div class="trading-layout">
+        <article class="panel market-board"><header><span>SYMBOL MATRIX</span><span>LIVE MOCK</span></header><div id="watchlistTable"></div></article>
+        <article class="panel chart-panel"><header><span>MARKET / POSITION SUPERVISION</span><span id="chartSymbol">XAUUSD</span></header><div class="mock-chart"><svg viewBox="0 0 800 280" preserveAspectRatio="none"><polyline points="0,220 70,205 120,215 180,174 235,183 295,140 350,153 410,105 475,120 540,74 610,94 680,48 740,62 800,31"/><line x1="0" y1="160" x2="800" y2="160"/></svg><div class="chart-watermark">DUSTY MARKET VIEW · MOCK PRICE PATH</div></div></article>
+        <article class="panel decision-panel"><header>DECISION ANATOMY</header><div id="decisionFeed"></div></article>
+        <article class="panel positions-panel"><header>OPEN POSITIONS</header><div id="positionsTable"></div></article>
+        <article class="panel capacity-panel"><header>PORTFOLIO CAPACITY</header><div id="capacityStats"></div></article>
+      </div>
+    </section>
+
+    <section id="risk" class="workspace">
+      <div class="risk-layout">
+        <article class="panel risk-map-panel"><header><span>PORTFOLIO RISK HEAT MAP</span><span>SIZE = RISK CONTRIBUTION · COLOR = FACTOR MOVE</span></header><div id="riskHeatmap" class="risk-heatmap"></div></article>
+        <article class="panel"><header>PORTFOLIO RISK</header><div id="riskStats"></div></article>
+        <article class="panel"><header>CORRELATION / CONCENTRATION</header><div id="correlationMatrix" class="correlation-grid"></div></article>
+        <article class="panel"><header>RISK GOVERNOR NOTES</header><div class="note-stack"><p><b>USD cluster:</b> elevated common-factor contribution. New correlated exposure restricted.</p><p><b>G04:</b> desk CAUTION state does not automatically imply portfolio HALT.</p><p><b>Capacity rejects:</b> preserved as valid desk signals for later governance-value analysis.</p></div></article>
+      </div>
+    </section>
+
+    <section id="performance" class="workspace">
+      <div class="performance-layout">
+        <article class="panel performance-stats"><header>FIRM PERFORMANCE ACCOUNTABILITY</header><div id="performanceStats" class="stats-grid"></div></article>
+        <article class="panel equity-panel"><header>GROWTH / EQUITY TRAJECTORY</header><div id="equityBars" class="equity-bars"></div></article>
+        <article class="panel attribution-panel"><header>DESK ATTRIBUTION</header><div id="deskAttribution"></div></article>
+        <article class="panel performance-notes"><header>QUALITY OF RETURN</header><div class="note-stack"><p>Profit is evaluated beside drawdown, expectancy, payoff, Sharpe/Sortino, recovery, and cost.</p><p>Firm totals are analytical aggregation only; desk capital remains financially isolated.</p><p>5% monthly portfolio growth is an objective, never a quota that authorizes extra risk.</p></div></article>
+      </div>
+    </section>
+
+    <section id="research" class="workspace">
+      <div class="research-layout">
+        <article class="panel research-queue"><header><span>RESEARCH OPERATIONS</span><span>6 ACTIVE</span></header><div id="researchQueue"></div></article>
+        <article class="panel evidence-panel"><header>INSTITUTIONAL EVIDENCE</header><div id="evidenceList"></div></article>
+        <article class="panel"><header>CONTRACTOR STATUS</header><div class="contractor-cards"><div><b>KRONOS</b><span>Forecast specialist</span><strong>DEGRADED / AVAILABLE</strong></div><div><b>VIBE</b><span>Quant research contractor</span><strong>HEALTHY</strong></div><div><b>MT5 TESTER</b><span>Broker-realistic validation</span><strong>HEALTHY</strong></div></div></article>
+        <article class="panel"><header>RESEARCH THROUGHPUT</header><div id="researchStats"></div></article>
+      </div>
+    </section>
+
+    <section id="lab" class="workspace">
+      <div class="lab-layout">
+        <article class="panel evolution-panel"><header>LAYER 0 ADVERSARIAL LAB</header><div class="evolution-tree"><div class="evo-root">INCUMBENT</div><div class="evo-line"></div><div class="branches"><span>Candidate 17<br><b>HOLDOUT PASS</b></span><span>Candidate 23<br><b>REJECTED</b></span><span>Candidate 31<br><b>FORWARD TEST</b></span></div></div></article>
+        <article class="panel"><header>CHALLENGE SCOREBOARD</header><div id="challengeScore"></div></article>
+        <article class="panel"><header>COHORT PROOF</header><div class="cohort-grid"><span>COHORT A<br><b>4 / 4 PASS</b></span><span>COHORT B<br><b>TESTING</b></span><span>VALID PROOFS<br><b>4 / 6</b></span><span>CHALLENGE<br><b>DAY 11 / 30</b></span></div></article>
+      </div>
+    </section>
+
+    <section id="system" class="workspace">
+      <div class="system-layout">
+        <article class="panel system-table"><header><span>SYSTEM / INFRASTRUCTURE</span><span>RESOURCE GOVERNOR ACTIVE</span></header><div id="systemRows"></div></article>
+        <article class="panel"><header>RESOURCE LOAD</header><div class="resource-gauges"><div><label>CPU</label><meter min="0" max="100" value="44"></meter><b>44%</b></div><div><label>RAM</label><meter min="0" max="24000" value="7820"></meter><b>7.8 / 24 GB</b></div><div><label>DISK I/O</label><meter min="0" max="100" value="28"></meter><b>28%</b></div><div><label>GUI BUDGET</label><meter min="0" max="100" value="34"></meter><b>SPATIAL FULL</b></div></div></article>
+        <article class="panel audit-panel"><header>AUDIT TAIL</header><div id="auditRows"></div></article>
+        <article class="panel"><header>RENDER PRIORITY</header><div class="note-stack"><p>Spatial Full → Spatial Reduced → Animation Off → Analytical 2D.</p><p>GUI yields compute before risk, execution, evidence capture, reconciliation, or broker truth.</p><p>G06 is intentionally fault-latched to test degraded-state visibility.</p></div></article>
+      </div>
+    </section>
   </main>
 
-  <dialog id="commandDialog">
-    <form method="dialog"><span class="eyebrow">UI LAB — NO BACKEND CALL</span><h2 id="dialogTitle"></h2><p id="dialogCopy"></p><div class="dialog-actions"><button value="cancel" class="ghost">CANCEL</button><button id="confirmCommand" value="confirm" class="danger">CONFIRM MOCK EVENT</button></div></form>
-  </dialog>
+  <dialog id="commandDialog"><form method="dialog"><span class="eyebrow">UI LAB — NO BACKEND CALL</span><h2 id="dialogTitle"></h2><p id="dialogCopy"></p><div class="dialog-actions"><button value="cancel" class="ghost">CANCEL</button><button id="confirmCommand" value="confirm" class="danger">CONFIRM MOCK EVENT</button></div></form></dialog>
 
   <footer><span>CONTRACT v1 / MOCK TELEMETRY</span><span id="auditTail">Audit: prototype session initialized</span><span>F2 ANALYTICAL · F3 SPATIAL</span></footer>
   <script src="mock-data.js"></script>
