@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dusty Dragon — PC Command Center UI Lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="spatial-mode">
+  <div class="scanlines" aria-hidden="true"></div>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark">DD</span><div><b>DUSTY DRAGON</b><small>PC COMMAND CENTER / UI LAB v1</small></div></div>
+    <div id="serviceStrip" class="service-strip"></div>
+    <div class="top-actions"><span id="clock">06:31:42 CT</span><button id="modeButton" class="ghost">F2 ANALYTICAL</button></div>
+  </header>
+
+  <nav class="workspace-nav" aria-label="Workspaces">
+    <button data-workspace="command" class="active">COMMAND</button>
+    <button data-workspace="trading">TRADING</button>
+    <button data-workspace="risk">RISK</button>
+    <button data-workspace="performance">PERFORMANCE</button>
+    <button data-workspace="research">RESEARCH</button>
+    <button data-workspace="lab">LAYER 0 LAB</button>
+    <button data-workspace="system">SYSTEM</button>
+  </nav>
+
+  <main>
+    <section id="command" class="workspace active">
+      <div class="brief-row">
+        <article class="hero-card">
+          <span class="eyebrow">MORNING COMMAND BRIEF</span>
+          <h1>Firm operational. One execution incident requires attention.</h1>
+          <div id="firmMetrics" class="metric-grid"></div>
+        </article>
+        <article class="attention-card panel">
+          <header><span>TOP ATTENTION</span><span class="severity critical">1 CRITICAL</span></header>
+          <div id="incidentList"></div>
+        </article>
+      </div>
+
+      <div class="command-grid">
+        <aside class="left-stack">
+          <article class="panel"><header>OVERNIGHT TIMELINE</header><div id="timeline" class="timeline"></div></article>
+          <article class="panel compact"><header>RESEARCH DELTA</header><div id="researchDelta"></div></article>
+        </aside>
+
+        <section class="firm-stage panel" aria-label="3D firm core">
+          <header><span>FIRM CORE</span><span id="focusLabel">SELECT DESK</span></header>
+          <div class="space-grid" aria-hidden="true"></div>
+          <div class="core-scene">
+            <div class="orbit orbit-one"></div>
+            <div class="orbit orbit-two"></div>
+            <button class="core-node firm-node" data-focus="FIRM"><span>DUSTY</span><strong>CORE</strong><small>OPERATIONAL</small></button>
+            <div id="deskNodes"></div>
+          </div>
+          <div id="deskDossier" class="dossier"></div>
+        </section>
+
+        <aside class="right-stack">
+          <article class="panel"><header>DESK MATRIX</header><div id="deskMatrix" class="desk-matrix"></div></article>
+          <article class="panel compact"><header>REJECTED OPPORTUNITIES</header><div id="rejectedSummary"></div></article>
+          <article class="panel authority-zone">
+            <header>COMMAND AUTHORITY <span>PC ONLY</span></header>
+            <p>Prototype controls mirror the current Backend Contract v1 authority only.</p>
+            <button data-command="REQUEST_SESSION_REBUILD">REQUEST SESSION REBUILD</button>
+            <button data-command="SHUTDOWN_EXECUTION" class="danger">SHUTDOWN EXECUTION</button>
+          </article>
+        </aside>
+      </div>
+    </section>
+
+    <section id="trading" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>TRADING WORKSPACE</header><h2>Operational execution supervision</h2><p>Planned modules: symbol matrix, primary chart, open positions, decision anatomy, spread/cost state, and portfolio capacity. Dusty supervises approved execution; this lab does not place orders.</p></article><article class="panel"><header>DECISION ANATOMY</header><p>Forecast evidence → research evidence → desk risk → portfolio risk → ApprovedOrder.</p></article></div></section>
+    <section id="risk" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>3D RISK UNIVERSE</header><div class="risk-cloud"><span style="--x:20%;--y:30%;--s:1.4">USD</span><span style="--x:65%;--y:26%;--s:1">GOLD</span><span style="--x:38%;--y:68%;--s:.8">EUR</span><span style="--x:78%;--y:70%;--s:.7">JPY</span></div></article><article class="panel"><header>PORTFOLIO RISK</header><p>Risk contribution, correlation, concentration, drawdown correlation, signal agreement, and simultaneous-loss frequency.</p></article></div></section>
+    <section id="performance" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>PERFORMANCE ACCOUNTABILITY</header><p>ForexFactory/Myfxbook-inspired account comparison with Dusty-specific desk independence, drawdown, expectancy, Profit Factor, Sharpe/Sortino, MAE/MFE, and growth efficiency.</p></article><article class="panel"><header>ATTRIBUTION</header><p>Layer · Desk · Style · Sector · Symbol · Broker · Regime · Session · Holding period.</p></article></div></section>
+    <section id="research" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>RESEARCH OPERATIONS</header><p>Durable research queue, dataset lineage, Kronos forecast evidence, Vibe research evidence, holdout status, challenger candidates, and rejected hypotheses.</p></article><article class="panel"><header>EVIDENCE QUALITY</header><p>Observed → peer testing → validated / rejected → aging → stale.</p></article></div></section>
+    <section id="lab" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>LAYER 0 ADVERSARIAL LAB</header><div class="evolution-tree"><div>INCUMBENT</div><div class="branches"><span>Candidate 17<br><b>HOLDOUT PASS</b></span><span>Candidate 23<br><b>REJECTED</b></span><span>Candidate 31<br><b>FORWARD TEST</b></span></div></div></article><article class="panel"><header>CHALLENGE</header><p>Day 11 / 30. Current verdict: <b>TOO EARLY</b>. Raw return alone can never determine a winner.</p></article></div></section>
+    <section id="system" class="workspace"><div class="placeholder-grid"><article class="panel span2"><header>SYSTEM / INFRASTRUCTURE</header><p>MT5 terminal health, session-latch state, native-write state, resource governor, data integrity, research degradation, unresolved execution reconciliation, and audit history.</p></article><article class="panel"><header>RENDER PRIORITY</header><p>Spatial Full → Spatial Reduced → Animation Off → Analytical 2D. GUI compute yields before safety, trading, evidence capture, and reconciliation.</p></article></div></section>
+  </main>
+
+  <dialog id="commandDialog">
+    <form method="dialog"><span class="eyebrow">UI LAB — NO BACKEND CALL</span><h2 id="dialogTitle"></h2><p id="dialogCopy"></p><div class="dialog-actions"><button value="cancel" class="ghost">CANCEL</button><button id="confirmCommand" value="confirm" class="danger">CONFIRM MOCK EVENT</button></div></form>
+  </dialog>
+
+  <footer><span>CONTRACT v1 / MOCK TELEMETRY</span><span id="auditTail">Audit: prototype session initialized</span><span>F2 ANALYTICAL · F3 SPATIAL</span></footer>
+  <script src="mock-data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
