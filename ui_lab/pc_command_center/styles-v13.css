@@ -1,0 +1,25 @@
+@import url("styles-v12.css");
+
+/* v1.3 Trading Floor refinements */
+.trading-floor-viewport{position:relative}
+#orbitalCanvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none}
+.trading-floor-viewport.dragging #orbitalCanvas{cursor:grabbing}
+.layer-navigator{position:absolute;z-index:14;left:50%;top:10px;transform:translateX(-50%);display:flex;gap:4px;padding:4px;border:1px solid rgba(103,215,255,.18);background:rgba(2,8,12,.72);backdrop-filter:blur(8px)}
+.layer-navigator button{padding:5px 8px;font-size:8px;border-color:transparent;color:var(--muted)}
+.layer-navigator button.active{color:var(--cyan);border-color:var(--line);background:rgba(103,215,255,.08)}
+.layer-navigator small{align-self:center;color:var(--muted);padding:0 5px;font-size:7px;letter-spacing:.08em}
+.floor-hint{bottom:128px}
+.floor-detail{z-index:30}
+.account-identity p{margin:4px 0}
+.account-identity .identity-separator{height:1px;background:rgba(103,215,255,.12);margin:8px 0}
+.hierarchy-summary{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.hierarchy-summary div{border:1px solid rgba(103,215,255,.12);background:rgba(255,255,255,.018);padding:7px}
+.hierarchy-summary span{display:block;color:var(--muted);font-size:8px}
+.hierarchy-summary b{font-size:11px;color:var(--text)}
+.child-roster{max-height:165px;overflow:auto;margin-top:8px;border-top:1px solid rgba(103,215,255,.12)}
+.child-row{display:grid;grid-template-columns:90px minmax(170px,1fr) 110px 110px 80px;gap:8px;padding:5px 4px;border-bottom:1px solid rgba(255,255,255,.045);font-size:8px;align-items:center}
+.child-row span{color:var(--muted)}
+.child-row b{font-size:9px}
+.parent-trail{color:var(--muted);font-size:8px;letter-spacing:.08em;margin:3px 0 8px}
+body.analytical-mode .layer-navigator{backdrop-filter:none}
+@media(max-width:1250px){.layer-navigator{left:12px;transform:none;right:12px;overflow:auto;justify-content:flex-start}.hierarchy-summary{grid-template-columns:repeat(3,1fr)}}
