@@ -9,7 +9,7 @@
 <body class="spatial-mode">
   <div class="scanlines" aria-hidden="true"></div>
   <header class="topbar">
-    <div class="brand"><span class="brand-mark">DD</span><div><b>DUSTY DRAGON</b><small>PC COMMAND CENTER / UI LAB v1.1</small></div></div>
+    <div class="brand"><span class="brand-mark">DD</span><div><b>DUSTY DRAGON</b><small>PC COMMAND CENTER / UI LAB v1.2</small></div></div>
     <div id="serviceStrip" class="service-strip"></div>
     <div class="top-actions"><span id="clock">--:--:--</span><button id="modeButton" class="ghost">F2 ANALYTICAL</button></div>
   </header>
@@ -33,10 +33,7 @@
           <div id="firmMetrics" class="metric-grid"></div>
           <div class="brief-ticker"><span class="ticker-label">FIRM WIRE</span><div class="ticker-viewport"><div id="firmTicker" class="ticker-track"></div></div></div>
         </article>
-        <article class="attention-card panel">
-          <header><span>TOP ATTENTION</span><span class="severity critical">1 CRITICAL</span></header>
-          <div id="incidentList"></div>
-        </article>
+        <article class="attention-card panel"><header><span>TOP ATTENTION</span><span class="severity critical">1 CRITICAL</span></header><div id="incidentList"></div></article>
       </div>
 
       <div class="command-grid">
@@ -45,15 +42,18 @@
           <article class="panel compact"><header>RESEARCH DELTA</header><div id="researchDelta"></div></article>
         </aside>
 
-        <section class="firm-stage panel" aria-label="spatial firm core">
-          <header><span id="stageTitle">FIRM CORE / GENERALIST SYSTEM</span><span id="focusLabel">ORBITAL VIEW</span></header>
+        <section class="firm-stage panel" aria-label="Trading Floor spatial hierarchy">
+          <header><span id="stageTitle">TRADING FLOOR</span><span id="focusLabel">FIRM / GENERALIST LAYER</span></header>
           <div class="space-grid" aria-hidden="true"></div>
-          <div id="coreScene" class="core-scene">
-            <div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="orbit orbit-c"></div>
-            <button id="coreNode" class="core-node firm-node" data-focus="FIRM"><span>DUSTY</span><strong>CORE</strong><small>OPERATIONAL</small></button>
-            <div id="deskNodes" class="orbital-system"></div>
+          <div id="tradingFloorViewport" class="trading-floor-viewport">
+            <canvas id="orbitalCanvas" aria-label="Interactive 3D Trading Floor"></canvas>
+            <div class="floor-hint">DRAG EMPTY SPACE TO ROTATE · CLICK ORBITING DESK TO DESCEND · CLICK CENTER FOR DETAILS</div>
+            <button id="backToFirm" class="back-to-firm ghost" hidden>← RETURN TO FIRM</button>
+            <div id="floorDetail" class="floor-detail" hidden>
+              <div class="detail-toolbar"><button id="closeDetail" class="ghost">← ORBITAL VIEW</button><span id="detailIdentity">FIRM</span></div>
+              <div id="detailContent" class="detail-content"></div>
+            </div>
           </div>
-          <button id="backToFirm" class="back-to-firm ghost" hidden>← RETURN TO FIRM</button>
           <div id="deskDossier" class="dossier"></div>
         </section>
 
@@ -65,63 +65,20 @@
       </div>
     </section>
 
-    <section id="trading" class="workspace">
-      <div class="trading-layout">
-        <article class="panel market-board"><header><span>SYMBOL MATRIX</span><span>LIVE MOCK</span></header><div id="watchlistTable"></div></article>
-        <article class="panel chart-panel"><header><span>MARKET / POSITION SUPERVISION</span><span id="chartSymbol">XAUUSD</span></header><div class="mock-chart"><svg viewBox="0 0 800 280" preserveAspectRatio="none"><polyline points="0,220 70,205 120,215 180,174 235,183 295,140 350,153 410,105 475,120 540,74 610,94 680,48 740,62 800,31"/><line x1="0" y1="160" x2="800" y2="160"/></svg><div class="chart-watermark">DUSTY MARKET VIEW · MOCK PRICE PATH</div></div></article>
-        <article class="panel decision-panel"><header>DECISION ANATOMY</header><div id="decisionFeed"></div></article>
-        <article class="panel positions-panel"><header>OPEN POSITIONS</header><div id="positionsTable"></div></article>
-        <article class="panel capacity-panel"><header>PORTFOLIO CAPACITY</header><div id="capacityStats"></div></article>
-      </div>
-    </section>
+    <section id="trading" class="workspace"><div class="trading-layout"><article class="panel market-board"><header><span>SYMBOL MATRIX</span><span>LIVE MOCK</span></header><div id="watchlistTable"></div></article><article class="panel chart-panel"><header><span>MARKET / POSITION SUPERVISION</span><span>XAUUSD</span></header><div class="mock-chart"><svg viewBox="0 0 800 280" preserveAspectRatio="none"><polyline points="0,220 70,205 120,215 180,174 235,183 295,140 350,153 410,105 475,120 540,74 610,94 680,48 740,62 800,31"/><line x1="0" y1="160" x2="800" y2="160"/></svg><div class="chart-watermark">DUSTY MARKET VIEW · MOCK PRICE PATH</div></div></article><article class="panel decision-panel"><header>DECISION ANATOMY</header><div id="decisionFeed"></div></article><article class="panel positions-panel"><header>OPEN POSITIONS</header><div id="positionsTable"></div></article></div></section>
 
-    <section id="risk" class="workspace">
-      <div class="risk-layout">
-        <article class="panel risk-map-panel"><header><span>PORTFOLIO RISK HEAT MAP</span><span>SIZE = RISK CONTRIBUTION · COLOR = FACTOR MOVE</span></header><div id="riskHeatmap" class="risk-heatmap"></div></article>
-        <article class="panel"><header>PORTFOLIO RISK</header><div id="riskStats"></div></article>
-        <article class="panel"><header>CORRELATION / CONCENTRATION</header><div id="correlationMatrix" class="correlation-grid"></div></article>
-        <article class="panel"><header>RISK GOVERNOR NOTES</header><div class="note-stack"><p><b>USD cluster:</b> elevated common-factor contribution. New correlated exposure restricted.</p><p><b>G04:</b> desk CAUTION state does not automatically imply portfolio HALT.</p><p><b>Capacity rejects:</b> preserved as valid desk signals for later governance-value analysis.</p></div></article>
-      </div>
-    </section>
+    <section id="risk" class="workspace"><div class="risk-layout"><article class="panel risk-map-panel"><header><span>PORTFOLIO RISK HEAT MAP</span><span>SIZE = RISK CONTRIBUTION · COLOR = FACTOR MOVE</span></header><div id="riskHeatmap" class="risk-heatmap"></div></article><article class="panel"><header>PORTFOLIO RISK</header><div id="riskStats"></div></article><article class="panel"><header>CORRELATION / CONCENTRATION</header><div id="correlationMatrix" class="correlation-grid"></div></article><article class="panel"><header>RISK GOVERNOR NOTES</header><div class="note-stack"><p><b>USD cluster:</b> elevated common-factor contribution. New correlated exposure restricted.</p><p><b>G04:</b> desk CAUTION state does not automatically imply portfolio HALT.</p><p><b>Capacity rejects:</b> preserved as valid desk signals for later governance-value analysis.</p></div></article></div></section>
 
-    <section id="performance" class="workspace">
-      <div class="performance-layout">
-        <article class="panel performance-stats"><header>FIRM PERFORMANCE ACCOUNTABILITY</header><div id="performanceStats" class="stats-grid"></div></article>
-        <article class="panel equity-panel"><header>GROWTH / EQUITY TRAJECTORY</header><div id="equityBars" class="equity-bars"></div></article>
-        <article class="panel attribution-panel"><header>DESK ATTRIBUTION</header><div id="deskAttribution"></div></article>
-        <article class="panel performance-notes"><header>QUALITY OF RETURN</header><div class="note-stack"><p>Profit is evaluated beside drawdown, expectancy, payoff, Sharpe/Sortino, recovery, and cost.</p><p>Firm totals are analytical aggregation only; desk capital remains financially isolated.</p><p>5% monthly portfolio growth is an objective, never a quota that authorizes extra risk.</p></div></article>
-      </div>
-    </section>
+    <section id="performance" class="workspace"><div class="performance-layout"><article class="panel performance-stats"><header>FIRM PERFORMANCE ACCOUNTABILITY</header><div id="performanceStats" class="stats-grid"></div></article><article class="panel equity-panel"><header>GROWTH / EQUITY TRAJECTORY</header><div id="equityBars" class="equity-bars"></div></article><article class="panel attribution-panel"><header>DESK ATTRIBUTION</header><div id="deskAttribution"></div></article><article class="panel performance-notes"><header>QUALITY OF RETURN</header><div class="note-stack"><p>Profit sits beside drawdown, expectancy, payoff, Sharpe/Sortino, recovery, and cost.</p><p>Firm totals are analytical aggregation only; desk capital remains financially isolated.</p><p>5% monthly portfolio growth is an objective, never a quota that authorizes extra risk.</p></div></article></div></section>
 
-    <section id="research" class="workspace">
-      <div class="research-layout">
-        <article class="panel research-queue"><header><span>RESEARCH OPERATIONS</span><span>6 ACTIVE</span></header><div id="researchQueue"></div></article>
-        <article class="panel evidence-panel"><header>INSTITUTIONAL EVIDENCE</header><div id="evidenceList"></div></article>
-        <article class="panel"><header>CONTRACTOR STATUS</header><div class="contractor-cards"><div><b>KRONOS</b><span>Forecast specialist</span><strong>DEGRADED / AVAILABLE</strong></div><div><b>VIBE</b><span>Quant research contractor</span><strong>HEALTHY</strong></div><div><b>MT5 TESTER</b><span>Broker-realistic validation</span><strong>HEALTHY</strong></div></div></article>
-        <article class="panel"><header>RESEARCH THROUGHPUT</header><div id="researchStats"></div></article>
-      </div>
-    </section>
+    <section id="research" class="workspace"><div class="research-layout"><article class="panel research-queue"><header><span>RESEARCH OPERATIONS</span><span>6 ACTIVE</span></header><div id="researchQueue"></div></article><article class="panel evidence-panel"><header>INSTITUTIONAL EVIDENCE</header><div id="evidenceList"></div></article><article class="panel"><header>CONTRACTOR STATUS</header><div class="contractor-cards"><div><b>KRONOS</b><span>Forecast specialist</span><strong>DEGRADED / AVAILABLE</strong></div><div><b>VIBE</b><span>Quant research contractor</span><strong>HEALTHY</strong></div><div><b>MT5 TESTER</b><span>Broker-realistic validation</span><strong>HEALTHY</strong></div></div></article><article class="panel"><header>RESEARCH THROUGHPUT</header><div id="researchStats"></div></article></div></section>
 
-    <section id="lab" class="workspace">
-      <div class="lab-layout">
-        <article class="panel evolution-panel"><header>LAYER 0 ADVERSARIAL LAB</header><div class="evolution-tree"><div class="evo-root">INCUMBENT</div><div class="evo-line"></div><div class="branches"><span>Candidate 17<br><b>HOLDOUT PASS</b></span><span>Candidate 23<br><b>REJECTED</b></span><span>Candidate 31<br><b>FORWARD TEST</b></span></div></div></article>
-        <article class="panel"><header>CHALLENGE SCOREBOARD</header><div id="challengeScore"></div></article>
-        <article class="panel"><header>COHORT PROOF</header><div class="cohort-grid"><span>COHORT A<br><b>4 / 4 PASS</b></span><span>COHORT B<br><b>TESTING</b></span><span>VALID PROOFS<br><b>4 / 6</b></span><span>CHALLENGE<br><b>DAY 11 / 30</b></span></div></article>
-      </div>
-    </section>
+    <section id="lab" class="workspace"><div class="lab-layout"><article class="panel evolution-panel"><header>LAYER 0 ADVERSARIAL LAB</header><div class="evolution-tree"><div class="evo-root">INCUMBENT</div><div class="evo-line"></div><div class="branches"><span>Candidate 17<br><b>HOLDOUT PASS</b></span><span>Candidate 23<br><b>REJECTED</b></span><span>Candidate 31<br><b>FORWARD TEST</b></span></div></div></article><article class="panel"><header>CHALLENGE SCOREBOARD</header><div id="challengeScore"></div></article><article class="panel"><header>COHORT PROOF</header><div class="cohort-grid"><span>COHORT A<br><b>4 / 4 PASS</b></span><span>COHORT B<br><b>TESTING</b></span><span>VALID PROOFS<br><b>4 / 6</b></span><span>CHALLENGE<br><b>DAY 11 / 30</b></span></div></article></div></section>
 
-    <section id="system" class="workspace">
-      <div class="system-layout">
-        <article class="panel system-table"><header><span>SYSTEM / INFRASTRUCTURE</span><span>RESOURCE GOVERNOR ACTIVE</span></header><div id="systemRows"></div></article>
-        <article class="panel"><header>RESOURCE LOAD</header><div class="resource-gauges"><div><label>CPU</label><meter min="0" max="100" value="44"></meter><b>44%</b></div><div><label>RAM</label><meter min="0" max="24000" value="7820"></meter><b>7.8 / 24 GB</b></div><div><label>DISK I/O</label><meter min="0" max="100" value="28"></meter><b>28%</b></div><div><label>GUI BUDGET</label><meter min="0" max="100" value="34"></meter><b>SPATIAL FULL</b></div></div></article>
-        <article class="panel audit-panel"><header>AUDIT TAIL</header><div id="auditRows"></div></article>
-        <article class="panel"><header>RENDER PRIORITY</header><div class="note-stack"><p>Spatial Full → Spatial Reduced → Animation Off → Analytical 2D.</p><p>GUI yields compute before risk, execution, evidence capture, reconciliation, or broker truth.</p><p>G06 is intentionally fault-latched to test degraded-state visibility.</p></div></article>
-      </div>
-    </section>
+    <section id="system" class="workspace"><div class="system-layout"><article class="panel system-table"><header><span>SYSTEM / INFRASTRUCTURE</span><span>RESOURCE GOVERNOR ACTIVE</span></header><div id="systemRows"></div></article><article class="panel"><header>RESOURCE LOAD</header><div class="resource-gauges"><div><label>CPU</label><meter min="0" max="100" value="44"></meter><b>44%</b></div><div><label>RAM</label><meter min="0" max="24000" value="7820"></meter><b>7.8 / 24 GB</b></div><div><label>DISK I/O</label><meter min="0" max="100" value="28"></meter><b>28%</b></div><div><label>GUI BUDGET</label><meter min="0" max="100" value="34"></meter><b>SPATIAL FULL</b></div></div></article><article class="panel audit-panel"><header>AUDIT TAIL</header><div id="auditRows"></div></article><article class="panel"><header>RENDER PRIORITY</header><div class="note-stack"><p>Spatial Full → Spatial Reduced → Animation Off → Analytical 2D.</p><p>GUI yields compute before risk, execution, evidence capture, reconciliation, or broker truth.</p></div></article></div></section>
   </main>
 
   <dialog id="commandDialog"><form method="dialog"><span class="eyebrow">UI LAB — NO BACKEND CALL</span><h2 id="dialogTitle"></h2><p id="dialogCopy"></p><div class="dialog-actions"><button value="cancel" class="ghost">CANCEL</button><button id="confirmCommand" value="confirm" class="danger">CONFIRM MOCK EVENT</button></div></form></dialog>
-
   <footer><span>CONTRACT v1 / MOCK TELEMETRY</span><span id="auditTail">Audit: prototype session initialized</span><span>F2 ANALYTICAL · F3 SPATIAL</span></footer>
   <script src="mock-data.js"></script>
   <script src="app.js"></script>
