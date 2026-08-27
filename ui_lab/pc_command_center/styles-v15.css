@@ -1,0 +1,25 @@
+@import url("styles-v13.css");
+
+/* v1.5 — larger Trading Floor and analytical hierarchy fallback */
+.trading-floor-viewport{min-height:535px}
+#orbitalCanvas{z-index:2}
+.hierarchy-tree-view{position:absolute;inset:0;z-index:5;padding:16px 18px 138px;overflow:auto;background:radial-gradient(circle at 50% 18%,rgba(18,48,61,.78),rgba(3,11,16,.96) 48%,rgba(2,7,10,.99));}
+.hierarchy-tree-view[hidden]{display:none!important}
+.tree-root{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:720px}
+.tree-core{border:1px solid rgba(103,215,255,.55);background:rgba(103,215,255,.08);box-shadow:0 0 22px rgba(103,215,255,.12);padding:10px 24px;text-align:center;min-width:190px}
+.tree-core b,.tree-layer-head b{display:block;font-size:11px;letter-spacing:.1em}.tree-core span,.tree-layer-head span{display:block;color:var(--muted);font-size:8px;margin-top:3px}
+.tree-trunk{width:1px;height:18px;background:rgba(103,215,255,.36)}
+.tree-layers{width:100%;display:grid;grid-template-columns:repeat(5,minmax(125px,1fr));gap:10px;align-items:start;position:relative}
+.tree-layers::before{content:"";position:absolute;left:10%;right:10%;top:-6px;height:1px;background:rgba(103,215,255,.28)}
+.tree-layer{border:1px solid rgba(103,215,255,.15);background:rgba(5,18,24,.72);min-width:0}
+.tree-layer-head{padding:9px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(103,215,255,.12)}
+.tree-layer-head:hover{background:rgba(103,215,255,.06)}
+.tree-children{padding:5px;display:flex;flex-direction:column;gap:4px}
+.tree-child{padding:6px 7px;border:1px solid rgba(255,255,255,.055);background:rgba(255,255,255,.018);cursor:pointer;font-size:8px;display:grid;grid-template-columns:42px 1fr;gap:6px;align-items:center}
+.tree-child:hover{border-color:rgba(103,215,255,.35);background:rgba(103,215,255,.04)}
+.tree-child b{font-size:8px;color:var(--cyan)}.tree-child span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.analytical-mode #orbitalCanvas,body.analytical-mode .floor-hint{display:none}
+body.analytical-mode .hierarchy-tree-view{display:block!important}
+body.spatial-mode .hierarchy-tree-view{display:none!important}
+body.analytical-mode .space-grid{opacity:.12}
+@media(max-width:1350px){.tree-layers{grid-template-columns:repeat(3,minmax(150px,1fr))}.tree-root{min-width:620px}}
