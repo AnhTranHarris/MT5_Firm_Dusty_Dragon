@@ -1,0 +1,27 @@
+@import url("styles-v16.css");
+
+/* v1.7 — true 3-axis cube rotation, no legacy return button */
+.back-to-firm{display:none!important}
+
+.cube-3d{animation:cubeSpatialRotate 18s linear infinite;will-change:transform}
+.spatial-nav-cube:hover .cube-3d{animation-duration:9s}
+
+@keyframes cubeSpatialRotate{
+  0%{transform:rotateX(-20deg) rotateY(0deg) rotateZ(0deg)}
+  25%{transform:rotateX(7deg) rotateY(90deg) rotateZ(3deg)}
+  50%{transform:rotateX(20deg) rotateY(180deg) rotateZ(0deg)}
+  75%{transform:rotateX(-5deg) rotateY(270deg) rotateZ(-3deg)}
+  100%{transform:rotateX(-20deg) rotateY(360deg) rotateZ(0deg)}
+}
+
+/* Keep navigation cubes visibly three-dimensional while preserving readability. */
+.spatial-nav-cube .cube-face.front{background:rgba(8,34,47,.52)}
+.spatial-nav-cube .cube-face.back{background:rgba(4,18,26,.34)}
+.spatial-nav-cube .cube-face.right,.spatial-nav-cube .cube-face.left{background:rgba(8,29,40,.38)}
+.spatial-nav-cube .cube-face.top,.spatial-nav-cube .cube-face.bottom{background:rgba(15,45,58,.32)}
+.spatial-nav-cube.demo-cube .cube-face.front{background:rgba(63,45,13,.34)}
+.spatial-nav-cube.demo-cube .cube-face.back{background:rgba(39,30,10,.24)}
+.spatial-nav-cube.demo-cube .cube-face.right,.spatial-nav-cube.demo-cube .cube-face.left{background:rgba(51,37,12,.28)}
+.spatial-nav-cube.demo-cube .cube-face.top,.spatial-nav-cube.demo-cube .cube-face.bottom{background:rgba(72,51,14,.24)}
+
+@media(prefers-reduced-motion:reduce){.cube-3d{animation:none;transform:rotateX(-18deg) rotateY(28deg) rotateZ(2deg)}}
