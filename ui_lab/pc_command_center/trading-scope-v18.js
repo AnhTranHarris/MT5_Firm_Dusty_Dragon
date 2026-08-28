@@ -200,4 +200,120 @@
   targetSelect.addEventListener("change",render);
   populateTargets();
   render();
+
+  /*
+   * COMMAND / TRADING FLOOR -> DESK MATRIX CONTEXT SYNC
+   * --------------------------------------------------
+   * Presentation-only behavior. It never mutates Trading Floor navigation,
+   * hierarchy state, desk authority, MT5 state, risk state, or backend data.
+   *
+   * Spatial/JARVIS mode: the matrix follows the last concrete layer entered in
+   * the Trading Floor. At firm overview there is no concrete desk layer, so the
+   * most recent layer remains visible; L1 Generalist is the deterministic boot
+   * default.
+   *
+   * Analytical/tree mode: pointer hover over a layer section (header OR child)
+   * temporarily previews that layer in the matrix. Leaving the section restores
+   * the persistent spatial layer. Event delegation is used so hierarchy-tree
+   * re-renders do not require listener re-binding and moving among children in
+   * the same layer does not flicker the matrix.
+   */
+  const matrix = document.querySelector("#deskMatrix");
+  const matrixPanel = matrix?.closest(".panel");
+  const matrixHeader = matrixPanel?.querySelector(":scope > header");
+  const focusLabel = document.querySelector("#focusLabel");
+  const hierarchyTree = document.querySelector("#hierarchyTree");
+  let persistentMatrixLayer = 1;
+  let renderedMatrixLayer = null;
+
+  function commandLayerChildren(layer) {
+    if (layer === 0) {
+      const layerMeta = hierarchy.layers.find(item => item.layer === 0);
+      const ids = new Set(layerMeta?.childIds || []);
+      return hierarchy.nodes.filter(node => ids.has(node.id));
+    }
+    if (layer === 1) return generalists;
+    return hierarchy.nodes.filter(node => node.layer === layer).slice(0, 6);
+  }
+
+  function matrixVisualState(desk) {
+    if (window.DUSTY_DESK_STATUS?.visualState) return window.DUSTY_DESK_STATUS.visualState(desk);
+    if (!desk?.provisioned || desk?.mt5Bound === false) return "UNPROVISIONED";
+    if (String(desk?.state || "").includes("FAULT")) return "FAULT";
+    if (desk?.state === "CAUTION") return "CAUTION";
+    if (desk?.state === "PARKED") return "PARKED";
+    return "NORMAL";
+  }
+
+  function matrixTile(desk) {
+    const state = matrixVisualState(desk);
+    const broker = desk.broker || "UNBOUND";
+    const account = desk.accountType || (state === "UNPROVISIONED" ? "NO MT5" : "MT5");
+    const mtd = Number(desk.mtd || 0);
+    const dd = Number(desk.dd || 0);
+    const pf = Number(desk.pf || 0);
+    const risk = Number(desk.risk || 0);
+    return `<div class="desk-tile visual-${state.toLowerCase()}" data-tree-desk="${desk.id}" title="Open ${desk.id} detail"><b>${desk.id}</b> <span class="state-${state}">● ${state === "UNPROVISIONED" ? "UNBOUND" : state}</span><small>${broker} · ${account}</small><div class="numbers"><span>MTD ${pct(mtd)}</span><span>DD ${dd.toFixed(2)}%</span><span>PF ${pf.toFixed(2)}</span><span>Risk ${risk.toFixed(2)}%</span></div></div>`;
+  }
+
+  function renderDeskMatrixLayer(layer, preview = false) {
+    if (!matrix || layer < 0 || layer > 4) return;
+    if (renderedMatrixLayer === layer && matrix.dataset.preview === String(preview)) return;
+    const desks = commandLayerChildren(layer);
+    matrix.innerHTML = desks.length
+      ? desks.map(matrixTile).join("")
+      : `<div class="empty-scope">No seeded desks in L${layer} ${layerName(layer)}.</div>`;
+    matrix.dataset.layer = String(layer);
+    matrix.dataset.preview = String(preview);
+    renderedMatrixLayer = layer;
+    if (matrixHeader) matrixHeader.textContent = `DESK MATRIX · ${preview ? "PREVIEW · " : ""}L${layer} ${layerName(layer).toUpperCase()}`;
+  }
+
+  function syncPersistentLayerFromFloor() {
+    const match = focusLabel?.textContent?.match(/^L([0-4])\s*\//i);
+    if (!match) return;
+    const next = Number(match[1]);
+    if (next === persistentMatrixLayer && renderedMatrixLayer === next && matrix?.dataset.preview !== "true") return;
+    persistentMatrixLayer = next;
+    if (!document.body.classList.contains("analytical-mode")) renderDeskMatrixLayer(next, false);
+  }
+
+  function layerFromTreeTarget(target) {
+    const section = target.closest?.(".tree-layer");
+    const head = section?.querySelector("[data-tree-layer]");
+    return head ? Number(head.dataset.treeLayer) : null;
+  }
+
+  if (matrix && focusLabel && hierarchyTree) {
+    renderDeskMatrixLayer(persistentMatrixLayer, false);
+    new MutationObserver(syncPersistentLayerFromFloor).observe(focusLabel, {childList:true, characterData:true, subtree:true});
+
+    hierarchyTree.addEventListener("pointerover", event => {
+      if (!document.body.classList.contains("analytical-mode")) return;
+      const layer = layerFromTreeTarget(event.target);
+      if (Number.isInteger(layer)) renderDeskMatrixLayer(layer, true);
+    });
+
+    hierarchyTree.addEventListener("pointerout", event => {
+      if (!document.body.classList.contains("analytical-mode")) return;
+      const fromSection = event.target.closest?.(".tree-layer");
+      if (!fromSection || fromSection.contains(event.relatedTarget)) return;
+      renderDeskMatrixLayer(persistentMatrixLayer, false);
+    });
+
+    const bodyClassObserver = new MutationObserver(() => {
+      if (!document.body.classList.contains("analytical-mode")) {
+        syncPersistentLayerFromFloor();
+        renderDeskMatrixLayer(persistentMatrixLayer, false);
+      }
+    });
+    bodyClassObserver.observe(document.body, {attributes:true, attributeFilter:["class"]});
+
+    document.addEventListener("dusty:desk-status-changed", () => {
+      const layer = Number(matrix.dataset.layer || persistentMatrixLayer);
+      const preview = matrix.dataset.preview === "true";
+      renderedMatrixLayer = null;
+      renderDeskMatrixLayer(layer, preview);
+    });
+  }
 })();
