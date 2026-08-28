@@ -8,6 +8,9 @@
  * - Panel content wraps/shrinks instead of forcing horizontal overflow.
  */
 
+body.system-workspace-active{overflow:hidden;padding-bottom:0}
+body.system-workspace-active main{overflow:hidden}
+
 #system.workspace.active{
   height:calc(100vh - 64px - 45px - 52px);
   min-height:430px;
@@ -34,8 +37,6 @@
   transition:min-height .16s ease,border-color .16s ease,background-color .16s ease;
 }
 
-/* Default desktop composition. The JS fit governor may collapse any panel while
- * preserving these spatial relationships. */
 #system .hardware-panel{grid-column:span 7}
 #system .capacity-panel{grid-column:span 5}
 #system .qualification-panel{grid-column:span 5}
@@ -46,25 +47,16 @@
 #system .audit-panel{grid-column:span 5}
 #system .render-priority-panel{grid-column:span 3}
 
-/* Dynamic/static child content must be allowed to shrink inside CSS Grid.
- * overflow-wrap:anywhere prevents long executable paths/server identifiers from
- * setting an accidental minimum column width. */
 #system .system-layout>.panel *,
 #system .terminal-row>*,
 #system .provisioning-row>*,
-#system .bootstrap-desk-row>*{
-  min-width:0;
-}
+#system .bootstrap-desk-row>*{min-width:0}
 #system .system-layout>.panel p,
 #system .system-layout>.panel small,
 #system .system-layout>.panel span,
 #system .system-layout>.panel strong,
-#system .system-layout>.panel b{
-  overflow-wrap:anywhere;
-}
+#system .system-layout>.panel b{overflow-wrap:anywhere}
 
-/* System panel collapse affordance. It is intentionally compact so collapsed
- * panels remain useful as an always-visible information index. */
 #system .system-collapse-toggle{
   flex:0 0 auto;
   width:24px;
@@ -104,8 +96,6 @@
 #system .system-layout>.panel.system-collapsed .capacity-head>:not(:first-child):not(.system-collapse-toggle){display:none!important}
 #system .system-layout>.panel.system-collapsed .system-collapse-toggle{transform:rotate(-90deg)}
 
-/* Added only to the System workspace so the user can explicitly ask the layout
- * governor to refit after manual expansion/collapse. */
 #system .system-view-tools{
   position:absolute;
   right:14px;
@@ -115,14 +105,8 @@
   gap:5px;
   pointer-events:auto;
 }
-#system .system-view-tools button{
-  padding:5px 7px;
-  font-size:7px;
-  background:rgba(4,13,18,.92);
-}
+#system .system-view-tools button{padding:5px 7px;font-size:7px;background:rgba(4,13,18,.92)}
 
-/* Compact responsive states. We reduce visual density before allowing layout
- * overflow; automatic panel collapse handles the remaining height constraint. */
 @media(max-width:1500px){
   #system .hardware-panel,#system .terminal-manager,#system .provisioning-panel{grid-column:span 8}
   #system .capacity-panel,#system .qualification-panel,#system .system-table{grid-column:span 4}
