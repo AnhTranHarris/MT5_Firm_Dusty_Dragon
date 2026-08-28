@@ -48,8 +48,9 @@
    * Performance UI is intentionally isolated from the trading/runtime core.
    * Native Windows handoff: preserve this read-model/view-state boundary; a UI
    * scope or timeframe selector must never mutate broker, risk, execution,
-   * terminal, or ledger state. Spatial profiles use the animated timeframe
-   * slider; global NO MOTION/HIGH CONTRAST swaps to static buttons below chart.
+   * terminal, ledger, benchmark, or return-objective policy state. Spatial
+   * profiles use the animated timeframe slider; global NO MOTION/HIGH CONTRAST
+   * swaps to static buttons below the chart.
    */
   window.addEventListener("DOMContentLoaded", () => {
     const style = document.createElement("link");
@@ -59,14 +60,14 @@
 
     const timeframeStyle = document.createElement("link");
     timeframeStyle.rel = "stylesheet";
-    timeframeStyle.href = "performance-timeframe-v33.css";
+    timeframeStyle.href = "performance-timeframe-v34.css";
     document.head.append(timeframeStyle);
 
     const script = document.createElement("script");
     script.src = "performance-dashboard-v30.js";
     script.onload = () => {
       const timeframeScript = document.createElement("script");
-      timeframeScript.src = "performance-timeframe-v33.js";
+      timeframeScript.src = "performance-timeframe-v34.js";
       timeframeScript.defer = true;
       document.body.append(timeframeScript);
     };
