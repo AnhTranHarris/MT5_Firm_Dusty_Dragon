@@ -18,6 +18,8 @@ concurrency:
   group: "ui-lab-pages"
   cancel-in-progress: true
 
+# UI Lab preview only. A small workflow-file change can intentionally retrigger
+# deployment after the repository Pages source is first set to GitHub Actions.
 jobs:
   build:
     runs-on: ubuntu-latest
