@@ -1,39 +1,21 @@
 (() => {
   "use strict";
 
-  /*
-   * UI-lab animation governor.
-   *
-   * The Trading Floor renderer uses requestAnimationFrame continuously. That is
-   * appropriate while the spatial surface is visible, but it should not spend a
-   * full 60 FPS budget when the user is on another workspace, in Analytical
-   * mode, looking at a detail overlay, or when the document is backgrounded.
-   *
-   * This wrapper preserves requestAnimationFrame semantics for the prototype
-   * while adapting cadence to actual UX need. CSS animations remain native.
-   */
+  /* UI-lab animation governor. Keep canvas cadence proportional to UX need. */
   const nativeRequest = window.requestAnimationFrame.bind(window);
   const nativeCancel = window.cancelAnimationFrame.bind(window);
   const scheduled = new Map();
   let nextId = 1;
 
   function targetFrameMs() {
-    if (document.hidden) return 1000; // effectively asleep in background tabs
-
+    if (document.hidden) return 1000;
     const command = document.querySelector("#command");
-    const commandActive = Boolean(command?.classList.contains("active"));
-    if (!commandActive) return 250; // renderer stays alive but nearly idle
-
+    if (!command?.classList.contains("active")) return 250;
     if (document.body.classList.contains("analytical-mode")) return 250;
-
     const detail = document.querySelector("#floorDetail");
     if (detail && !detail.hidden) return 100;
-
     const viewport = document.querySelector("#tradingFloorViewport");
     if (viewport?.classList.contains("dragging")) return 1000 / 60;
-
-    // Slow orbital motion does not need 60 FPS. 30 FPS is visually continuous
-    // here and roughly halves canvas draw pressure on ordinary hardware.
     return 1000 / 30;
   }
 
@@ -41,11 +23,9 @@
     const id = nextId++;
     let nativeId = 0;
     let lastDelivery = performance.now();
-
     const pump = now => {
       if (!scheduled.has(id)) return;
-      const interval = targetFrameMs();
-      if (now - lastDelivery >= interval) {
+      if (now - lastDelivery >= targetFrameMs()) {
         scheduled.delete(id);
         callback(now);
         return;
@@ -53,7 +33,6 @@
       nativeId = nativeRequest(pump);
       scheduled.set(id, nativeId);
     };
-
     nativeId = nativeRequest(pump);
     scheduled.set(id, nativeId);
     return id;
@@ -64,4 +43,23 @@
     if (nativeId !== undefined) nativeCancel(nativeId);
     scheduled.delete(id);
   };
+
+  /*
+   * Performance UI v3 is intentionally isolated from the trading/runtime core.
+   * It is presentation-only progressive disclosure: Investor -> Quant and
+   * Firm -> Portfolio/Layer -> Desk. Loading after DOMContentLoaded guarantees
+   * mock-data, hierarchy and the base app have initialized before replacement.
+   * Native Windows handoff: keep this view-model boundary; never let a UI scope
+   * selector mutate broker, risk, execution, or ledger state.
+   */
+  window.addEventListener("DOMContentLoaded", () => {
+    const style = document.createElement("link");
+    style.rel = "stylesheet";
+    style.href = "performance-dashboard-v30.css";
+    document.head.append(style);
+    const script = document.createElement("script");
+    script.src = "performance-dashboard-v30.js";
+    script.defer = true;
+    document.body.append(script);
+  }, {once:true});
 })();
