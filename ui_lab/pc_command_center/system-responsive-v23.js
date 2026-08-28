@@ -6,46 +6,46 @@
   if (!system || !layout) return;
 
   /*
-   * SYSTEM VIEWPORT GOVERNOR — UI LAB
-   * ---------------------------------
-   * The System workspace is intentionally treated as a fixed cockpit surface.
-   * We do not solve viewport pressure by introducing page scrollbars. Instead:
-   *   1. content is allowed to wrap/shrink horizontally;
-   *   2. every System panel receives a persistent collapse control;
-   *   3. lower-priority panels collapse automatically if the current window
-   *      cannot display the expanded composition;
-   *   4. a manual expansion is honored, then the lowest-priority *other* panel
-   *      is collapsed if necessary to keep the workspace inside the viewport.
+   * SYSTEM VIEWPORT + RENDER GOVERNOR — UI LAB
+   * ------------------------------------------
+   * The System workspace is a fixed cockpit surface. Presentation pressure is
+   * solved by wrapping, responsive reflow, and panel collapse — never page-level
+   * scrolling. Collapse is presentation state only and must never change MT5,
+   * execution, risk, reconciliation, or telemetry behavior.
    *
-   * Browser implementation references retained for production translation:
-   * - Grid/flex items can retain a min-content automatic minimum; explicit
-   *   min-width:0 and minmax(0,1fr) prevent long paths/labels from widening the
-   *   cockpit beyond its container:
-   *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/min-width
-   *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/minmax
-   * - ResizeObserver is the supported element-size observation mechanism used
-   *   here to refit after window/container changes without polling:
-   *   https://developer.mozilla.org/en-US/docs/Web/API/Resize_Observer_API
+   * Accessibility / Windows references retained for the native-app handoff:
+   * - Windows contrast themes:
+   *   https://learn.microsoft.com/en-us/windows/apps/design/accessibility/high-contrast-themes
+   * - Web forced-colors detection used by this prototype:
+   *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/forced-colors
+   * - User contrast preference:
+   *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-contrast
    *
-   * Future native Windows app translation:
-   * preserve the same policy in the view-model/layout layer. Do not make the
-   * backend change sampling, MT5, execution, or risk behavior because a panel
-   * became collapsed. Collapse is presentation state only.
+   * Production Windows app: detect the user's contrast theme through the native
+   * framework/System.ThemeSettings (or Win32 HIGHCONTRAST for a Win32 host), use
+   * system/theme resources rather than hard-coded colors, and treat accessibility
+   * preference as stronger than cosmetic rendering preference.
    */
 
   const PANEL_META = [
-    ["capacity-panel", 100, "COMPUTE CAPACITY GOVERNOR"],
+    ["capacity-panel", 100, "TRADING CAPACITY"],
     ["terminal-manager", 95, "MT5 TERMINAL MANAGER"],
     ["qualification-panel", 90, "LAYER 0 · PROGRESSIVE BOOTSTRAP"],
     ["hardware-panel", 85, "PC HARDWARE SNAPSHOT"],
     ["system-table", 80, "SYSTEM / INFRASTRUCTURE"],
-    ["resource-load-panel", 70, "RESOURCE LOAD"],
+    ["resource-load-panel", 75, "RESOURCE LOAD"],
+    ["render-priority-panel", 72, "DISPLAY GOVERNOR"],
     ["provisioning-panel", 65, "DESK PROVISIONING / CAPACITY STATE"],
-    ["audit-panel", 40, "AUDIT TAIL"],
-    ["render-priority-panel", 30, "RENDER PRIORITY"]
+    ["audit-panel", 40, "AUDIT TAIL"]
   ];
 
+  /* Initial cockpit: keep operationally critical/system-context panels open and
+   * collapse detailed workflow/history panels. FIT VIEW may collapse more on a
+   * smaller window, but it will preserve higher-priority panels first. */
+  const DEFAULT_COLLAPSED = new Set(["provisioning-panel", "audit-panel"]);
+
   let decorated = false;
+  let initialStateApplied = false;
   let fitting = false;
   let fitTimer = 0;
 
@@ -57,7 +57,7 @@
     layout.querySelectorAll(":scope > .panel").forEach(panel => {
       const headerText = directHeader(panel)?.textContent?.toUpperCase() || "";
       if (headerText.includes("RESOURCE LOAD")) panel.classList.add("resource-load-panel");
-      if (headerText.includes("RENDER PRIORITY")) panel.classList.add("render-priority-panel");
+      if (headerText.includes("RENDER PRIORITY") || headerText.includes("DISPLAY GOVERNOR")) panel.classList.add("render-priority-panel");
     });
   }
 
@@ -97,11 +97,8 @@
     toggle.setAttribute("aria-label", `Collapse ${meta.title}`);
     toggle.setAttribute("aria-expanded", "true");
     toggle.textContent = "⌄";
-
-    /* Capacity mode buttons live in the same header. Appending the collapse
-     * control rather than making the whole header clickable avoids accidental
-     * collapse when the operator changes AUTO/MANUAL. */
     header.append(toggle);
+
     toggle.addEventListener("click", event => {
       event.preventDefault();
       event.stopPropagation();
@@ -111,10 +108,92 @@
     });
   }
 
+  function applyInitialPanelState() {
+    if (initialStateApplied) return;
+    layout.querySelectorAll(":scope > .panel").forEach(panel => {
+      const shouldCollapse = [...DEFAULT_COLLAPSED].some(className => panel.classList.contains(className));
+      setCollapsed(panel, shouldCollapse, shouldCollapse ? "startup" : "");
+    });
+    initialStateApplied = true;
+  }
+
   function decorateAll() {
     classifyStaticPanels();
     layout.querySelectorAll(":scope > .panel").forEach(decoratePanel);
     decorated = true;
+  }
+
+  function buildRenderGovernor() {
+    classifyStaticPanels();
+    const panel = layout.querySelector(".render-priority-panel");
+    if (!panel || panel.dataset.renderGovernor === "true") return;
+    panel.dataset.renderGovernor = "true";
+    panel.innerHTML = `
+      <header><span>DISPLAY GOVERNOR</span><span id="renderProfileState">AUTO · SPATIAL FULL</span></header>
+      <div class="render-governor-body">
+        <div class="render-mode-switch" role="group" aria-label="Display governor mode">
+          <button type="button" data-render-mode="auto" class="active">AUTO</button>
+          <button type="button" data-render-mode="manual">MANUAL</button>
+        </div>
+        <label class="render-profile-label">DISPLAY PROFILE
+          <select id="renderProfile" disabled>
+            <option value="spatial-full">SPATIAL FULL</option>
+            <option value="spatial-reduced">SPATIAL REDUCED</option>
+            <option value="analytical">ANALYTICAL 2D</option>
+            <option value="high-contrast">HIGH CONTRAST · NO MOTION</option>
+          </select>
+        </label>
+        <div class="render-signals">
+          <span>WINDOWS CONTRAST <b id="renderContrastSignal">NORMAL</b></span>
+          <span>REDUCED MOTION <b id="renderMotionSignal">NO</b></span>
+          <span>GUI POLICY <b id="renderPolicySignal">FULL EFFECTS</b></span>
+        </div>
+        <p id="renderGovernorNote">AUTO preserves accessibility first, then reduces cosmetic rendering before trading-critical compute.</p>
+      </div>`;
+
+    let mode = "auto";
+    let manualProfile = "spatial-full";
+    const forced = matchMedia("(forced-colors: active)");
+    const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+    const contrastMore = matchMedia("(prefers-contrast: more)");
+    const select = panel.querySelector("#renderProfile");
+    const buttons = [...panel.querySelectorAll("[data-render-mode]")];
+
+    function autoProfile() {
+      if (forced.matches) return "high-contrast";
+      if (reduced.matches) return "analytical";
+      if (window.innerWidth < 1000 || window.innerHeight < 650) return "spatial-reduced";
+      return "spatial-full";
+    }
+
+    function applyProfile(profile) {
+      document.body.classList.toggle("render-spatial-reduced", profile === "spatial-reduced");
+      document.body.classList.toggle("render-analytical-lite", profile === "analytical");
+      document.body.classList.toggle("render-high-contrast", profile === "high-contrast");
+      document.body.classList.toggle("render-no-motion", profile === "analytical" || profile === "high-contrast");
+      panel.querySelector("#renderProfileState").textContent = `${mode.toUpperCase()} · ${profile.replaceAll("-", " ").toUpperCase()}`;
+      panel.querySelector("#renderPolicySignal").textContent = profile === "spatial-full" ? "FULL EFFECTS" : profile === "spatial-reduced" ? "REDUCED EFFECTS" : profile === "analytical" ? "2D / NO MOTION" : "SYSTEM CONTRAST";
+      select.value = profile;
+    }
+
+    function render() {
+      panel.querySelector("#renderContrastSignal").textContent = forced.matches || contrastMore.matches ? "HIGH" : "NORMAL";
+      panel.querySelector("#renderMotionSignal").textContent = reduced.matches ? "YES" : "NO";
+      select.disabled = mode === "auto";
+      buttons.forEach(button => button.classList.toggle("active", button.dataset.renderMode === mode));
+      const profile = mode === "auto" ? autoProfile() : manualProfile;
+      applyProfile(profile);
+      panel.querySelector("#renderGovernorNote").innerHTML = mode === "auto"
+        ? `<b>AUTO:</b> Windows accessibility preferences win first. If forced colors are active, Dusty uses the user's system palette and stops decorative motion. Otherwise cosmetic load steps down before risk/execution resources.`
+        : `<b>MANUAL:</b> choose a presentation profile directly. This changes UI presentation only; it never changes desk capacity, trading authority, or risk controls.`;
+      scheduleFit(panel);
+    }
+
+    buttons.forEach(button => button.addEventListener("click", () => { mode = button.dataset.renderMode; render(); }));
+    select.addEventListener("change", () => { manualProfile = select.value; render(); });
+    [forced, reduced, contrastMore].forEach(query => query.addEventListener?.("change", render));
+    window.addEventListener("resize", render);
+    render();
   }
 
   function syncWorkspaceBodyState() {
@@ -141,20 +220,10 @@
     fitting = true;
     try {
       if (!decorated) decorateAll();
-
-      /* Browser layout is synchronous after class changes when queried through
-       * getBoundingClientRect(), so this bounded loop needs no animation frame. */
       const candidates = expandedPanels(preferredPanel);
       let guard = candidates.length + 2;
-      while (overflows() && candidates.length && guard-- > 0) {
-        setCollapsed(candidates.shift(), true, "auto-fit");
-      }
-
-      /* If the preferred panel alone still cannot fit, collapse it last rather
-       * than allowing inaccessible off-screen content. Its header stays visible. */
-      if (overflows() && preferredPanel && !preferredPanel.classList.contains("system-collapsed")) {
-        setCollapsed(preferredPanel, true, "auto-fit");
-      }
+      while (overflows() && candidates.length && guard-- > 0) setCollapsed(candidates.shift(), true, "auto-fit");
+      if (overflows() && preferredPanel && !preferredPanel.classList.contains("system-collapsed")) setCollapsed(preferredPanel, true, "auto-fit");
     } finally {
       fitting = false;
     }
@@ -185,17 +254,19 @@
     tools.querySelector("[data-system-collapse]").addEventListener("click", collapseAll);
   }
 
-  /* v21/v22 currently execute before this module, but the observer protects the
-   * lab if their load order changes during future experiments. */
   const observer = new MutationObserver(() => {
     decorateAll();
+    buildRenderGovernor();
+    if (!initialStateApplied) applyInitialPanelState();
     scheduleFit();
     if (layout.querySelectorAll(":scope > .panel").length >= 9) observer.disconnect();
   });
   observer.observe(layout, {childList:true});
 
+  buildRenderGovernor();
   addViewTools();
   decorateAll();
+  applyInitialPanelState();
   syncWorkspaceBodyState();
 
   const resizeObserver = new ResizeObserver(() => scheduleFit());
@@ -212,6 +283,5 @@
   });
   window.addEventListener("resize", () => scheduleFit());
 
-  /* Expose presentation controls only; no trading or infrastructure authority. */
   window.DUSTY_SYSTEM_VIEW = Object.freeze({fit: () => scheduleFit(), collapseAll, expandAll: expandAllAndFit});
 })();
