@@ -1,0 +1,36 @@
+@import url("styles-v17.css");
+
+/* v1.8 — make spatial navigation read as real Y-axis cube rotation. */
+.cube-label{display:none}
+.cube-3d{
+  animation:cubeYOrbit 18s linear infinite;
+  transform-style:preserve-3d;
+  will-change:transform;
+}
+.spatial-nav-cube:hover .cube-3d{animation-duration:9s}
+
+.cube-face::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font:700 7px/1 "Segoe UI",sans-serif;
+  letter-spacing:.08em;
+  text-shadow:0 0 8px #020608;
+  backface-visibility:hidden;
+}
+.home-cube .cube-face::after{content:"CORE";color:var(--cyan)}
+.demo-cube .cube-face::after{content:"DEMO";color:var(--amber)}
+
+@keyframes cubeYOrbit{
+  0%{transform:rotateX(-18deg) rotateY(0deg)}
+  25%{transform:rotateX(-14deg) rotateY(90deg)}
+  50%{transform:rotateX(-18deg) rotateY(180deg)}
+  75%{transform:rotateX(-22deg) rotateY(270deg)}
+  100%{transform:rotateX(-18deg) rotateY(360deg)}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .cube-3d{animation:none;transform:rotateX(-18deg) rotateY(32deg)}
+}
