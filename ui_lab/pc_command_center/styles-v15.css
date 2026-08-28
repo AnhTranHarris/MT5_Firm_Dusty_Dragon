@@ -6,8 +6,10 @@
 .hierarchy-tree-view{position:absolute;inset:0;z-index:5;padding:16px 18px 138px;overflow:auto;background:radial-gradient(circle at 50% 18%,rgba(18,48,61,.78),rgba(3,11,16,.96) 48%,rgba(2,7,10,.99));}
 .hierarchy-tree-view[hidden]{display:none!important}
 .tree-root{display:flex;flex-direction:column;align-items:center;gap:12px;min-width:720px}
-.tree-core{border:1px solid rgba(103,215,255,.55);background:rgba(103,215,255,.08);box-shadow:0 0 22px rgba(103,215,255,.12);padding:10px 24px;text-align:center;min-width:190px}
+.tree-core{border:1px solid rgba(101,242,176,.62);background:rgba(101,242,176,.07);box-shadow:0 0 22px rgba(101,242,176,.10);padding:10px 24px;text-align:center;min-width:190px}
 .tree-core b,.tree-layer-head b{display:block;font-size:11px;letter-spacing:.1em}.tree-core span,.tree-layer-head span{display:block;color:var(--muted);font-size:8px;margin-top:3px}
+.tree-core em,.tree-layer-head em,.tree-child em{font-style:normal;font-size:7px;letter-spacing:.08em;font-weight:700}
+.tree-core em,.tree-layer-head em{display:block;margin-top:5px}
 .tree-trunk{width:1px;height:18px;background:rgba(103,215,255,.36)}
 .tree-layers{width:100%;display:grid;grid-template-columns:repeat(5,minmax(125px,1fr));gap:10px;align-items:start;position:relative}
 .tree-layers::before{content:"";position:absolute;left:10%;right:10%;top:-6px;height:1px;background:rgba(103,215,255,.28)}
@@ -15,9 +17,22 @@
 .tree-layer-head{padding:9px;text-align:center;cursor:pointer;border-bottom:1px solid rgba(103,215,255,.12)}
 .tree-layer-head:hover{background:rgba(103,215,255,.06)}
 .tree-children{padding:5px;display:flex;flex-direction:column;gap:4px}
-.tree-child{padding:6px 7px;border:1px solid rgba(255,255,255,.055);background:rgba(255,255,255,.018);cursor:pointer;font-size:8px;display:grid;grid-template-columns:42px 1fr;gap:6px;align-items:center}
-.tree-child:hover{border-color:rgba(103,215,255,.35);background:rgba(103,215,255,.04)}
-.tree-child b{font-size:8px;color:var(--cyan)}.tree-child span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tree-child{padding:6px 7px;border:1px solid rgba(255,255,255,.055);background:rgba(255,255,255,.018);cursor:pointer;font-size:8px;display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:6px;align-items:center}
+.tree-child:hover{filter:brightness(1.12)}
+.tree-child b{font-size:8px}.tree-child span{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Trading Floor lifecycle palette. The analytical tree intentionally mirrors the
+ * spatial-orb semantics so switching F2/F3 changes representation, not meaning. */
+.visual-normal{--life:#65f2b0;--life-bg:rgba(101,242,176,.065);--life-line:rgba(101,242,176,.42)}
+.visual-caution{--life:#ffc568;--life-bg:rgba(255,197,104,.065);--life-line:rgba(255,197,104,.45)}
+.visual-fault{--life:#ff6175;--life-bg:rgba(255,97,117,.070);--life-line:rgba(255,97,117,.48)}
+.visual-parked{--life:#71a8ff;--life-bg:rgba(113,168,255,.065);--life-line:rgba(113,168,255,.44)}
+.visual-unprovisioned{--life:#8a949a;--life-bg:rgba(138,148,154,.045);--life-line:rgba(138,148,154,.28)}
+.tree-core[class*="visual-"],.tree-layer[class*="visual-"],.tree-child[class*="visual-"]{border-color:var(--life-line);background-color:var(--life-bg)}
+.tree-core[class*="visual-"] em,.tree-layer[class*="visual-"] .tree-layer-head em,.tree-child[class*="visual-"] b,.tree-child[class*="visual-"] em{color:var(--life)}
+.tree-child.visual-unprovisioned{opacity:.68}
+.tree-child.visual-unprovisioned span{color:#7d878c}
+
 body.analytical-mode #orbitalCanvas,body.analytical-mode .floor-hint{display:none}
 body.analytical-mode .hierarchy-tree-view{display:block!important}
 body.spatial-mode .hierarchy-tree-view{display:none!important}
