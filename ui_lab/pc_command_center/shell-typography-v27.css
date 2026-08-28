@@ -1,0 +1,36 @@
+/* Dusty Dragon UI Lab v2.7 — command-shell typography refinement.
+   Increase the maximized-window shell text by ~15% while preserving the compact
+   48px cockpit header. Horizontal padding is trimmed fractionally so the larger
+   labels consume width rather than forcing a taller shell or a second row. */
+
+.app-shell-header .brand-mark{
+  font-size:9.2px;
+}
+
+.app-shell-header .brand b{
+  font-size:11.5px;
+  line-height:1;
+}
+
+.app-shell-header .workspace-nav button{
+  font-size:8.05px;
+  line-height:1;
+  padding-inline:6.5px;
+}
+
+.app-shell-header .service-pill{
+  font-size:8.05px;
+  line-height:1;
+}
+
+.app-shell-header .top-actions{
+  font-size:9.2px;
+  line-height:1;
+}
+
+/* The narrow-monitor two-row shell keeps the same proportional readability gain
+   without changing its established responsive height. */
+@media(max-width:1450px){
+  .app-shell-header .brand small{font-size:8.05px}
+  .app-shell-header .workspace-nav button{padding-inline:6px}
+}
