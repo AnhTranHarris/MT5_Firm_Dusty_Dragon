@@ -17,15 +17,13 @@ on:
 # - GitHub Pages deploy-pages requires pages:write + id-token:write, a Pages
 #   artifact, and the github-pages environment.
 # - Environment deployment rules may restrict which GITHUB_REF may deploy.
-#   Keeping the deployment workflow on main satisfies a main/protected-branch
-#   policy without merging experimental UI work into production.
-# - actions/checkout can explicitly read the UI branch while the deployment
-#   authority remains attached to this main-branch workflow run.
+# - actions/checkout explicitly reads dev/ui-lab-v1 while deployment authority
+#   remains attached to this protected main-branch workflow.
 #
-# References retained for Windows-app handoff / future maintainers:
+# Preview checkpoint: Performance UI v3 progressive disclosure.
+# References:
 # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 # https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
-# https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
 
 permissions:
   contents: read
@@ -53,6 +51,8 @@ jobs:
         run: |
           set -euo pipefail
           test -f ui_lab/pc_command_center/index.html
+          test -f ui_lab/pc_command_center/performance-dashboard-v30.js
+          test -f ui_lab/pc_command_center/performance-dashboard-v30.css
           rm -rf _site
           mkdir -p _site
           cp -a ui_lab/pc_command_center/. _site/
