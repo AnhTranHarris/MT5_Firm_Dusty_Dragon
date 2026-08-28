@@ -2,20 +2,31 @@
   "use strict";
 
   /*
-   * PERFORMANCE TIMEFRAME v3.2 — fiscal-calendar investor reporting.
-   * ----------------------------------------------------------------
+   * PERFORMANCE TIMEFRAME v3.3 — federal-fiscal-calendar investor reporting.
+   * ------------------------------------------------------------------------
    * Presentation-only UI-Lab behavior. Bars represent realized firm results and
    * MUST NEVER render to the right of the authoritative "as-of" date. The target
    * line may continue through the complete selected fiscal reporting horizon.
    *
-   * MOCK ASSUMPTION:
-   * - Dusty Dragon fiscal year currently follows Jan 1 -> Dec 31.
+   * MOCK POLICY:
+   * - Dusty Dragon uses the U.S. FEDERAL FISCAL YEAR convention for management
+   *   reporting: October 1 -> September 30, with FY named for its ending year.
+   *   Example: FY2026 = Oct 1, 2025 through Sep 30, 2026.
+   * - This is a Dusty Dragon management/reporting policy for the UI Lab. IRS rules
+   *   do NOT impose one universal fiscal year on every U.S. business; production
+   *   tax/accounting configuration must follow the legal entity's adopted tax year.
    * - The browser's local calendar date is used as the UI-Lab "today" marker.
    * - Longer-horizon realized values are deterministic mock history until Dusty
    *   Core exposes authoritative fiscal-period performance read models.
    *
-   * WINDOWS / PRODUCTION HANDOFF:
-   * - Move fiscal-year start month/day and reporting timezone into firm policy.
+   * REFERENCES / PRODUCTION HANDOFF:
+   * - U.S. federal fiscal year: Oct 1 through Sep 30.
+   *   https://www.usa.gov/federal-budget-process
+   * - IRS tax years: businesses may use a calendar year or an eligible fiscal year;
+   *   a fiscal tax year generally ends on the last day of a month other than Dec.
+   *   https://www.irs.gov/businesses/small-businesses-self-employed/tax-years
+   * - Move fiscal-year start month/day, FY naming convention and reporting timezone
+   *   into firm policy / authoritative backend configuration.
    * - Dusty Core must calculate authoritative fiscal boundaries and return an
    *   immutable {period_start, period_end, as_of, actual[], target[]} read model.
    * - The UI must not derive ledger truth, fill missing future actuals, interpolate
@@ -30,14 +41,13 @@
   const data = window.DUSTY_MOCK;
   if (!root || !data) return;
 
-  const FISCAL_START_MONTH = 0; // January in UI Lab. Future: firm-policy field.
+  const FISCAL_START_MONTH = 9; // October (0-based). FY is named for ending year.
   const MONTHLY_TARGET = Number(data.firm?.monthlyTargetPct || 5);
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
   const dayMs = 86400000;
-  const addDays = (d, days) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
   const endOfMonth = d => new Date(d.getFullYear(), d.getMonth() + 1, 0);
   const fmtDate = d => d.toLocaleDateString(undefined, {month:"short", day:"numeric", year:"numeric"}).toUpperCase();
   const fmtShort = d => d.toLocaleDateString(undefined, {month:"short", day:"numeric"}).toUpperCase();
@@ -51,13 +61,21 @@
     return new Date(start.getFullYear() + 1, FISCAL_START_MONTH, 0);
   }
 
+  function fiscalYearNumber(start) {
+    return fiscalYearEnd(start).getFullYear();
+  }
+
+  function fiscalYearForDate(date) {
+    return date.getMonth() >= FISCAL_START_MONTH ? date.getFullYear() + 1 : date.getFullYear();
+  }
+
   function currentQuarterBounds(date) {
     const fyStart = fiscalYearStart(date);
     const fiscalMonthIndex = (date.getFullYear() - fyStart.getFullYear()) * 12 + date.getMonth() - fyStart.getMonth();
     const qIndex = Math.floor(fiscalMonthIndex / 3);
     const start = new Date(fyStart.getFullYear(), fyStart.getMonth() + qIndex * 3, 1);
     const end = new Date(fyStart.getFullYear(), fyStart.getMonth() + qIndex * 3 + 3, 0);
-    return {start, end, q: qIndex + 1};
+    return {start, end, q: qIndex + 1, fy: fiscalYearNumber(fyStart)};
   }
 
   function elapsedFraction(start, end, asOf = today) {
@@ -83,11 +101,11 @@
       const day = 1 + Math.round((elapsedDays - 1) * i / Math.max(1, count - 1));
       return {date:new Date(today.getFullYear(), today.getMonth(), day), value};
     });
-    return {id:"month",label:"MONTHLY",short:"1M",start,end,target:MONTHLY_TARGET,actual:points,note:"CURRENT FISCAL MONTH"};
+    return {id:"month",label:"MONTHLY",short:"1M",start,end,target:MONTHLY_TARGET,actual:points,note:`FY${fiscalYearForDate(today)} · CURRENT FISCAL MONTH`};
   }
 
   function quarterConfig() {
-    const {start,end,q} = currentQuarterBounds(today);
+    const {start,end,q,fy} = currentQuarterBounds(today);
     const elapsedWeeks = Math.max(2, Math.ceil((today - start) / (7 * dayMs)) + 1);
     const count = Math.min(12, elapsedWeeks);
     const quarterReturn = Number(data.firm?.pnlMonthPct || 0) + Number(data.firm?.pnlWeekPct || 0) * 2.55;
@@ -96,12 +114,13 @@
       const fraction = i / Math.max(1, count - 1);
       return {date:new Date(start.getTime() + (today.getTime() - start.getTime()) * fraction), value};
     });
-    return {id:"quarter",label:"QUARTERLY",short:`Q${q}`,start,end,target:MONTHLY_TARGET * 3,actual:points,note:`FY${fiscalYearStart(today).getFullYear()} · Q${q}`};
+    return {id:"quarter",label:"QUARTERLY",short:`FY${fy} Q${q}`,start,end,target:MONTHLY_TARGET * 3,actual:points,note:`FY${fy} · Q${q}`};
   }
 
   function yearConfig() {
     const start = fiscalYearStart(today);
     const end = fiscalYearEnd(start);
+    const fy = fiscalYearNumber(start);
     const elapsedMonths = (today.getFullYear() - start.getFullYear()) * 12 + today.getMonth() - start.getMonth() + 1;
     const count = Math.max(1, elapsedMonths);
     const ytdReturn = 37.6; // deterministic UI-Lab mock; replace with Dusty Core fiscal YTD.
@@ -109,11 +128,12 @@
       const monthDate = new Date(start.getFullYear(), start.getMonth() + i + 1, 0);
       return {date: monthDate > today ? today : monthDate, value};
     });
-    return {id:"year",label:"ANNUAL",short:`FY${start.getFullYear()}`,start,end,target:MONTHLY_TARGET * 12,actual,note:`FISCAL YEAR ${start.getFullYear()}`};
+    return {id:"year",label:"ANNUAL",short:`FY${fy}`,start,end,target:MONTHLY_TARGET * 12,actual,note:`FY${fy} · OCT 1 ${start.getFullYear()} – SEP 30 ${end.getFullYear()}`};
   }
 
   function fiveYearConfig() {
     const start = fiscalYearStart(today);
+    const firstFY = fiscalYearNumber(start);
     const end = new Date(start.getFullYear() + 5, start.getMonth(), 0);
     const elapsedMonths = Math.max(1, (today.getFullYear() - start.getFullYear()) * 12 + today.getMonth() - start.getMonth() + 1);
     const ytdReturn = 37.6;
@@ -121,7 +141,7 @@
       const monthDate = new Date(start.getFullYear(), start.getMonth() + i + 1, 0);
       return {date: monthDate > today ? today : monthDate, value};
     });
-    return {id:"fiveYear",label:"5 YEAR",short:"5Y",start,end,target:MONTHLY_TARGET * 60,actual,note:`FY${start.getFullYear()}–FY${start.getFullYear()+4} PLAN`};
+    return {id:"fiveYear",label:"5 YEAR",short:"5Y",start,end,target:MONTHLY_TARGET * 60,actual,note:`FY${firstFY}–FY${firstFY+4} PLAN`};
   }
 
   const timeframeBuilders = [monthConfig, quarterConfig, yearConfig, fiveYearConfig];
@@ -183,7 +203,7 @@
   function labelFor(config, date) {
     if (config.id === "month") return String(date.getDate()).padStart(2,"0");
     if (config.id === "quarter" || config.id === "year") return date.toLocaleDateString(undefined,{month:"short"}).toUpperCase();
-    return `FY${date.getFullYear()}`;
+    return `FY${fiscalYearForDate(date)}`;
   }
 
   function chartSvg(config, expanded) {
