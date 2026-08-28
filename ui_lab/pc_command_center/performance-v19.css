@@ -1,0 +1,60 @@
+/* Dusty Dragon UI Lab v1.9 — render-efficiency layer.
+   Keep continuous motion on compositor-friendly transforms and remove expensive
+   full-screen compositing effects that add little analytical value. */
+
+/* The scanline texture does not need a blend-mode compositing pass. */
+.scanlines{
+  mix-blend-mode:normal;
+  opacity:.26;
+}
+
+/* Blur-behind is attractive but expensive when large sticky surfaces repaint.
+   The base backgrounds are already opaque enough to preserve the visual design. */
+.topbar,
+.layer-navigator{
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+
+/* Keep persistent transform animations on their own compositor path. */
+.ticker-track,
+.cube-3d{
+  will-change:transform;
+  backface-visibility:hidden;
+}
+
+/* Avoid promoting every heat-map tile. Promote only the tile being inspected. */
+.heat-tile{will-change:auto}
+.heat-tile:hover{will-change:transform}
+.heat-tile:hover::after{will-change:transform}
+
+/* The Trading Floor canvas is an isolated paint surface; its internal drawing
+   cannot affect surrounding layout. */
+#orbitalCanvas{
+  contain:strict;
+}
+
+/* Large static panel glows are reduced slightly. Spatial hierarchy remains the
+   visual focus while less GPU fill-rate is spent repainting broad shadows. */
+.panel,
+.hero-card{
+  box-shadow:0 0 14px rgba(80,197,255,.055);
+}
+
+/* UI transitions should be short and property-specific. */
+.heat-tile,
+.cube-face{
+  transition-duration:.16s;
+}
+
+/* Hidden workspaces should contribute no animation or paint work. */
+.workspace:not(.active) *,
+.workspace:not(.active) *::before,
+.workspace:not(.active) *::after{
+  animation-play-state:paused!important;
+}
+
+/* Analytical mode is explicitly the low-motion fallback. */
+body.analytical-mode .ticker-track{
+  animation-play-state:paused;
+}
