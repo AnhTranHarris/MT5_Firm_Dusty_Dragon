@@ -9,8 +9,13 @@
    * CONTRACTOR REPOSITORY MANAGER — UI LAB / PRODUCTION HANDOFF NOTES
    * ----------------------------------------------------------------
    * PURPOSE
-   * Dusty may use several independently installed research/forecast contractor
-   * repositories (for example Vibe-Trading-like or Kronos-like implementations).
+   * Dusty may use several independently installed contractor repositories. The
+   * UI names contractors by CAPABILITY ROLE rather than upstream project brand:
+   *   VIBE      -> QUANT RESEARCH & STRATEGY ENGINE
+   *   KRONOS    -> TIME-SERIES FORECASTING ENGINE
+   *   AUTOMATON -> AUTONOMOUS RESEARCH ORCHESTRATOR
+   * The upstream repository remains visible as implementation identity. This
+   * separation lets Dusty support multiple repos that can satisfy the same role.
    * Discovery is automatic; selection is human-confirmed. A discovered Git repo
    * receives ZERO execution/trading authority merely because it is selected.
    *
@@ -34,10 +39,10 @@
    *      https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository
    *    GitHub remote docs:
    *      https://docs.github.com/en/get-started/git-basics/about-remote-repositories
-   * 4) Classify contractor TYPE from an explicit Dusty adapter manifest when
+   * 4) Classify contractor ROLE from an explicit Dusty adapter manifest when
    *    available (future dusty-contractor.json), then adapter probe/signature.
    *    Never classify solely from folder/repository name. Multiple repos of the
-   *    same type are valid; selection is per contractor role.
+   *    same role are valid; selection is per contractor role.
    * 5) Before activation verify adapter/API compatibility, expected entrypoints,
    *    pinned commit/version policy, dependency/environment health, and optional
    *    integrity allow-list. A repo being a valid Git working tree != trusted or
@@ -77,6 +82,12 @@
    * These reinforce path/instance identity but are not production specifications.
    */
 
+  const ROLE_LABELS = Object.freeze({
+    VIBE:"QUANT RESEARCH & STRATEGY ENGINE",
+    KRONOS:"TIME-SERIES FORECASTING ENGINE",
+    AUTOMATON:"AUTONOMOUS RESEARCH ORCHESTRATOR"
+  });
+
   const repos = [
     {id:"CTR-01",type:"VIBE",name:"HKUDS/Vibe-Trading",path:"D:\\Dusty\\contractors\\Vibe-Trading",origin:"https://github.com/HKUDS/Vibe-Trading.git",commit:"8f41c2a",state:"ACTIVE",selected:true},
     {id:"CTR-02",type:"VIBE",name:"Vibe-Trading-lab",path:"D:\\Research\\Vibe-Trading-lab",origin:"https://github.com/example/Vibe-Trading-lab.git",commit:"32aa17d",state:"AVAILABLE",selected:false},
@@ -91,12 +102,12 @@
     <header><span>CONTRACTOR REPOSITORIES</span><div class="contractor-actions"><span id="contractorState">3 ACTIVE</span><button type="button" id="contractorRescan" class="ghost tiny-button">RESCAN · MOCK</button></div></header>
     <div class="contractor-summary">
       <div><span>DISCOVERED REPOS</span><b id="contractorFound">5</b></div>
-      <div><span>CONTRACTOR TYPES</span><b id="contractorTypes">3</b></div>
+      <div><span>CAPABILITY ROLES</span><b id="contractorTypes">3</b></div>
       <div><span>SELECTED</span><b id="contractorSelected">3</b></div>
       <div><span>UNVERIFIED</span><b id="contractorUnverified" class="state-CAUTION">1</b></div>
     </div>
     <div id="contractorRows" class="contractor-repo-rows"></div>
-    <p id="contractorNote" class="contractor-policy"><b>DISCOVERY ≠ TRUST:</b> Dusty may locate multiple implementations of the same contractor type. Human selection chooses the adapter candidate; compatibility verification and sandbox policy still gate activation. No contractor receives MT5 credentials or broker-write authority.</p>`;
+    <p id="contractorNote" class="contractor-policy"><b>DISCOVERY ≠ TRUST:</b> Dusty may locate multiple implementations of the same capability role. Human selection chooses the adapter candidate; compatibility verification and sandbox policy still gate activation. No contractor receives MT5 credentials or broker-write authority.</p>`;
 
   const terminalManager = layout.querySelector(".terminal-manager");
   if (terminalManager) terminalManager.insertAdjacentElement("afterend", panel);
@@ -104,6 +115,7 @@
 
   const stateClass = state => `contractor-state-${state.toLowerCase()}`;
   const types = () => [...new Set(repos.map(repo => repo.type))];
+  const roleLabel = repo => ROLE_LABELS[repo.type] || "SPECIALIST CONTRACTOR";
 
   function render() {
     panel.querySelector("#contractorFound").textContent = repos.length;
@@ -115,9 +127,9 @@
       <div class="contractor-repo-row" data-contractor-id="${repo.id}">
         <b>${repo.id}</b>
         <span><strong>${repo.name}</strong><small>${repo.path}</small></span>
-        <span class="contractor-origin"><strong class="contractor-role">${repo.type}</strong><small title="${repo.origin}">${repo.origin}</small></span>
+        <span class="contractor-origin"><strong class="contractor-role">${roleLabel(repo)}</strong><small title="${repo.origin}">${repo.origin}</small></span>
         <span class="${stateClass(repo.state)}">${repo.state}</span>
-        <label><select aria-label="Use ${repo.name}"><option value="off"${repo.selected ? "" : " selected"}>AVAILABLE</option><option value="on"${repo.selected ? " selected" : ""}>SELECTED</option></select><small>HEAD ${repo.commit}</small></label>
+        <label><select aria-label="Use ${repo.name} as ${roleLabel(repo)}"><option value="off"${repo.selected ? "" : " selected"}>AVAILABLE</option><option value="on"${repo.selected ? " selected" : ""}>SELECTED</option></select><small>HEAD ${repo.commit}</small></label>
       </div>`).join("");
 
     panel.querySelectorAll(".contractor-repo-row select").forEach(select => {
@@ -127,7 +139,7 @@
         if (!repo) return;
         if (event.target.value === "on" && repo.state === "UNVERIFIED") {
           event.target.value = "off";
-          panel.querySelector("#contractorNote").innerHTML = `<b>SELECTION BLOCKED · MOCK:</b> ${repo.name} is discovered but UNVERIFIED. Production Dusty must validate its Git identity, contractor adapter contract, compatibility and isolation policy before it can become selectable.`;
+          panel.querySelector("#contractorNote").innerHTML = `<b>SELECTION BLOCKED · MOCK:</b> ${repo.name} is discovered but UNVERIFIED. Production Dusty must validate its Git identity, ${roleLabel(repo)} adapter contract, compatibility and isolation policy before it can become selectable.`;
           return;
         }
         repo.selected = event.target.value === "on";
@@ -139,7 +151,7 @@
   }
 
   panel.querySelector("#contractorRescan").addEventListener("click", () => {
-    panel.querySelector("#contractorNote").innerHTML = `<b>MOCK RESCAN COMPLETE:</b> ${repos.length} Git working trees across ${types().length} contractor types. Production discovery will use configured roots + persisted paths, validate candidates with Git commands, and will not execute, pull, reset, install, or trust discovered code during the scan.`;
+    panel.querySelector("#contractorNote").innerHTML = `<b>MOCK RESCAN COMPLETE:</b> ${repos.length} Git working trees across ${types().length} contractor capability roles. Production discovery will use configured roots + persisted paths, validate candidates with Git commands, and will not execute, pull, reset, install, or trust discovered code during the scan.`;
     window.DUSTY_SYSTEM_VIEW?.fit();
   });
 
