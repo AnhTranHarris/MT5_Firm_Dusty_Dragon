@@ -36,28 +36,16 @@
    *   inaccurate on non-WDDM hardware):
    *   https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-videocontroller
    *
-   * A community Python report observed high overhead when repeatedly rebuilding
-   * WMI/OpenHardwareMonitor collectors. Diagnostic evidence only, but it matches
-   * our design: collectors are persistent/cached and sampled at bounded cadence.
-   * https://www.reddit.com/r/learnpython/comments/gkxp4q/
-   *
    * MODEL POLICY FOR PRODUCTION
    * - static hardware inventory: refresh rarely/on explicit rescan;
    * - fast process/CPU/RAM/disk metrics: sampled worker, never UI animation loop;
    * - latency/queue/MT5 health: timestamped observations from owning subsystems;
    * - summarize p50/p95/p99 + violations over multi-day/weekly windows;
    * - preserve safety reserve and hysteresis to prevent desk flapping;
-   * - reduce capacity faster on sustained violations than it increases after
-   *   good periods;
    * - GUI quality degrades before execution/risk/reconciliation resources.
-   *
-   * Do not infer a universal MT5-instance maximum from CPU/RAM. Community reports
-   * show Windows GUI/session constraints can appear before raw hardware is full.
-   * Never auto-edit Windows desktop-heap/SharedSection settings; surface evidence
-   * and require explicit human/admin diagnosis instead.
    */
   const MODEL = {workloadBudget:55,mt5Cost:7,symbolCost:1.5,maxMt5:7,maxSymbols:24,provenSafeMt5:5,autoSymbols:12};
-  let eligibleDeskCount = 1; // progressive first-launch mock: D01 only
+  let eligibleDeskCount = 1;
 
   const hardware = document.createElement("article");
   hardware.className = "panel hardware-panel";
@@ -66,7 +54,7 @@
   const capacity = document.createElement("article");
   capacity.className = "panel capacity-panel";
   capacity.innerHTML = `
-    <div class="capacity-head"><div><span class="eyebrow">COMPUTE CAPACITY GOVERNOR</span><strong>MT5 DESK + SYMBOL CONCURRENCY ENVELOPE</strong></div><div class="capacity-mode" role="group" aria-label="Capacity mode"><button id="capacityAuto" class="active">AUTO</button><button id="capacityManual">MANUAL</button></div></div>
+    <div class="capacity-head"><div class="capacity-title"><span class="eyebrow">TRADING CAPACITY</span><small>MT5 DESKS · SYMBOL LOAD</small></div><div class="capacity-mode" role="group" aria-label="Capacity mode"><button id="capacityAuto" class="active">AUTO</button><button id="capacityManual">MANUAL</button></div></div>
     <div class="capacity-summary"><div><span>ACTIVE MT5 DESKS</span><b id="capMt5">—</b></div><div><span>ACTIVE SYMBOLS</span><b id="capSymbols">—</b></div><div><span>TRADE ENVELOPES</span><b id="capTrades">—</b></div><div><span>COMPUTE HEADROOM</span><b id="capHeadroom">—</b></div></div>
     <div class="capacity-controls">
       <section class="capacity-control"><header><b>CONCURRENT MT5 DESKS / INSTANCES</b><strong id="mt5Value">1</strong></header><input id="mt5Slider" type="range" min="1" max="7" step="1" value="1" disabled><div class="range-scale"><span>1</span><span>1 desk = 1 account = 1 MT5 terminal instance</span><span>7</span></div></section>
@@ -104,8 +92,6 @@
   function setMode(next){mode=next;const manual=mode==="manual";autoButton.classList.toggle("active",!manual);manualButton.classList.toggle("active",manual);mt5Slider.disabled=!manual;symbolSlider.disabled=!manual;reconcile();}
   autoButton.addEventListener("click",()=>setMode("auto"));manualButton.addEventListener("click",()=>setMode("manual"));mt5Slider.addEventListener("input",()=>reconcile("mt5"));symbolSlider.addEventListener("input",()=>reconcile("symbols"));
 
-  // Tiny lab API keeps provisioning and capacity modules decoupled. Production
-  // replaces this with typed application messages/view models, not DOM reach-in.
   window.DUSTY_CAPACITY={setEligibleDeskCount(count){eligibleDeskCount=Math.max(1,Number(count)||1);reconcile();},getMode(){return mode;}};
   setMode("auto");
 })();
