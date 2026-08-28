@@ -1,27 +1,49 @@
 @import url("styles-v16.css");
 
-/* v1.7 — true 3-axis cube rotation, no legacy return button */
+/* v1.7 refined — explicit Y-axis spatial navigation, no legacy return button. */
 .back-to-firm{display:none!important}
-
-.cube-3d{animation:cubeSpatialRotate 18s linear infinite;will-change:transform}
+.cube-label{display:none}
+.cube-3d{
+  animation:cubeYOrbit 18s linear infinite;
+  transform-style:preserve-3d;
+  will-change:transform;
+}
 .spatial-nav-cube:hover .cube-3d{animation-duration:9s}
 
-@keyframes cubeSpatialRotate{
-  0%{transform:rotateX(-20deg) rotateY(0deg) rotateZ(0deg)}
-  25%{transform:rotateX(7deg) rotateY(90deg) rotateZ(3deg)}
-  50%{transform:rotateX(20deg) rotateY(180deg) rotateZ(0deg)}
-  75%{transform:rotateX(-5deg) rotateY(270deg) rotateZ(-3deg)}
-  100%{transform:rotateX(-20deg) rotateY(360deg) rotateZ(0deg)}
+.cube-face::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  font:700 7px/1 "Segoe UI",sans-serif;
+  letter-spacing:.08em;
+  text-shadow:0 0 8px #020608;
+  backface-visibility:hidden;
+}
+.home-cube .cube-face::after{content:"CORE";color:var(--cyan)}
+.demo-cube .cube-face::after{content:"DEMO";color:var(--amber)}
+
+/* Face contrast makes the 90° Y-axis turns perceptible instead of reading as a flat card. */
+.spatial-nav-cube .cube-face.front{background:rgba(8,34,47,.56)}
+.spatial-nav-cube .cube-face.back{background:rgba(3,15,22,.30)}
+.spatial-nav-cube .cube-face.right{background:rgba(14,43,56,.44)}
+.spatial-nav-cube .cube-face.left{background:rgba(5,24,34,.34)}
+.spatial-nav-cube .cube-face.top,.spatial-nav-cube .cube-face.bottom{background:rgba(18,49,61,.30)}
+.spatial-nav-cube.demo-cube .cube-face.front{background:rgba(67,48,13,.38)}
+.spatial-nav-cube.demo-cube .cube-face.back{background:rgba(35,26,8,.22)}
+.spatial-nav-cube.demo-cube .cube-face.right{background:rgba(76,54,14,.32)}
+.spatial-nav-cube.demo-cube .cube-face.left{background:rgba(48,35,10,.26)}
+.spatial-nav-cube.demo-cube .cube-face.top,.spatial-nav-cube.demo-cube .cube-face.bottom{background:rgba(72,51,14,.22)}
+
+@keyframes cubeYOrbit{
+  0%{transform:rotateX(-18deg) rotateY(0deg)}
+  25%{transform:rotateX(-14deg) rotateY(90deg)}
+  50%{transform:rotateX(-18deg) rotateY(180deg)}
+  75%{transform:rotateX(-22deg) rotateY(270deg)}
+  100%{transform:rotateX(-18deg) rotateY(360deg)}
 }
 
-/* Keep navigation cubes visibly three-dimensional while preserving readability. */
-.spatial-nav-cube .cube-face.front{background:rgba(8,34,47,.52)}
-.spatial-nav-cube .cube-face.back{background:rgba(4,18,26,.34)}
-.spatial-nav-cube .cube-face.right,.spatial-nav-cube .cube-face.left{background:rgba(8,29,40,.38)}
-.spatial-nav-cube .cube-face.top,.spatial-nav-cube .cube-face.bottom{background:rgba(15,45,58,.32)}
-.spatial-nav-cube.demo-cube .cube-face.front{background:rgba(63,45,13,.34)}
-.spatial-nav-cube.demo-cube .cube-face.back{background:rgba(39,30,10,.24)}
-.spatial-nav-cube.demo-cube .cube-face.right,.spatial-nav-cube.demo-cube .cube-face.left{background:rgba(51,37,12,.28)}
-.spatial-nav-cube.demo-cube .cube-face.top,.spatial-nav-cube.demo-cube .cube-face.bottom{background:rgba(72,51,14,.24)}
-
-@media(prefers-reduced-motion:reduce){.cube-3d{animation:none;transform:rotateX(-18deg) rotateY(28deg) rotateZ(2deg)}}
+@media(prefers-reduced-motion:reduce){
+  .cube-3d{animation:none;transform:rotateX(-18deg) rotateY(32deg)}
+}
