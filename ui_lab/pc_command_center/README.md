@@ -33,9 +33,20 @@ Open `index.html` directly in a modern browser. No build step and no runtime dep
 - A gold Saturn-like orb with subtle green rings is the next-layer bridge; the rings use front/back occlusion so they wrap around the gold sphere rather than reading as a flat ellipse.
 - The top-left CORE cube returns to the Dusty Dragon Core system.
 - The top-right DEMO cube opens the hidden Demo solar system.
-- Both navigation cubes rotate visibly around the Y axis and label their physical faces rather than using a stationary overlay label.
+- CORE and DEMO rotate independently around the Y axis at deliberately different slow periods. Hover changes face glow only; it never changes the 3D transform hierarchy.
+- OS reduced-motion preference no longer silently freezes Spatial mode. Spatial mode retains only an ultra-slow orientation cue; `F2` remains the explicit zero-spatial-motion fallback.
 - Click an orbiting desk for its detailed mock performance page; click a center portfolio orb for aggregate performance.
 - Command buttons remain segregated in the PC-only Command Authority zone.
+
+## Trading workspace
+
+The Trading workspace includes a quantitative **Trading Lens** that can switch among:
+
+- Firm — analytical aggregation of all active desks.
+- Portfolio — Demo, Generalist, Trading Style, Sector, or Symbol portfolio scope.
+- Desk — seeded individual desk scope across the hierarchy.
+
+The selected lens exposes mock balance/equity, 24-hour P&L, MTD return, maximum drawdown, profit factor, Sharpe, open risk, margin utilization, gross exposure, open positions, win rate, expectancy, broker/account/environment context, and filtered positions/decision telemetry. These are UX placeholders only; production values must come from authoritative historical and execution data.
 
 ## UX audit notes
 
@@ -43,7 +54,8 @@ Open `index.html` directly in a modern browser. No build step and no runtime dep
 - The analytical hierarchy tree remains a complete fallback when spatial effects are disabled.
 - Orbit velocity decreases by 15% for each successively more distant orbit.
 - Presentation state remains separate from trading authority and cannot mutate broker or execution state.
-- Obsolete JavaScript revisions were removed from the active lab during the current cleanup pass; retained versioned stylesheets remain because the active stylesheet import chain depends on them.
+- The generic button hover shadow is explicitly disabled for spatial cubes; only cube-face outlines/glow respond to hover.
+- Obsolete JavaScript revisions and the superseded cube stylesheet were removed during cleanup. The retained stylesheet chain is still active and must not be deleted until the lab is flattened into canonical production assets.
 
 ## Design doctrine
 
