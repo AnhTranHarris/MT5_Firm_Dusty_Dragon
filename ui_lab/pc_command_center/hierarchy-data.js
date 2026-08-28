@@ -1,4 +1,6 @@
 (() => {
+  "use strict";
+
   const data = window.DUSTY_MOCK;
   const brokerProfiles = {
     IC: { broker: "IC Markets", accountType: "MT5 Raw Spread", server: "ICMarketsSC-Demo", environment: "DEMO" },
@@ -6,10 +8,35 @@
     PEPPER: { broker: "Pepperstone", accountType: "MT5 Razor", server: "Pepperstone-Demo", environment: "DEMO" }
   };
 
-  data.desks.forEach((desk, index) => Object.assign(desk, index % 3 === 0 ? brokerProfiles.IC : index % 3 === 1 ? brokerProfiles.FP : brokerProfiles.PEPPER, {
-    accountAlias: `${desk.id}-A${String(index + 1).padStart(2, "0")}`,
-    mt5Mode: desk.id === "G06" ? "DEMO / SESSION FAULT" : "DEMO / VERIFIED"
-  }));
+  /*
+   * UI-LAB STATUS CONTRACT
+   * ----------------------
+   * Operational state and provisioning are different dimensions. A desk can be
+   * NORMAL yet unavailable because no MT5 account is bound; visual presentation
+   * must therefore resolve both facts before choosing a color.
+   *
+   * Canonical Trading Floor colors:
+   *   NORMAL / ACTIVE       -> green
+   *   CAUTION / DRAINING    -> amber
+   *   FAULT / FAULT-LATCHED -> red
+   *   CAPACITY-PARKED       -> blue
+   *   NOT PROVISIONED / no bound MT5 account / LOCKED -> gray
+   *
+   * Production note: this status registry becomes a read-only view-model fed by
+   * authoritative desk/provisioning state. The frontend must never infer whether
+   * a broker account is bound from a filename, broker label, or visual color.
+   */
+
+  data.desks.forEach((desk, index) => Object.assign(
+    desk,
+    index % 3 === 0 ? brokerProfiles.IC : index % 3 === 1 ? brokerProfiles.FP : brokerProfiles.PEPPER,
+    {
+      accountAlias: `${desk.id}-A${String(index + 1).padStart(2, "0")}`,
+      mt5Mode: desk.id === "G06" ? "DEMO / SESSION FAULT" : "DEMO / VERIFIED",
+      provisioned: true,
+      mt5Bound: true
+    }
+  ));
 
   const styleNames = ["TREND", "MEAN REVERSION", "BREAKOUT", "SWING", "MOMENTUM", "RANGE"];
   const sectors = ["FX", "METALS", "INDICES", "ENERGY", "FX-B", "METALS-B"];
@@ -23,15 +50,18 @@
   };
   const brokers = [brokerProfiles.IC, brokerProfiles.FP, brokerProfiles.PEPPER];
 
-  function mkDesk(id, name, layer, parentId, slot, profile, state = "NORMAL") {
+  function mkDesk(id, name, layer, parentId, slot, profile, state = "NORMAL", lifecycle = {}) {
     const base = 4850 + layer * 340 + slot * 73;
+    const provisioned = lifecycle.provisioned ?? true;
+    const mt5Bound = lifecycle.mt5Bound ?? provisioned;
+    const effectiveProfile = mt5Bound ? profile : {broker:"—", accountType:"UNBOUND", server:"—", environment:"—"};
     return {
-      id, name, layer, parentId, state,
-      broker: profile.broker,
-      accountType: profile.accountType,
-      server: profile.server,
-      environment: profile.environment,
-      accountAlias: `${id}-A${String(slot).padStart(2, "0")}`,
+      id, name, layer, parentId, state, provisioned, mt5Bound,
+      broker: effectiveProfile.broker,
+      accountType: effectiveProfile.accountType,
+      server: effectiveProfile.server,
+      environment: effectiveProfile.environment,
+      accountAlias: mt5Bound ? `${id}-A${String(slot).padStart(2, "0")}` : "—",
       equity: base,
       today: ((slot % 5) - 1) * 0.17,
       mtd: 1.7 + (slot % 6) * 0.43,
@@ -45,18 +75,39 @@
   }
 
   const nodes = [];
-  for (let i = 0; i < 6; i++) nodes.push(mkDesk(`D0${i + 1}`, `Demo Proof ${i + 1}`, 0, "L0", i + 1, brokers[i % brokers.length], i === 5 ? "FAULT" : "NORMAL"));
+  for (let i = 0; i < 6; i++) {
+    nodes.push(mkDesk(
+      `D0${i + 1}`,
+      `Demo Proof ${i + 1}`,
+      0,
+      "L0",
+      i + 1,
+      brokers[i % brokers.length],
+      "NORMAL",
+      {provisioned: i === 0, mt5Bound: i === 0}
+    ));
+  }
 
   data.desks.forEach((desk, i) => nodes.push({ ...desk, name: `Generalist ${i + 1}`, layer: 1, parentId: "FIRM" }));
 
-  styleNames.forEach((style, i) => nodes.push(mkDesk(`S${String(i + 1).padStart(2, "0")}`, style, 2, "L2", i + 1, brokers[i % brokers.length], i === 4 ? "CAUTION" : "NORMAL")));
+  styleNames.forEach((style, i) => {
+    const state = i === 2 ? "CAPACITY-PARKED" : i === 4 ? "CAUTION" : i === 5 ? "FAULT" : "NORMAL";
+    const lifecycle = i === 3 ? {provisioned:false, mt5Bound:false} : {provisioned:true, mt5Bound:true};
+    nodes.push(mkDesk(`S${String(i + 1).padStart(2, "0")}`, style, 2, "L2", i + 1, brokers[i % brokers.length], state, lifecycle));
+  });
 
   styleNames.forEach((style, styleIndex) => {
     sectors.forEach((sector, sectorIndex) => {
       const sectorId = `L3-${styleIndex + 1}-${sectorIndex + 1}`;
-      nodes.push(mkDesk(sectorId, `${style} / ${sector}`, 3, `S${String(styleIndex + 1).padStart(2, "0")}`, sectorIndex + 1, brokers[(styleIndex + sectorIndex) % brokers.length]));
+      const sectorState = sectorIndex === 5 ? "CAPACITY-PARKED" : "NORMAL";
+      const sectorLifecycle = sectorIndex === 4 ? {provisioned:false, mt5Bound:false} : {provisioned:true, mt5Bound:true};
+      nodes.push(mkDesk(sectorId, `${style} / ${sector}`, 3, `S${String(styleIndex + 1).padStart(2, "0")}`, sectorIndex + 1, brokers[(styleIndex + sectorIndex) % brokers.length], sectorState, sectorLifecycle));
       const symbolList = symbols[sector] || symbols.FX;
-      symbolList.forEach((symbol, symbolIndex) => nodes.push(mkDesk(`L4-${styleIndex + 1}-${sectorIndex + 1}-${symbolIndex + 1}`, `${style} / ${sector} / ${symbol}`, 4, sectorId, symbolIndex + 1, brokers[(styleIndex + sectorIndex + symbolIndex) % brokers.length])));
+      symbolList.forEach((symbol, symbolIndex) => {
+        const symbolState = symbolIndex === 4 ? "CAPACITY-PARKED" : "NORMAL";
+        const symbolLifecycle = symbolIndex === 5 ? {provisioned:false, mt5Bound:false} : {provisioned:true, mt5Bound:true};
+        nodes.push(mkDesk(`L4-${styleIndex + 1}-${sectorIndex + 1}-${symbolIndex + 1}`, `${style} / ${sector} / ${symbol}`, 4, sectorId, symbolIndex + 1, brokers[(styleIndex + sectorIndex + symbolIndex) % brokers.length], symbolState, symbolLifecycle));
+      });
     });
   });
 
@@ -73,4 +124,27 @@
     sectors,
     note: "UI-lab seed only. Layer 2 styles are illustrative earned winners; Layer 3 sector selection is broker-aware and permits differentiated duplicate sectors; Layer 4 symbols are illustrative specializations."
   };
+
+  const lookup = id => data.desks.find(d => d.id === id) || nodes.find(n => n.id === id) || null;
+  const normalizeState = value => String(value || "NORMAL").trim().toUpperCase().replaceAll(" ", "-");
+  function visualState(entity) {
+    if (!entity) return "UNPROVISIONED";
+    const raw = normalizeState(entity.state);
+    if (entity.provisioned === false || entity.mt5Bound === false || raw === "NOT-PROVISIONED" || raw === "LOCKED") return "UNPROVISIONED";
+    if (raw.includes("PARKED")) return "PARKED";
+    if (raw.includes("FAULT")) return "FAULT";
+    if (["CAUTION", "DEGRADED", "DRAINING"].includes(raw)) return "CAUTION";
+    return "NORMAL";
+  }
+
+  window.DUSTY_DESK_STATUS = Object.freeze({
+    get(id) { return lookup(id); },
+    visualState,
+    update(id, patch) {
+      const targets = [data.desks.find(d => d.id === id), nodes.find(n => n.id === id)].filter(Boolean);
+      targets.forEach(target => Object.assign(target, patch));
+      document.dispatchEvent(new CustomEvent("dusty:desk-status-changed", {detail:{id, patch}}));
+      return targets.length > 0;
+    }
+  });
 })();
