@@ -14,6 +14,7 @@
   let scope = "firm";
   let layer = 1;
   let desk = desks[0]?.id || "G01";
+  let chartExpanded = false;
 
   root.innerHTML = `
     <article class="panel perf-commandbar">
@@ -25,7 +26,7 @@
       </div>
     </article>
     <article class="panel perf-hero"><header><span>INVESTOR SUMMARY</span><span id="perfPeriod">MONTH TO DATE</span></header><div id="perfHeroMetrics" class="perf-hero-metrics"></div><div id="perfVerdict" class="perf-verdict"></div></article>
-    <article class="panel perf-chart"><header><span>CAPITAL GROWTH</span><span>RETURN PATH · MOCK</span></header><div id="perfGrowthChart" class="perf-growth-chart"></div></article>
+    <article class="panel perf-chart" id="perfChartPanel"><header><span>CAPITAL GROWTH</span><span class="perf-chart-actions"><span>ACTUAL vs TARGET PATH · MOCK</span><button id="perfExpandChart" type="button" aria-expanded="false" title="Expand investor chart">EXPAND ↗</button></span></header><div id="perfGrowthChart" class="perf-growth-chart"></div><div id="perfChartReadout" class="perf-chart-readout" hidden></div></article>
     <article class="panel perf-quality"><header>QUALITY OF RETURN</header><div id="perfQuality"></div></article>
     <article class="panel perf-contributors"><header><span>CONTRIBUTION</span><span id="perfContributionScope">BY DESK</span></header><div id="perfContributors"></div></article>
     <article class="panel perf-quant" id="perfQuant" hidden><header><span>QUANT DIAGNOSTICS</span><span>RISK-ADJUSTED / EXECUTION-AWARE</span></header><div id="perfQuantGrid" class="perf-quant-grid"></div></article>`;
@@ -54,10 +55,42 @@
     if(scope==="layer") e.innerHTML=[0,1,2,3,4].map(n=>`<option value="${n}" ${n===layer?"selected":""}>L${n} · ${layerName(n)}</option>`).join("");
     else e.innerHTML=desks.map(d=>`<option value="${d.id}" ${d.id===desk?"selected":""}>${d.id} · ${d.state}</option>`).join("");
   }
-  function renderChart(ret){
-    const vals=(perf.returns||[1,1.5,2,2.4,3]).map((v,i,a)=>v*(ret/(a[a.length-1]||1)));
-    const max=Math.max(...vals,1);
-    $("#perfGrowthChart").innerHTML=vals.map((v,i)=>`<div class="growth-col"><i style="height:${Math.max(8,v/max*82)}%"></i><span>${i===vals.length-1?pct(v):""}</span></div>`).join("");
+  function chartSeries(ret){
+    const source=perf.returns||[1,1.5,2,2.4,3];
+    const actual=source.map((v,i,a)=>v*(ret/(a[a.length-1]||1)));
+    const target=Number(data.firm.monthlyTargetPct||5);
+    const goal=actual.map((_,i)=>target*(i+1)/actual.length);
+    return {actual,goal,target};
+  }
+  function renderCompactChart(ret){
+    const {actual,goal,target}=chartSeries(ret);
+    const max=Math.max(target,...actual,1);
+    $("#perfGrowthChart").innerHTML=actual.map((v,i)=>`<div class="growth-col"><i style="height:${Math.max(8,v/max*82)}%"></i><em style="bottom:${Math.max(4,goal[i]/max*82)}%"></em><span>${i===actual.length-1?pct(v):""}</span></div>`).join("");
+  }
+  function renderExpandedChart(ret){
+    const {actual,goal,target}=chartSeries(ret);
+    const width=1000,height=390,pad={l:62,r:30,t:24,b:48};
+    const max=Math.max(target,...actual,1)*1.12;
+    const x=i=>pad.l+i*((width-pad.l-pad.r)/(actual.length-1));
+    const y=v=>height-pad.b-(v/max)*(height-pad.t-pad.b);
+    const barW=Math.min(48,(width-pad.l-pad.r)/actual.length*.54);
+    const grid=[0,1,2,3,4,5,6].filter(v=>v<=max+.2);
+    const bars=actual.map((v,i)=>`<rect class="investor-actual-bar" x="${x(i)-barW/2}" y="${y(Math.max(0,v))}" width="${barW}" height="${Math.max(1,height-pad.b-y(Math.max(0,v)))}" rx="3"><title>Period ${i+1}: ${pct(v)}</title></rect>`).join("");
+    const goalPoints=goal.map((v,i)=>`${x(i)},${y(v)}`).join(" ");
+    const labels=actual.map((_,i)=>`<text class="chart-axis-label" x="${x(i)}" y="${height-20}" text-anchor="middle">P${i+1}</text>`).join("");
+    const grids=grid.map(v=>`<g><line class="chart-gridline" x1="${pad.l}" x2="${width-pad.r}" y1="${y(v)}" y2="${y(v)}"/><text class="chart-axis-label" x="${pad.l-10}" y="${y(v)+4}" text-anchor="end">${v.toFixed(0)}%</text></g>`).join("");
+    $("#perfGrowthChart").innerHTML=`<svg class="investor-detail-chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Current cumulative performance bars compared with the monthly financial target path">${grids}${bars}<polyline class="investor-target-line" points="${goalPoints}"/>${goal.map((v,i)=>`<circle class="investor-target-point" cx="${x(i)}" cy="${y(v)}" r="4"><title>Target path ${pct(v)}</title></circle>`).join("")}${labels}</svg>`;
+    $("#perfChartReadout").hidden=false;
+    $("#perfChartReadout").innerHTML=`<div><b>${pct(ret)}</b><span>CURRENT MTD</span></div><div><b>${target.toFixed(2)}%</b><span>MONTHLY TARGET</span></div><div><b>${(ret-target)>=0?"+":""}${(ret-target).toFixed(2)} pts</b><span>TO TARGET</span></div><p><i class="legend-bar"></i> Bars = realized cumulative performance &nbsp; <i class="legend-line"></i> Line = financial target path. Target path is a planning objective, not a return forecast.</p>`;
+  }
+  function renderChart(ret){chartExpanded?renderExpandedChart(ret):renderCompactChart(ret);}
+  function setChartExpanded(expanded){
+    chartExpanded=Boolean(expanded);
+    $("#perfChartPanel").classList.toggle("expanded",chartExpanded);
+    $("#perfExpandChart").setAttribute("aria-expanded",String(chartExpanded));
+    $("#perfExpandChart").textContent=chartExpanded?"CLOSE ×":"EXPAND ↗";
+    if(!chartExpanded) $("#perfChartReadout").hidden=true;
+    render();
   }
   function render(){
     const m=entityMetrics();
@@ -75,5 +108,7 @@
   lensButtons.forEach(b=>b.addEventListener("click",()=>{lens=b.dataset.lens;lensButtons.forEach(x=>x.classList.toggle("active",x===b));render();}));
   $("#perfScope").addEventListener("change",e=>{scope=e.target.value;populateEntity();render();});
   $("#perfEntity").addEventListener("change",e=>{if(scope==="layer")layer=Number(e.target.value);else desk=e.target.value;render();});
+  $("#perfExpandChart").addEventListener("click",()=>setChartExpanded(!chartExpanded));
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&chartExpanded)setChartExpanded(false);});
   populateEntity(); render();
 })();
