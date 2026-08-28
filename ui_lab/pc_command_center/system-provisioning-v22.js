@@ -87,8 +87,6 @@
     <div id="provisioningRows" class="provisioning-rows"></div>
     <div class="provisioning-policy"><b>SAFE SHEDDING:</b> a desk with open positions, reconciliation work, or unresolved execution state must enter <b>DRAINING</b>. Resource policy may stop new exposure but cannot terminate the terminal until obligations are safe.</div>`;
 
-  // Put organizational provisioning immediately after the existing hardware +
-  // capacity governor, before lower-level infrastructure diagnostics.
   const capacity = layout.querySelector(".capacity-panel");
   const anchor = capacity?.nextSibling || layout.firstChild;
   layout.insertBefore(qualification, anchor);
@@ -98,55 +96,38 @@
   const stateClass = state => `state-${String(state).replaceAll(" ","-")}`;
   const availableTerminals = () => terminals.filter(t => t.state === "AVAILABLE");
   const provisionableDesks = () => desks.filter(d => d.state === "NOT PROVISIONED");
+  const assignedDeskCount = () => desks.filter(d => ["ACTIVE","DRAINING","CAPACITY-PARKED"].includes(d.state) && d.terminal).length;
 
   function renderDesks() {
-    qualification.querySelector("#bootstrapDeskRows").innerHTML = desks.filter(d=>d.layer==="L0").map(d=>`
-      <div class="bootstrap-desk-row"><b>${d.id}</b><span>${d.type}</span><span class="${stateClass(d.state)}">${d.state}</span><span>PROOF ${d.proof}</span><span>${d.terminal || "—"}</span></div>`).join("");
+    qualification.querySelector("#bootstrapDeskRows").innerHTML = desks.filter(d=>d.layer==="L0").map(d=>`<div class="bootstrap-desk-row"><b>${d.id}</b><span>${d.type}</span><span class="${stateClass(d.state)}">${d.state}</span><span>PROOF ${d.proof}</span><span>${d.terminal || "—"}</span></div>`).join("");
     const proofs = desks.filter(d=>d.layer==="L0"&&d.proof==="PASS").length;
     const active = desks.filter(d=>d.layer==="L0"&&d.state==="ACTIVE").length;
     qualification.querySelector("#bootProofs").textContent = `${proofs} / 6`;
     qualification.querySelector("#bootActive").textContent = active;
     qualification.querySelector("#bootAvailable").textContent = availableTerminals().length;
-
-    provisioning.querySelector("#provisioningRows").innerHTML = desks.map(d=>`
-      <div class="provisioning-row"><b>${d.id}</b><span>${d.layer}</span><span>${d.type}</span><span class="${stateClass(d.state)}">${d.state}</span><span>${d.terminal || "—"}</span><span>${d.layer==="L0" ? `Proof ${d.proof}` : d.state==="LOCKED" ? "Requires 6/6 L0 proofs" : "Eligible"}</span></div>`).join("");
+    provisioning.querySelector("#provisioningRows").innerHTML = desks.map(d=>`<div class="provisioning-row"><b>${d.id}</b><span>${d.layer}</span><span>${d.type}</span><span class="${stateClass(d.state)}">${d.state}</span><span>${d.terminal || "—"}</span><span>${d.layer==="L0" ? `Proof ${d.proof}` : d.state==="LOCKED" ? "Requires 6/6 L0 proofs" : "Eligible"}</span></div>`).join("");
+    window.DUSTY_CAPACITY?.setEligibleDeskCount(assignedDeskCount());
   }
 
   function renderTerminals() {
-    terminalManager.querySelector("#terminalRows").innerHTML = terminals.map(t=>`
-      <div class="terminal-row"><b>${t.id}</b><span><strong>${t.label}</strong><small>${t.path}</small></span><span>${t.broker}<small>${t.account}</small></span><span>${t.environment}</span><span class="${stateClass(t.state)}">${t.state}${t.desk?` · ${t.desk}`:""}</span></div>`).join("");
+    terminalManager.querySelector("#terminalRows").innerHTML = terminals.map(t=>`<div class="terminal-row"><b>${t.id}</b><span><strong>${t.label}</strong><small>${t.path}</small></span><span>${t.broker}<small>${t.account}</small></span><span>${t.environment}</span><span class="${stateClass(t.state)}">${t.state}${t.desk?` · ${t.desk}`:""}</span></div>`).join("");
     terminalManager.querySelector("#terminalFound").textContent = terminals.length;
     terminalManager.querySelector("#terminalAssigned").textContent = terminals.filter(t=>t.state==="ASSIGNED").length;
     terminalManager.querySelector("#terminalFree").textContent = availableTerminals().length;
-
-    const deskSelect = terminalManager.querySelector("#assignmentDesk");
-    const terminalSelect = terminalManager.querySelector("#assignmentTerminal");
-    const currentDesk = deskSelect.value;
-    const currentTerminal = terminalSelect.value;
-    deskSelect.innerHTML = provisionableDesks().map(d=>`<option value="${d.id}">${d.id} · ${d.layer} ${d.type}</option>`).join("") || `<option>No desk requests</option>`;
-    terminalSelect.innerHTML = availableTerminals().map(t=>`<option value="${t.id}">${t.id} · ${t.label}</option>`).join("") || `<option>No available terminals</option>`;
-    if ([...deskSelect.options].some(o=>o.value===currentDesk)) deskSelect.value=currentDesk;
-    if ([...terminalSelect.options].some(o=>o.value===currentTerminal)) terminalSelect.value=currentTerminal;
-    const selected = desks.find(d=>d.id===deskSelect.value);
-    terminalManager.querySelector("#assignmentTitle").textContent = selected ? `${selected.id} · ${selected.layer} ${selected.type.toUpperCase()} DESK` : "NO DESK REQUEST";
-    terminalManager.querySelector("#assignMock").disabled = !selected || !availableTerminals().length;
+    const deskSelect=terminalManager.querySelector("#assignmentDesk"),terminalSelect=terminalManager.querySelector("#assignmentTerminal"),currentDesk=deskSelect.value,currentTerminal=terminalSelect.value;
+    deskSelect.innerHTML=provisionableDesks().map(d=>`<option value="${d.id}">${d.id} · ${d.layer} ${d.type}</option>`).join("")||`<option>No desk requests</option>`;
+    terminalSelect.innerHTML=availableTerminals().map(t=>`<option value="${t.id}">${t.id} · ${t.label}</option>`).join("")||`<option>No available terminals</option>`;
+    if([...deskSelect.options].some(o=>o.value===currentDesk))deskSelect.value=currentDesk;if([...terminalSelect.options].some(o=>o.value===currentTerminal))terminalSelect.value=currentTerminal;
+    const selected=desks.find(d=>d.id===deskSelect.value);terminalManager.querySelector("#assignmentTitle").textContent=selected?`${selected.id} · ${selected.layer} ${selected.type.toUpperCase()} DESK`:"NO DESK REQUEST";terminalManager.querySelector("#assignMock").disabled=!selected||!availableTerminals().length;
   }
 
   function renderAll(){renderDesks();renderTerminals()}
-
   terminalManager.querySelector("#assignmentDesk").addEventListener("change",renderTerminals);
-  terminalManager.querySelector("#mockRescan").addEventListener("click",()=>{
-    terminalManager.querySelector("#assignmentStatus").textContent = "Mock rescan complete: 4 terminal installations found. Production discovery must be performed by a constrained local service, not browser filesystem access.";
-  });
+  terminalManager.querySelector("#mockRescan").addEventListener("click",()=>{terminalManager.querySelector("#assignmentStatus").textContent="Mock rescan complete: 4 terminal installations found. Production discovery must be performed by a constrained local service, not browser filesystem access.";});
   terminalManager.querySelector("#assignMock").addEventListener("click",()=>{
-    const desk = desks.find(d=>d.id===terminalManager.querySelector("#assignmentDesk").value);
-    const terminal = terminals.find(t=>t.id===terminalManager.querySelector("#assignmentTerminal").value);
-    if (!desk || !terminal || terminal.state!=="AVAILABLE") return;
-    terminal.state="ASSIGNED"; terminal.desk=desk.id;
-    desk.terminal=terminal.id; desk.state="ACTIVE";
-    terminalManager.querySelector("#assignmentStatus").innerHTML = `<b>MOCK VERIFIED:</b> ${terminal.id} assigned to ${desk.id}. In production this state must not be reached until account identity, server, environment, permissions, and session verification all pass.`;
-    renderAll();
+    const desk=desks.find(d=>d.id===terminalManager.querySelector("#assignmentDesk").value),terminal=terminals.find(t=>t.id===terminalManager.querySelector("#assignmentTerminal").value);if(!desk||!terminal||terminal.state!=="AVAILABLE")return;
+    terminal.state="ASSIGNED";terminal.desk=desk.id;desk.terminal=terminal.id;desk.state="ACTIVE";
+    terminalManager.querySelector("#assignmentStatus").innerHTML=`<b>MOCK VERIFIED:</b> ${terminal.id} assigned to ${desk.id}. In production this state must not be reached until account identity, server, environment, permissions, and session verification all pass.`;renderAll();
   });
-
   renderAll();
 })();
