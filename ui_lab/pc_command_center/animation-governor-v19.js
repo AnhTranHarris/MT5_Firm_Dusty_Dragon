@@ -48,7 +48,7 @@
    * Performance UI is intentionally isolated from the trading/runtime core.
    * Native Windows handoff: preserve this read-model/view-state boundary; a UI
    * scope or timeframe selector must never mutate broker, risk, execution,
-   * terminal, or ledger state.
+   * terminal, or ledger state. Timeframe buttons require no animation support.
    */
   window.addEventListener("DOMContentLoaded", () => {
     const style = document.createElement("link");
@@ -58,14 +58,14 @@
 
     const timeframeStyle = document.createElement("link");
     timeframeStyle.rel = "stylesheet";
-    timeframeStyle.href = "performance-timeframe-v31.css";
+    timeframeStyle.href = "performance-timeframe-v32.css";
     document.head.append(timeframeStyle);
 
     const script = document.createElement("script");
     script.src = "performance-dashboard-v30.js";
     script.onload = () => {
       const timeframeScript = document.createElement("script");
-      timeframeScript.src = "performance-timeframe-v31.js";
+      timeframeScript.src = "performance-timeframe-v32.js";
       timeframeScript.defer = true;
       document.body.append(timeframeScript);
     };
