@@ -11,7 +11,7 @@
    * The System workspace is intentionally treated as a fixed cockpit surface.
    * We do not solve viewport pressure by introducing page scrollbars. Instead:
    *   1. content is allowed to wrap/shrink horizontally;
-   *   2. every panel receives a persistent collapse control;
+   *   2. every System panel receives a persistent collapse control;
    *   3. lower-priority panels collapse automatically if the current window
    *      cannot display the expanded composition;
    *   4. a manual expansion is honored, then the lowest-priority *other* panel
@@ -19,8 +19,8 @@
    *
    * Future native Windows app translation:
    * preserve the same policy in the view-model/layout layer. Do not make the
-   * backend change its sampling, MT5, or risk behavior because a panel became
-   * collapsed. Collapse is presentation state only.
+   * backend change sampling, MT5, execution, or risk behavior because a panel
+   * became collapsed. Collapse is presentation state only.
    */
 
   const PANEL_META = [
@@ -39,15 +39,23 @@
   let fitting = false;
   let fitTimer = 0;
 
+  function directHeader(panel) {
+    return panel.querySelector(":scope > header") || panel.querySelector(":scope > .capacity-head");
+  }
+
+  function classifyStaticPanels() {
+    layout.querySelectorAll(":scope > .panel").forEach(panel => {
+      const headerText = directHeader(panel)?.textContent?.toUpperCase() || "";
+      if (headerText.includes("RESOURCE LOAD")) panel.classList.add("resource-load-panel");
+      if (headerText.includes("RENDER PRIORITY")) panel.classList.add("render-priority-panel");
+    });
+  }
+
   function metaFor(panel) {
     const found = PANEL_META.find(([className]) => panel.classList.contains(className));
     if (found) return {priority: found[1], title: found[2]};
-    const title = panel.querySelector(":scope > header")?.textContent?.trim().replace(/\s+/g, " ") || "SYSTEM PANEL";
+    const title = directHeader(panel)?.textContent?.trim().replace(/\s+/g, " ") || "SYSTEM PANEL";
     return {priority: 50, title};
-  }
-
-  function directHeader(panel) {
-    return panel.querySelector(":scope > header") || panel.querySelector(":scope > .capacity-head");
   }
 
   function setCollapsed(panel, collapsed, reason = "manual") {
@@ -56,6 +64,7 @@
     const toggle = panel.querySelector(":scope > header .system-collapse-toggle, :scope > .capacity-head .system-collapse-toggle");
     if (toggle) {
       toggle.setAttribute("aria-expanded", String(!collapsed));
+      toggle.setAttribute("aria-label", `${collapsed ? "Expand" : "Collapse"} ${panel.dataset.systemTitle || "System panel"}`);
       toggle.title = collapsed ? "Expand panel" : "Collapse panel";
       toggle.textContent = "⌄";
     }
@@ -64,12 +73,12 @@
   function decoratePanel(panel) {
     if (panel.dataset.systemCollapsible === "true") return;
     const meta = metaFor(panel);
+    const header = directHeader(panel);
+    if (!header) return;
+
     panel.dataset.systemCollapsible = "true";
     panel.dataset.systemPriority = String(meta.priority);
     panel.dataset.systemTitle = meta.title;
-
-    const header = directHeader(panel);
-    if (!header) return;
     header.classList.add("system-panel-header");
 
     const toggle = document.createElement("button");
@@ -93,17 +102,13 @@
   }
 
   function decorateAll() {
+    classifyStaticPanels();
     layout.querySelectorAll(":scope > .panel").forEach(decoratePanel);
-
-    /* Static legacy panels did not originally carry semantic classes because
-     * they predate the System-specific modules. Assign them once by stable DOM
-     * content so responsive CSS can place them intentionally. */
-    layout.querySelectorAll(":scope > .panel").forEach(panel => {
-      const headerText = directHeader(panel)?.textContent?.toUpperCase() || "";
-      if (headerText.includes("RESOURCE LOAD")) panel.classList.add("resource-load-panel");
-      if (headerText.includes("RENDER PRIORITY")) panel.classList.add("render-priority-panel");
-    });
     decorated = true;
+  }
+
+  function syncWorkspaceBodyState() {
+    document.body.classList.toggle("system-workspace-active", system.classList.contains("active"));
   }
 
   function overflows() {
@@ -128,16 +133,15 @@
       if (!decorated) decorateAll();
 
       /* Browser layout is synchronous after class changes when queried through
-       * getBoundingClientRect(), so this bounded loop does not need timers. */
-      let candidates = expandedPanels(preferredPanel);
+       * getBoundingClientRect(), so this bounded loop needs no animation frame. */
+      const candidates = expandedPanels(preferredPanel);
       let guard = candidates.length + 2;
       while (overflows() && candidates.length && guard-- > 0) {
-        const panel = candidates.shift();
-        setCollapsed(panel, true, "auto-fit");
+        setCollapsed(candidates.shift(), true, "auto-fit");
       }
 
       /* If the preferred panel alone still cannot fit, collapse it last rather
-       * than allowing inaccessible off-screen content. Its header remains visible. */
+       * than allowing inaccessible off-screen content. Its header stays visible. */
       if (overflows() && preferredPanel && !preferredPanel.classList.contains("system-collapsed")) {
         setCollapsed(preferredPanel, true, "auto-fit");
       }
@@ -171,9 +175,8 @@
     tools.querySelector("[data-system-collapse]").addEventListener("click", collapseAll);
   }
 
-  /* v21/v22 inject panels after this file's sibling modules execute. A short
-   * MutationObserver keeps the collapsibility layer decoupled from their DOM
-   * implementation and disconnects once the known panel set is decorated. */
+  /* v21/v22 currently execute before this module, but the observer protects the
+   * lab if their load order changes during future experiments. */
   const observer = new MutationObserver(() => {
     decorateAll();
     scheduleFit();
@@ -183,15 +186,22 @@
 
   addViewTools();
   decorateAll();
+  syncWorkspaceBodyState();
 
   const resizeObserver = new ResizeObserver(() => scheduleFit());
   resizeObserver.observe(system);
+
+  const classObserver = new MutationObserver(() => {
+    syncWorkspaceBodyState();
+    if (system.classList.contains("active")) scheduleFit();
+  });
+  classObserver.observe(system, {attributes:true, attributeFilter:["class"]});
 
   document.addEventListener("click", event => {
     if (event.target.closest('[data-workspace="system"]')) scheduleFit();
   });
   window.addEventListener("resize", () => scheduleFit());
 
-  /* Expose only presentation controls for later native-app parity testing. */
+  /* Expose presentation controls only; no trading or infrastructure authority. */
   window.DUSTY_SYSTEM_VIEW = Object.freeze({fit: () => scheduleFit(), collapseAll, expandAll: expandAllAndFit});
 })();
