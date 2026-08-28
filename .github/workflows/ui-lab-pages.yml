@@ -1,0 +1,76 @@
+name: UI Lab Pages Preview
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/ui-lab-pages.yml"
+  workflow_dispatch:
+
+# GitHub Pages production deployment intentionally runs from the repository's
+# default/protected branch. The published payload is still read-only UI-Lab
+# content checked out from dev/ui-lab-v1; no backend, broker, MT5, credential,
+# or execution files are staged into the Pages artifact.
+#
+# Why this indirection exists:
+# - GitHub Pages deploy-pages requires pages:write + id-token:write, a Pages
+#   artifact, and the github-pages environment.
+# - Environment deployment rules may restrict which GITHUB_REF may deploy.
+#   Keeping the deployment workflow on main satisfies a main/protected-branch
+#   policy without merging experimental UI work into production.
+# - actions/checkout can explicitly read the UI branch while the deployment
+#   authority remains attached to this main-branch workflow run.
+#
+# References retained for Windows-app handoff / future maintainers:
+# https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
+# https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
+# https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "ui-lab-pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout UI Lab branch
+        uses: actions/checkout@v6
+        with:
+          ref: dev/ui-lab-v1
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Stage PC Command Center only
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f ui_lab/pc_command_center/index.html
+          rm -rf _site
+          mkdir -p _site
+          cp -a ui_lab/pc_command_center/. _site/
+          touch _site/.nojekyll
+          git -C . rev-parse HEAD > _site/DEPLOYED_COMMIT.txt
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy UI Lab preview
+        id: deployment
+        uses: actions/deploy-pages@v4
