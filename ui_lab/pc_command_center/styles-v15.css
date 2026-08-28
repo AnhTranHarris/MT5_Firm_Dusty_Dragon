@@ -28,6 +28,7 @@
 .visual-fault{--life:#ff6175;--life-bg:rgba(255,97,117,.070);--life-line:rgba(255,97,117,.48)}
 .visual-parked{--life:#71a8ff;--life-bg:rgba(113,168,255,.065);--life-line:rgba(113,168,255,.44)}
 .visual-unprovisioned{--life:#8a949a;--life-bg:rgba(138,148,154,.045);--life-line:rgba(138,148,154,.28)}
+.visual-normal,.visual-caution,.visual-fault,.visual-parked,.visual-unprovisioned{color:var(--life)}
 .tree-core[class*="visual-"],.tree-layer[class*="visual-"],.tree-child[class*="visual-"]{border-color:var(--life-line);background-color:var(--life-bg)}
 .tree-core[class*="visual-"] em,.tree-layer[class*="visual-"] .tree-layer-head em,.tree-child[class*="visual-"] b,.tree-child[class*="visual-"] em{color:var(--life)}
 .tree-child.visual-unprovisioned{opacity:.68}
