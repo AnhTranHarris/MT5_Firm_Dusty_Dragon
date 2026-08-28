@@ -1,194 +1,34 @@
 @import url("styles-v15.css");
 
-/* Trading Floor spatial navigation.
-   The cube itself owns only transform animation. Glow/hover decoration stays on
-   the six faces so no grouping property can flatten the preserve-3d scene. */
-.spatial-nav-cube{
-  --cube-duration:78s;
-  position:absolute;
-  z-index:18;
-  top:14px;
-  width:64px;
-  height:64px;
-  border:0;
-  background:transparent;
-  padding:0;
-  perspective:420px;
-  cursor:pointer;
-  color:var(--text);
-  box-shadow:none;
-  outline:none;
-}
-.spatial-nav-cube.home-cube{left:14px;--cube-duration:78s}
-.spatial-nav-cube.demo-cube{right:14px;--cube-duration:107s}
+/* Trading Floor spatial navigation. */
+.spatial-nav-cube{--cube-duration:78s;position:absolute;z-index:18;top:14px;width:64px;height:64px;border:0;background:transparent;padding:0;perspective:420px;cursor:pointer;color:var(--text);box-shadow:none;outline:none}.spatial-nav-cube.home-cube{left:14px;--cube-duration:78s}.spatial-nav-cube.demo-cube{right:14px;--cube-duration:107s}.cube-3d{position:absolute;inset:10px;transform-style:preserve-3d;animation:cubeYOrbit var(--cube-duration) linear infinite;will-change:transform}.home-cube .cube-3d{animation-delay:-17s}.demo-cube .cube-3d{animation-delay:-43s;animation-direction:reverse}.cube-face{position:absolute;inset:0;border:1px solid rgba(103,215,255,.5);background:rgba(6,29,40,.42);box-shadow:inset 0 0 10px rgba(103,215,255,.07);transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease;backface-visibility:hidden}.cube-face.front{transform:translateZ(21px)}.cube-face.back{transform:rotateY(180deg) translateZ(21px)}.cube-face.right{transform:rotateY(90deg) translateZ(21px)}.cube-face.left{transform:rotateY(-90deg) translateZ(21px)}.cube-face.top{transform:rotateX(90deg) translateZ(21px)}.cube-face.bottom{transform:rotateX(-90deg) translateZ(21px)}.cube-label{display:none}.cube-face::after{content:"";position:absolute;inset:0;display:grid;place-items:center;font:700 7px/1 "Segoe UI",sans-serif;letter-spacing:.08em;text-shadow:0 0 8px #020608;backface-visibility:hidden}.home-cube .cube-face::after{content:"CORE";color:var(--cyan)}.demo-cube .cube-face::after{content:"DEMO";color:var(--amber)}.home-cube .cube-face.front{background:rgba(8,34,47,.56)}.home-cube .cube-face.back{background:rgba(3,15,22,.30)}.home-cube .cube-face.right{background:rgba(14,43,56,.44)}.home-cube .cube-face.left{background:rgba(5,24,34,.34)}.home-cube .cube-face.top,.home-cube .cube-face.bottom{background:rgba(18,49,61,.30)}.demo-cube .cube-face{border-color:rgba(255,197,104,.58)}.demo-cube .cube-face.front{background:rgba(67,48,13,.38)}.demo-cube .cube-face.back{background:rgba(35,26,8,.22)}.demo-cube .cube-face.right{background:rgba(76,54,14,.32)}.demo-cube .cube-face.left{background:rgba(48,35,10,.26)}.demo-cube .cube-face.top,.demo-cube .cube-face.bottom{background:rgba(72,51,14,.22)}.spatial-nav-cube:hover,.spatial-nav-cube:focus-visible{border-color:transparent;background:transparent;box-shadow:none}.home-cube:hover .cube-face,.home-cube:focus-visible .cube-face{border-color:rgba(126,230,255,.96);box-shadow:inset 0 0 16px rgba(103,215,255,.17),0 0 14px rgba(103,215,255,.34)}.demo-cube:hover .cube-face,.demo-cube:focus-visible .cube-face{border-color:rgba(255,214,125,.96);box-shadow:inset 0 0 16px rgba(255,197,104,.15),0 0 14px rgba(255,197,104,.31)}.spatial-nav-cube:disabled{opacity:1;cursor:default}.spatial-nav-cube:disabled .cube-3d{animation-play-state:running}@keyframes cubeYOrbit{from{transform:rotateX(-18deg) rotateY(0deg)}to{transform:rotateX(-18deg) rotateY(360deg)}}body.analytical-mode .spatial-nav-cube{display:none}@media(prefers-reduced-motion:reduce){.cube-3d{animation-duration:120s}}
 
-.cube-3d{
-  position:absolute;
-  inset:10px;
-  transform-style:preserve-3d;
-  animation:cubeYOrbit var(--cube-duration) linear infinite;
-  will-change:transform;
-}
-.home-cube .cube-3d{animation-delay:-17s}
-.demo-cube .cube-3d{animation-delay:-43s;animation-direction:reverse}
+/* Trading workspace scope console. */
+.trading-scope-console{margin-bottom:8px;overflow:visible}.trading-scope-controls{display:grid;grid-template-columns:minmax(180px,1.2fr) 155px 240px minmax(220px,1fr);gap:9px;align-items:end;padding:8px 10px;border-bottom:1px solid var(--line)}.scope-kicker{display:block;color:var(--cyan);font-size:8px;letter-spacing:.14em}.trading-scope-controls strong{display:block;margin-top:3px;font-size:14px;letter-spacing:.06em}.trading-scope-controls label{display:grid;gap:4px;color:var(--muted);font-size:8px;letter-spacing:.11em}.trading-scope-controls select{width:100%;height:28px;border:1px solid var(--line);background:#071219;color:var(--text);padding:0 8px;font-size:9px;outline:none}.trading-scope-controls select:focus{border-color:var(--cyan);box-shadow:0 0 12px rgba(103,215,255,.12)}.scope-note{align-self:center;color:var(--muted);font-size:9px;line-height:1.35}.trading-scope-metrics{display:grid;grid-template-columns:repeat(6,minmax(105px,1fr));gap:1px;background:rgba(103,215,255,.10)}.trading-scope-metrics>div{min-height:58px;padding:6px 8px;background:#071219}.trading-scope-metrics span{display:block;color:var(--muted);font-size:7px;letter-spacing:.09em}.trading-scope-metrics b{display:block;margin-top:3px;font-size:12px;font-variant-numeric:tabular-nums}.trading-scope-metrics small{display:block;margin-top:2px;color:rgba(127,168,187,.78);font-size:7px}.trading-scope-context{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;border-top:1px solid rgba(103,215,255,.08);background:rgba(103,215,255,.08)}.trading-scope-context span{padding:5px 8px;background:#061016;color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trading-scope-context b{color:var(--cyan);margin-right:7px;font-size:7px;letter-spacing:.08em}.empty-scope{padding:18px!important;text-align:center!important;color:var(--muted)!important}@media(max-width:1350px){.trading-scope-controls{grid-template-columns:1fr 145px 220px}.scope-note{grid-column:1/-1}.trading-scope-metrics{grid-template-columns:repeat(4,1fr)}}
 
-.cube-face{
-  position:absolute;
-  inset:0;
-  border:1px solid rgba(103,215,255,.5);
-  background:rgba(6,29,40,.42);
-  box-shadow:inset 0 0 10px rgba(103,215,255,.07);
-  transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease;
-  backface-visibility:hidden;
-}
-.cube-face.front{transform:translateZ(21px)}
-.cube-face.back{transform:rotateY(180deg) translateZ(21px)}
-.cube-face.right{transform:rotateY(90deg) translateZ(21px)}
-.cube-face.left{transform:rotateY(-90deg) translateZ(21px)}
-.cube-face.top{transform:rotateX(90deg) translateZ(21px)}
-.cube-face.bottom{transform:rotateX(-90deg) translateZ(21px)}
+/* v2.6 — viewport cockpit contract.
+   Every ordinary workspace consumes the available application viewport instead
+   of behaving like a vertically scrolling web document. System remains governed
+   by its dedicated responsive/collapse controller. At narrow widths the shell
+   may use two rows, but vertical page scrolling is still prohibited. */
+:root{--app-shell-height:48px;--footer-height:28px;--main-gap:12px}.topbar.app-shell-header{height:var(--app-shell-height);grid-template-columns:auto minmax(560px,1fr) minmax(0,1fr) auto;grid-template-areas:"brand nav services actions";gap:10px;padding:0 12px;align-items:center;border-bottom:1px solid var(--line);backdrop-filter:none}.app-shell-header .brand{grid-area:brand;gap:7px;white-space:nowrap}.app-shell-header .brand-mark{width:28px;height:28px;font-size:8px;box-shadow:0 0 12px rgba(103,215,255,.18)}.app-shell-header .brand b{font-size:10px}.app-shell-header .brand small{display:none}.app-shell-header .workspace-nav{grid-area:nav;position:static;top:auto;display:flex;align-items:center;gap:1px;padding:0;border:0;background:transparent;overflow:hidden}.app-shell-header .workspace-nav button{padding:5px 7px;font-size:7px;min-height:24px;white-space:nowrap}.app-shell-header .service-strip{grid-area:services;gap:3px;flex-wrap:nowrap;overflow:hidden;justify-content:flex-end}.app-shell-header .service-pill{font-size:7px;padding:3px 4px;white-space:nowrap}.app-shell-header .top-actions{grid-area:actions;gap:6px;font-size:8px;white-space:nowrap}.app-shell-header .top-actions #modeButton{display:none!important}
 
-.cube-label{display:none}
-.cube-face::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  display:grid;
-  place-items:center;
-  font:700 7px/1 "Segoe UI",sans-serif;
-  letter-spacing:.08em;
-  text-shadow:0 0 8px #020608;
-  backface-visibility:hidden;
-}
-.home-cube .cube-face::after{content:"CORE";color:var(--cyan)}
-.demo-cube .cube-face::after{content:"DEMO";color:var(--amber)}
-.home-cube .cube-face.front{background:rgba(8,34,47,.56)}
-.home-cube .cube-face.back{background:rgba(3,15,22,.30)}
-.home-cube .cube-face.right{background:rgba(14,43,56,.44)}
-.home-cube .cube-face.left{background:rgba(5,24,34,.34)}
-.home-cube .cube-face.top,.home-cube .cube-face.bottom{background:rgba(18,49,61,.30)}
-.demo-cube .cube-face{border-color:rgba(255,197,104,.58)}
-.demo-cube .cube-face.front{background:rgba(67,48,13,.38)}
-.demo-cube .cube-face.back{background:rgba(35,26,8,.22)}
-.demo-cube .cube-face.right{background:rgba(76,54,14,.32)}
-.demo-cube .cube-face.left{background:rgba(48,35,10,.26)}
-.demo-cube .cube-face.top,.demo-cube .cube-face.bottom{background:rgba(72,51,14,.22)}
-.spatial-nav-cube:hover,.spatial-nav-cube:focus-visible{border-color:transparent;background:transparent;box-shadow:none}
-.home-cube:hover .cube-face,.home-cube:focus-visible .cube-face{border-color:rgba(126,230,255,.96);box-shadow:inset 0 0 16px rgba(103,215,255,.17),0 0 14px rgba(103,215,255,.34)}
-.demo-cube:hover .cube-face,.demo-cube:focus-visible .cube-face{border-color:rgba(255,214,125,.96);box-shadow:inset 0 0 16px rgba(255,197,104,.15),0 0 14px rgba(255,197,104,.31)}
-.spatial-nav-cube:disabled{opacity:1;cursor:default}
-.spatial-nav-cube:disabled .cube-3d{animation-play-state:running}
-@keyframes cubeYOrbit{from{transform:rotateX(-18deg) rotateY(0deg)}to{transform:rotateX(-18deg) rotateY(360deg)}}
-body.analytical-mode .spatial-nav-cube{display:none}
-@media(prefers-reduced-motion:reduce){.cube-3d{animation-duration:120s}}
+html,body{height:100%;min-height:0;overflow:hidden}body{padding-bottom:0}main{height:calc(100vh - var(--app-shell-height) - var(--footer-height));min-height:0;padding:8px 12px;overflow:hidden}.workspace.active{height:100%;min-height:0;overflow:hidden}.workspace.active>.trading-layout,.workspace.active>.risk-layout,.workspace.active>.performance-layout,.workspace.active>.research-layout,.workspace.active>.lab-layout{height:100%;min-height:0;overflow:hidden}.panel,.hero-card{min-height:0}
 
-/* Trading workspace: one quantitative surface, selectable at firm, portfolio,
-   or individual-desk resolution. */
-.trading-scope-console{margin-bottom:10px;overflow:visible}
-.trading-scope-controls{display:grid;grid-template-columns:minmax(180px,1.2fr) 155px 240px minmax(220px,1fr);gap:9px;align-items:end;padding:10px 12px;border-bottom:1px solid var(--line)}
-.scope-kicker{display:block;color:var(--cyan);font-size:8px;letter-spacing:.14em}
-.trading-scope-controls strong{display:block;margin-top:3px;font-size:14px;letter-spacing:.06em}
-.trading-scope-controls label{display:grid;gap:4px;color:var(--muted);font-size:8px;letter-spacing:.11em}
-.trading-scope-controls select{width:100%;height:30px;border:1px solid var(--line);background:#071219;color:var(--text);padding:0 8px;font-size:9px;outline:none}
-.trading-scope-controls select:focus{border-color:var(--cyan);box-shadow:0 0 12px rgba(103,215,255,.12)}
-.scope-note{align-self:center;color:var(--muted);font-size:9px;line-height:1.35}
-.trading-scope-metrics{display:grid;grid-template-columns:repeat(6,minmax(105px,1fr));gap:1px;background:rgba(103,215,255,.10)}
-.trading-scope-metrics>div{min-height:66px;padding:8px 9px;background:#071219}
-.trading-scope-metrics span{display:block;color:var(--muted);font-size:7px;letter-spacing:.09em}
-.trading-scope-metrics b{display:block;margin-top:4px;font-size:13px;font-variant-numeric:tabular-nums}
-.trading-scope-metrics small{display:block;margin-top:2px;color:rgba(127,168,187,.78);font-size:7px}
-.trading-scope-context{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;border-top:1px solid rgba(103,215,255,.08);background:rgba(103,215,255,.08)}
-.trading-scope-context span{padding:6px 9px;background:#061016;color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.trading-scope-context b{color:var(--cyan);margin-right:7px;font-size:7px;letter-spacing:.08em}
-.empty-scope{padding:18px!important;text-align:center!important;color:var(--muted)!important}
-@media(max-width:1350px){.trading-scope-controls{grid-template-columns:1fr 145px 220px}.scope-note{grid-column:1/-1}.trading-scope-metrics{grid-template-columns:repeat(4,1fr)}}
+/* Command: brief + three-column floor exactly fill the remaining viewport. */
+#command.workspace.active{display:grid;grid-template-rows:auto minmax(0,1fr);gap:8px}.brief-row{margin-bottom:0;gap:8px}.command-brief{padding:9px 12px 0}.command-brief h1{font-size:16px;margin:3px 0 6px}.command-brief .metric-grid{gap:4px}.command-brief .metric{padding:2px 6px}.command-brief .metric strong{font-size:13px;margin-top:1px}.command-brief .metric small,.command-brief .metric label{font-size:7px}.command-brief .brief-ticker{height:23px;margin:6px -12px 0}.attention-card #incidentList{padding:4px}.attention-card .incident{padding:5px}.command-grid{height:100%;min-height:0;grid-template-columns:280px minmax(520px,1fr) 290px;gap:8px}.left-stack,.right-stack{height:100%;min-height:0;gap:8px}.left-stack>.panel:first-child{flex:0 1 43%;min-height:0}.timeline{padding:4px 7px}.timeline-row{padding:3px 0;font-size:9px}.firm-stage{height:100%;min-height:0;display:grid;grid-template-rows:30px minmax(0,1fr) auto}.firm-stage>header{grid-row:1}.trading-floor-viewport{grid-row:2;height:auto!important;min-height:0!important}.dossier{grid-row:3;min-height:82px;padding:6px 9px;gap:4px}.dossier .metric strong{font-size:12px}.right-stack>.panel{min-height:0}.desk-matrix{gap:4px;padding:5px}.desk-tile{padding:5px}.authority-zone p{margin:6px 0}.authority-zone button{padding:6px 8px;margin:3px 8px}.compact{padding-bottom:4px}
 
-/* v2.6 — desktop-first single-row application shell.
-   Maximized desktop windows keep brand + workspace navigation + health/clock on
-   one line. Narrower monitors intentionally fall back to the two-row shell.
-   The old F2/F3 keyboard behavior remains available, but the visible F2 button
-   is removed from the chrome to reduce clutter. */
-:root{--app-shell-height:56px}
-.topbar.app-shell-header{
-  height:var(--app-shell-height);
-  grid-template-columns:220px minmax(590px,1fr) minmax(430px,auto) 88px;
-  grid-template-rows:1fr;
-  grid-template-areas:"brand nav services actions";
-  gap:0 10px;
-  padding:0 12px;
-  align-items:center;
-  border-bottom:1px solid var(--line);
-  backdrop-filter:none;
-}
-.app-shell-header .brand{grid-area:brand;gap:8px;min-width:0}
-.app-shell-header .brand-mark{width:30px;height:30px;font-size:9px;box-shadow:0 0 12px rgba(103,215,255,.18)}
-.app-shell-header .brand b{font-size:11px;white-space:nowrap}
-.app-shell-header .brand small{font-size:7px;margin-top:2px;white-space:nowrap}
-.app-shell-header .workspace-nav{
-  grid-area:nav;
-  position:static;
-  top:auto;
-  display:flex;
-  align-items:center;
-  gap:1px;
-  padding:0;
-  border:0;
-  background:transparent;
-  overflow:hidden;
-  min-width:0;
-}
-.app-shell-header .workspace-nav button{padding:5px 6px;font-size:7.5px;min-height:24px;white-space:nowrap}
-.app-shell-header .service-strip{grid-area:services;gap:4px;flex-wrap:nowrap;overflow:hidden;justify-content:flex-end;min-width:0}
-.app-shell-header .service-pill{font-size:7px;padding:3px 4px;white-space:nowrap}
-.app-shell-header .top-actions{grid-area:actions;gap:0;font-size:8px;justify-content:flex-end;white-space:nowrap}
-.app-shell-header #modeButton{display:none!important}
+/* Trading: rows are fractions of the usable height, never fixed 430/290px. */
+.trading-layout{grid-template-columns:300px minmax(500px,1fr) 310px;grid-template-rows:minmax(0,3fr) minmax(0,2fr);gap:8px}.market-board,.chart-panel,.decision-panel,.positions-panel{min-height:0;overflow:hidden}.mock-chart{height:100%;min-height:0}.data-table th,.data-table td{padding:5px 6px}.decision-item{padding:6px}.positions-panel{overflow:hidden}
 
-/* Command startup cockpit: reclaim vertical room instead of introducing another
-   collapse system. Trading Floor is exactly ~10% shorter than the 552px base. */
-main{padding:8px 10px}
-#command .brief-row{gap:8px;margin-bottom:8px}
-#command .hero-card{padding:10px 14px 0}
-#command .hero-card h1{font-size:18px;margin:4px 0 9px}
-#command .metric-grid{gap:5px}
-#command .metric{padding:3px 6px}
-#command .metric strong{font-size:14px}
-#command .metric label,#command .metric small{font-size:8px}
-#command .brief-ticker{height:26px;margin:8px -14px 0}
-#command .command-grid{min-height:0;height:635px;gap:8px}
-#command .left-stack,#command .right-stack{gap:8px;min-height:0}
-#command .firm-stage{min-height:635px;height:635px}
-#command .trading-floor-viewport{height:497px;min-height:497px}
-#command .dossier{min-height:107px;padding:7px 10px}
-#command .left-stack>.panel:first-child{flex:0 0 330px;max-height:330px;overflow:hidden}
-#command .timeline{padding:4px 7px}
-#command .timeline-row{padding:4px 0;font-size:9px}
+/* Risk: heat map owns the tall column and scales its cells to viewport height. */
+.risk-layout{grid-template-columns:minmax(650px,2fr) 320px;grid-template-rows:minmax(0,2fr) minmax(0,1fr);gap:8px}.risk-map-panel{min-height:0;overflow:hidden}.risk-heatmap{height:calc(100% - 30px);min-height:0;grid-auto-rows:minmax(0,1fr);padding:6px;gap:3px}.heat-tile strong{font-size:clamp(11px,1.15vw,17px)}.heat-tile span{font-size:clamp(7px,.7vw,10px)}.heat-tile small{font-size:7px}.correlation-grid{padding:6px}.corr-cell{height:auto;min-height:24px}
 
-/* At narrower desktop widths the shell intentionally becomes two rows. */
-@media(max-width:1450px){
-  :root{--app-shell-height:76px}
-  .topbar.app-shell-header{
-    grid-template-columns:230px minmax(0,1fr) 105px;
-    grid-template-rows:48px 28px;
-    grid-template-areas:"brand services actions" "nav nav nav";
-    gap:0 10px;
-  }
-  .app-shell-header .workspace-nav{align-self:stretch;border-top:1px solid rgba(103,215,255,.10);padding:2px 0 3px}
-  .app-shell-header .workspace-nav button{padding:4px 8px;font-size:8px;min-height:22px}
-  .app-shell-header .service-strip{justify-content:center}
-}
-@media(max-width:900px){
-  :root{--app-shell-height:82px}
-  .topbar.app-shell-header{grid-template-columns:190px minmax(0,1fr);grid-template-areas:"brand actions" "nav nav"}
-  .app-shell-header .service-strip{display:none}
-  .app-shell-header .workspace-nav{overflow-x:auto}
-}
+/* Performance, Research and Lab use all available height with balanced rows. */
+.performance-layout,.research-layout,.lab-layout{grid-template-columns:2fr 1fr;grid-template-rows:repeat(2,minmax(0,1fr));gap:8px}.performance-stats,.research-queue,.evolution-panel{min-height:0!important}.performance-layout>.panel,.research-layout>.panel,.lab-layout>.panel{min-height:0;overflow:hidden}.stats-grid{padding:7px;gap:5px}.stat-block{padding:8px}.equity-bars{height:calc(100% - 30px);min-height:0;padding:12px}.attrib-row,.research-item,.evidence-item,.audit-row{padding:6px 8px}.contractor-cards{padding:7px;gap:5px}.contractor-cards>div{padding:7px}.cohort-grid{padding:8px;gap:6px}
 
-/* Short maximized windows get one more density step so the Command startup
-   remains a cockpit rather than a vertically scrolling document. */
-@media(max-height:900px) and (min-width:1451px){
-  #command .command-grid{height:600px}
-  #command .firm-stage{height:600px;min-height:600px}
-  #command .trading-floor-viewport{height:462px;min-height:462px}
-  #command .dossier{min-height:107px}
-  #command .left-stack>.panel:first-child{flex-basis:300px;max-height:300px}
-}
+footer{height:var(--footer-height);min-height:var(--footer-height);padding:0 12px;display:flex;align-items:center}
+
+@media(max-width:1450px){:root{--app-shell-height:76px}.topbar.app-shell-header{height:var(--app-shell-height);grid-template-columns:230px minmax(0,1fr) 190px;grid-template-rows:46px 30px;grid-template-areas:"brand services actions" "nav nav nav";gap:0 10px}.app-shell-header .brand small{display:block;font-size:7px}.app-shell-header .workspace-nav{align-self:stretch;border-top:1px solid rgba(103,215,255,.10);padding:2px 0}.app-shell-header .workspace-nav button{padding:4px 7px}.app-shell-header .service-strip{justify-content:center}}
+@media(max-width:1050px){.app-shell-header .service-strip{display:none}.topbar.app-shell-header{grid-template-columns:220px 1fr;grid-template-areas:"brand actions" "nav nav"}.command-grid{grid-template-columns:230px minmax(430px,1fr) 240px}.trading-layout{grid-template-columns:250px minmax(420px,1fr) 260px}.risk-layout{grid-template-columns:minmax(540px,2fr) 280px}}
+@media(max-height:820px){main{padding-top:6px;padding-bottom:6px}.command-brief h1{font-size:14px}.command-brief .brief-ticker{height:20px}.dossier{min-height:70px}.panel>header{min-height:27px;padding:5px 7px}.timeline-row{padding:2px 0}.data-table th,.data-table td{padding:4px 5px}.research-item,.evidence-item,.attrib-row{padding:5px 7px}}
