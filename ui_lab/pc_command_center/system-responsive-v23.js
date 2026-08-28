@@ -6,12 +6,26 @@
   if (!system || !layout) return;
 
   /*
-   * SYSTEM VIEWPORT + RENDER GOVERNOR — UI LAB
-   * ------------------------------------------
+   * SYSTEM VIEWPORT + DISPLAY GOVERNOR — UI LAB
+   * -------------------------------------------
    * The System workspace is a fixed cockpit surface. Presentation pressure is
    * solved by wrapping, responsive reflow, and panel collapse — never page-level
    * scrolling. Collapse is presentation state only and must never change MT5,
    * execution, risk, reconciliation, or telemetry behavior.
+   *
+   * IMPORTANT DISPLAY SEMANTICS
+   * ---------------------------
+   * "NO MOTION" is a GLOBAL Dusty Dragon UI policy. It disables decorative
+   * animation/transitions across every workspace, not merely the Trading Floor.
+   * The Trading Floor is the one special case where merely freezing the JARVIS
+   * solar system would leave a misleading/non-interactive spatial snapshot.
+   * Therefore, whenever NO MOTION is active, the orbital Canvas + spatial cubes
+   * are hidden and the existing analytical hierarchy tree is shown instead.
+   *
+   * In other words:
+   *   global UI            -> animation/transition disabled
+   *   Trading Floor        -> hierarchy tree replaces orbital solar system
+   *   trading/risk/backend -> completely unaffected
    *
    * Accessibility / Windows references retained for the native-app handoff:
    * - Windows contrast themes:
@@ -20,11 +34,13 @@
    *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/forced-colors
    * - User contrast preference:
    *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-contrast
+   * - Reduced motion:
+   *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/At-rules/@media/prefers-reduced-motion
    *
-   * Production Windows app: detect the user's contrast theme through the native
-   * framework/System.ThemeSettings (or Win32 HIGHCONTRAST for a Win32 host), use
-   * system/theme resources rather than hard-coded colors, and treat accessibility
-   * preference as stronger than cosmetic rendering preference.
+   * Production Windows app: detect the user's contrast/motion preference through
+   * native framework/system APIs, use system/theme resources rather than hard-
+   * coded colors, and treat accessibility preference as stronger than cosmetic
+   * rendering preference.
    */
 
   const PANEL_META = [
@@ -39,9 +55,6 @@
     ["audit-panel", 40, "AUDIT TAIL"]
   ];
 
-  /* Initial cockpit: keep operationally critical/system-context panels open and
-   * collapse detailed workflow/history panels. FIT VIEW may collapse more on a
-   * smaller window, but it will preserve higher-priority panels first. */
   const DEFAULT_COLLAPSED = new Set(["provisioning-panel", "audit-panel"]);
 
   let decorated = false;
@@ -139,7 +152,7 @@
           <select id="renderProfile" disabled>
             <option value="spatial-full">SPATIAL FULL</option>
             <option value="spatial-reduced">SPATIAL REDUCED</option>
-            <option value="analytical">ANALYTICAL 2D</option>
+            <option value="no-motion">NO MOTION · TREE FLOOR</option>
             <option value="high-contrast">HIGH CONTRAST · NO MOTION</option>
           </select>
         </label>
@@ -161,18 +174,25 @@
 
     function autoProfile() {
       if (forced.matches) return "high-contrast";
-      if (reduced.matches) return "analytical";
+      if (reduced.matches) return "no-motion";
       if (window.innerWidth < 1000 || window.innerHeight < 650) return "spatial-reduced";
       return "spatial-full";
     }
 
     function applyProfile(profile) {
+      const noMotion = profile === "no-motion" || profile === "high-contrast";
       document.body.classList.toggle("render-spatial-reduced", profile === "spatial-reduced");
-      document.body.classList.toggle("render-analytical-lite", profile === "analytical");
+      document.body.classList.toggle("render-analytical-lite", profile === "no-motion");
       document.body.classList.toggle("render-high-contrast", profile === "high-contrast");
-      document.body.classList.toggle("render-no-motion", profile === "analytical" || profile === "high-contrast");
+      document.body.classList.toggle("render-no-motion", noMotion);
       panel.querySelector("#renderProfileState").textContent = `${mode.toUpperCase()} · ${profile.replaceAll("-", " ").toUpperCase()}`;
-      panel.querySelector("#renderPolicySignal").textContent = profile === "spatial-full" ? "FULL EFFECTS" : profile === "spatial-reduced" ? "REDUCED EFFECTS" : profile === "analytical" ? "2D / NO MOTION" : "SYSTEM CONTRAST";
+      panel.querySelector("#renderPolicySignal").textContent = profile === "spatial-full"
+        ? "FULL EFFECTS"
+        : profile === "spatial-reduced"
+          ? "REDUCED EFFECTS"
+          : profile === "no-motion"
+            ? "GLOBAL STATIC · TREE FLOOR"
+            : "SYSTEM CONTRAST · STATIC";
       select.value = profile;
     }
 
@@ -184,8 +204,8 @@
       const profile = mode === "auto" ? autoProfile() : manualProfile;
       applyProfile(profile);
       panel.querySelector("#renderGovernorNote").innerHTML = mode === "auto"
-        ? `<b>AUTO:</b> Windows accessibility preferences win first. If forced colors are active, Dusty uses the user's system palette and stops decorative motion. Otherwise cosmetic load steps down before risk/execution resources.`
-        : `<b>MANUAL:</b> choose a presentation profile directly. This changes UI presentation only; it never changes desk capacity, trading authority, or risk controls.`;
+        ? `<b>AUTO:</b> accessibility wins first. Reduced-motion disables decorative motion across the entire Dusty UI; the Trading Floor alone swaps its JARVIS solar system for the hierarchy tree. Forced colors additionally use the Windows/system contrast palette.`
+        : `<b>MANUAL:</b> choose presentation only. NO MOTION disables decorative animation across every workspace and replaces the Trading Floor solar system with its hierarchy tree; it never changes desk capacity, trading authority, or risk controls.`;
       scheduleFit(panel);
     }
 
