@@ -1,0 +1,81 @@
+/* Dusty Dragon UI Lab v2.9 — readability floor.
+   The prototype accumulated 7–9px microcopy while we were maximizing information
+   density. That is too small for sustained workstation use. This layer raises the
+   smallest text classes by approximately 25% while keeping major headings largely
+   unchanged. Vertical density is recovered with slightly tighter padding/line-height,
+   not by shrinking text back down. The viewport/no-scroll contract remains intact. */
+
+:root{
+  --dd-font-micro:8.75px;   /* former 7px */
+  --dd-font-xs:10px;        /* former 8px */
+  --dd-font-small:11.25px;  /* former 9px */
+  --dd-font-body:12.5px;    /* former 10px */
+}
+
+/* Core cockpit microcopy. */
+.panel>header{font-size:var(--dd-font-small);line-height:1.05}
+.eyebrow{font-size:var(--dd-font-small)}
+.metric label,.metric small{font-size:var(--dd-font-small);line-height:1.1}
+.ticker-label{font-size:var(--dd-font-xs)}
+.ticker-track{font-size:var(--dd-font-small)}
+.ticker-track span::before{font-size:7.5px}
+.severity{font-size:var(--dd-font-xs)}
+.incident p{font-size:var(--dd-font-body);line-height:1.18}
+.timeline-row,.kv{font-size:var(--dd-font-body);line-height:1.16}
+.floor-hint{font-size:var(--dd-font-xs)}
+.detail-toolbar span{font-size:var(--dd-font-body)}
+.account-identity p{font-size:var(--dd-font-body)}
+.account-performance table,.detail-table{font-size:var(--dd-font-small)}
+.detail-panel h3{font-size:var(--dd-font-body)}
+.stat-cloud span{font-size:var(--dd-font-xs)}
+.desk-tile small{font-size:var(--dd-font-xs)}
+.desk-tile .numbers{font-size:var(--dd-font-small)}
+.authority-zone p{font-size:var(--dd-font-small);line-height:1.18}
+.data-table{font-size:var(--dd-font-body)}
+.data-table th{font-size:var(--dd-font-xs)}
+.chart-watermark{font-size:var(--dd-font-xs)}
+.decision-item{font-size:var(--dd-font-body);line-height:1.18}
+.heat-tile small{font-size:var(--dd-font-xs)}
+.corr-cell{font-size:var(--dd-font-xs)}
+.stat-block span{font-size:var(--dd-font-xs)}
+.equity-bar span{font-size:var(--dd-font-micro)}
+.attrib-row,.research-item,.evidence-item,.audit-row{font-size:var(--dd-font-small);line-height:1.18}
+
+/* Trading lens. */
+.scope-kicker,.trading-scope-controls label{font-size:var(--dd-font-xs)}
+.trading-scope-controls select,.scope-note{font-size:var(--dd-font-small)}
+.trading-scope-metrics span,.trading-scope-metrics small{font-size:var(--dd-font-micro)}
+.trading-scope-context span{font-size:var(--dd-font-xs)}
+.trading-scope-context b{font-size:var(--dd-font-micro)}
+
+/* System workspace — preserve information density but remove eye-strain microtype. */
+#system .capacity-title .eyebrow{font-size:var(--dd-font-small)}
+#system .capacity-title small{font-size:var(--dd-font-micro)}
+#system .render-mode-switch button,#system .render-profile-label,#system .render-signals span,#system .render-signals b,#system #renderGovernorNote{font-size:var(--dd-font-micro)}
+#system #renderProfile{font-size:var(--dd-font-xs)}
+.bootstrap-summary span,.bootstrap-summary small{font-size:var(--dd-font-micro)}
+.bootstrap-desk-row,.terminal-summary,.terminal-row,.terminal-assignment select,.terminal-assignment button,.bootstrap-note,.provisioning-policy,.terminal-status,.provisioning-row{font-size:var(--dd-font-xs)}
+.terminal-assignment small,.terminal-assignment label,.provisioning-legend,.tiny-button{font-size:var(--dd-font-micro)!important}
+
+/* Contractor repository manager. Role names are intentionally readable because
+   they communicate capability, not implementation trivia. */
+.contractor-summary span{font-size:var(--dd-font-micro)}
+.contractor-repo-row,.contractor-repo-row select{font-size:var(--dd-font-xs)}
+.contractor-repo-row small{font-size:var(--dd-font-micro)}
+.contractor-role{font-size:var(--dd-font-xs);line-height:1.12}
+.contractor-policy{font-size:var(--dd-font-micro);line-height:1.3}
+.contractor-actions button{font-size:var(--dd-font-micro)!important}
+
+/* Recover space through rhythm instead of illegible type. */
+.panel>header{padding-top:5px;padding-bottom:5px}
+.timeline-row,.attrib-row,.research-item,.evidence-item,.audit-row{padding-top:4px;padding-bottom:4px}
+.data-table th,.data-table td{padding-top:4px;padding-bottom:4px}
+.decision-item{padding-top:5px;padding-bottom:5px}
+.contractor-repo-row,.terminal-row,.bootstrap-desk-row,.provisioning-row{padding-top:5px;padding-bottom:5px}
+
+@media(max-height:820px){
+  .panel>header{font-size:10.5px}
+  .metric label,.metric small{font-size:10.5px}
+  .timeline-row,.kv,.data-table,.decision-item{font-size:11.5px}
+  .contractor-repo-row,.terminal-row,.bootstrap-desk-row,.provisioning-row{font-size:9.5px}
+}
