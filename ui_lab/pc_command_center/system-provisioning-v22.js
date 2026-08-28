@@ -6,33 +6,64 @@
   if (!system || !layout) return;
 
   /*
-   * UI-LAB ONLY — future production translation notes
-   * -------------------------------------------------
-   * 1) Discovery and assignment are separate operations. A future native/local
-   *    service may inventory installed MT5 executables/data directories, but
-   *    the browser must not be given arbitrary filesystem authority.
-   * 2) Assignment is human-confirmed. Discovery never grants execution rights.
-   * 3) A selected terminal must still pass Dusty's existing account/session/
-   *    DEMO-vs-LIVE/permission verification before the desk becomes READY.
-   * 4) One active Dusty desk consumes one assigned MT5 account/terminal instance.
-   * 5) Capacity contraction uses newest/deepest-first shedding; desks with open
-   *    market/execution obligations enter DRAINING and cannot be killed merely
-   *    to satisfy a resource recommendation.
-   * 6) Layer 0 is progressive bootstrap: one valid Demo desk is enough to run.
-   *    Six qualifying independent Demo proofs gate eligibility to request L1;
-   *    six simultaneous Demo terminals are NOT a startup requirement.
+   * UI-LAB ONLY — future native Windows implementation notes
+   * ---------------------------------------------------------
+   * PRODUCT CONTRACT
+   * 1) Discovery and assignment are separate operations. Discovery may be
+   *    automatic; assignment is human-confirmed and grants NO trade authority.
+   * 2) One active Dusty desk = one broker account = one running MT5 terminal
+   *    instance. A terminal is not READY until Dusty's existing account,
+   *    DEMO/LIVE, permission, session-latch, reconciliation and execution
+   *    verification succeeds.
+   * 3) Layer 0 progressively bootstraps. One verified Demo desk is enough to
+   *    operate. Six independent qualifying Demo proofs gate the L1 request;
+   *    six simultaneous terminals are not a startup requirement.
+   * 4) Capacity contraction is newest/deepest-first, but a desk with open market
+   *    or reconciliation obligations enters DRAINING and retains its terminal
+   *    until broker-safe release is proven.
    *
-   * Research breadcrumbs retained for production implementation:
-   * - GitHub Actions maintenance guidance: https://docs.github.com/en/actions/how-tos/create-and-publish-actions/release-and-maintain-actions
-   * - GitHub custom-action separation guidance: https://docs.github.com/en/actions/how-tos/create-and-publish-actions/manage-custom-actions
-   * - Community frontend guidance: keep view/business/network concerns separate
-   *   and avoid unnecessary state coupling.
-   * - Canvas/community implementations consistently gate rendering to active
-   *   surfaces and avoid per-frame DOM rebuilds; preserve that principle here.
+   * METAQUOTES — authoritative terminal binding/probing
+   * - initialize(path, login=..., server=..., timeout=..., portable=...):
+   *   https://www.mql5.com/en/docs/python_metatrader5/mt5initialize_py
+   *   Prefer EXPLICIT path after discovery. MetaQuotes says path-less initialize
+   *   uses an undisclosed auto-discovery algorithm, which is ambiguous when many
+   *   terminals exist.
+   * - terminal_info() returns connected/trade_allowed/tradeapi_disabled/build,
+   *   company, path, data_path, commondata_path, ping, etc. Use it to prove the
+   *   selected terminal instance after initialize():
+   *   https://www.mql5.com/en/docs/python_metatrader5/mt5terminalinfo_py
+   * - Terminal path/data path semantics:
+   *   https://www.mql5.com/en/docs/standardlibrary/tradeclasses/cterminalinfo/cterminalinfopath
+   *   https://www.mql5.com/en/docs/standardlibrary/tradeclasses/cterminalinfo/cterminalinfodatapath
    *
-   * These notes are architectural reminders, not claims that GitHub specifies
-   * MT5 discovery. Production terminal discovery needs Windows/MetaTrader-specific
-   * engineering and explicit tests before any broker-facing integration.
+   * WINDOWS — candidate discovery, not trust
+   * - App Paths registration:
+   *   https://learn.microsoft.com/en-us/windows/win32/shell/app-registration
+   * - MSI uninstall registration:
+   *   https://learn.microsoft.com/en-us/windows/win32/msi/uninstall-registry-key
+   * - Running process inspection:
+   *   https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-process
+   * Production candidate sources should be bounded: stored Dusty assignments,
+   * running terminal processes, registry registration, user-approved portable
+   * directories, and only then bounded common-location scanning. Never hand the
+   * frontend arbitrary filesystem access.
+   *
+   * DURABLE TERMINAL IDENTITY
+   *   normalized_exe_path + normalized_data_path + portable_flag
+   * Runtime process identity additionally includes PID + process start time.
+   * Do not use filename, broker branding, or PID alone as identity.
+   *
+   * COMMUNITY DIAGNOSTIC NOTES — NEVER AUTO-APPLY
+   * - Users commonly report separate install folders for simultaneous MT5:
+   *   https://www.reddit.com/r/metatrader/comments/1denbb4/
+   * - A 2025 community report attributes a high-instance ceiling to Windows
+   *   desktop heap and suggests SharedSection registry changes:
+   *   https://www.reddit.com/r/metatrader/comments/1nwqad6/
+   *   Treat this only as a diagnostic lead. Dusty must NEVER modify desktop heap
+   *   or similar system registry values automatically.
+   *
+   * Full implementation checklist and source hierarchy live in
+   * PRODUCTION_HANDOFF_NOTES.md. Re-check source docs before production coding.
    */
 
   const terminals = [
@@ -77,7 +108,7 @@
       <label>AVAILABLE MT5<select id="assignmentTerminal"></select></label>
       <button id="assignMock">ASSIGN & VERIFY · MOCK</button>
     </div>
-    <p id="assignmentStatus" class="terminal-status">Select an unprovisioned desk and an available terminal. No real filesystem, MT5, or broker calls occur in this lab.</p>`;
+    <p id="assignmentStatus" class="terminal-status">Select an unprovisioned desk and an available terminal. No real filesystem, MT5, registry, process-control, or broker calls occur in this lab.</p>`;
 
   const provisioning = document.createElement("article");
   provisioning.className = "panel provisioning-panel";
@@ -123,11 +154,11 @@
 
   function renderAll(){renderDesks();renderTerminals()}
   terminalManager.querySelector("#assignmentDesk").addEventListener("change",renderTerminals);
-  terminalManager.querySelector("#mockRescan").addEventListener("click",()=>{terminalManager.querySelector("#assignmentStatus").textContent="Mock rescan complete: 4 terminal installations found. Production discovery must be performed by a constrained local service, not browser filesystem access.";});
+  terminalManager.querySelector("#mockRescan").addEventListener("click",()=>{terminalManager.querySelector("#assignmentStatus").textContent="Mock rescan complete: 4 terminal installations found. Production discovery must be performed by a constrained local service using bounded Windows candidate sources, then verified through explicit MetaQuotes terminal binding.";});
   terminalManager.querySelector("#assignMock").addEventListener("click",()=>{
     const desk=desks.find(d=>d.id===terminalManager.querySelector("#assignmentDesk").value),terminal=terminals.find(t=>t.id===terminalManager.querySelector("#assignmentTerminal").value);if(!desk||!terminal||terminal.state!=="AVAILABLE")return;
     terminal.state="ASSIGNED";terminal.desk=desk.id;desk.terminal=terminal.id;desk.state="ACTIVE";
-    terminalManager.querySelector("#assignmentStatus").innerHTML=`<b>MOCK VERIFIED:</b> ${terminal.id} assigned to ${desk.id}. In production this state must not be reached until account identity, server, environment, permissions, and session verification all pass.`;renderAll();
+    terminalManager.querySelector("#assignmentStatus").innerHTML=`<b>MOCK VERIFIED:</b> ${terminal.id} assigned to ${desk.id}. In production this state must not be reached until executable/data-path identity, account identity, server, environment, permissions, and session verification all pass.`;renderAll();
   });
   renderAll();
 })();
