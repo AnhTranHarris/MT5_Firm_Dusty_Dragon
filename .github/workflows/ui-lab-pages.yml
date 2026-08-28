@@ -20,7 +20,8 @@ on:
 # - actions/checkout explicitly reads dev/ui-lab-v1 while deployment authority
 #   remains attached to this protected main-branch workflow.
 #
-# Preview checkpoint: Performance UI v3.3 federal-fiscal-year actual-vs-target graph.
+# Preview checkpoint: Performance UI v3.2 no-motion fiscal timeframe buttons,
+# explicit date axis, full-width actual-vs-target graph.
 # References:
 # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 # https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
@@ -53,8 +54,8 @@ jobs:
           test -f ui_lab/pc_command_center/index.html
           test -f ui_lab/pc_command_center/performance-dashboard-v30.js
           test -f ui_lab/pc_command_center/performance-dashboard-v30.css
-          test -f ui_lab/pc_command_center/performance-timeframe-v31.js
-          test -f ui_lab/pc_command_center/performance-timeframe-v31.css
+          test -f ui_lab/pc_command_center/performance-timeframe-v32.js
+          test -f ui_lab/pc_command_center/performance-timeframe-v32.css
           rm -rf _site
           mkdir -p _site
           cp -a ui_lab/pc_command_center/. _site/
