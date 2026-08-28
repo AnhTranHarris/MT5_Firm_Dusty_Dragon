@@ -20,7 +20,7 @@ on:
 # - actions/checkout explicitly reads dev/ui-lab-v1 while deployment authority
 #   remains attached to this protected main-branch workflow.
 #
-# Preview checkpoint: Performance UI v3.3 dynamic report timeframe slider.
+# Preview checkpoint: Performance UI v3.2 fiscal-calendar actual-vs-target graph.
 # References:
 # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 # https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
