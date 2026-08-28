@@ -1,19 +1,17 @@
-/* v2.4 — System workspace fit-to-window, collapsible panels, display governor */
+/* v2.5 — System workspace fit-to-window, collapsible panels, display governor */
 body.system-workspace-active{overflow:hidden;padding-bottom:0}
 body.system-workspace-active main{overflow:hidden;max-width:100vw}
-#system.workspace.active{position:relative;height:calc(100vh - 64px - 45px - 52px);min-height:0;max-width:100%;overflow:hidden}
+#system.workspace.active{position:relative;height:calc(100vh - var(--app-shell-height,76px) - 52px);min-height:0;max-width:100%;overflow:hidden}
 #system .system-layout{height:100%;width:100%;min-width:0;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-auto-flow:row dense;grid-auto-rows:min-content;align-content:start;gap:8px;overflow:hidden}
 #system .system-layout>.panel{min-width:0;max-width:100%;overflow:hidden;transition:min-height .16s ease,border-color .16s ease,background-color .16s ease}
 #system .hardware-panel{grid-column:span 7}#system .capacity-panel{grid-column:span 5}#system .qualification-panel{grid-column:span 5}#system .terminal-manager{grid-column:span 7}#system .provisioning-panel{grid-column:span 7}#system .system-table{grid-column:span 5}#system .resource-load-panel{grid-column:span 4}#system .audit-panel{grid-column:span 5}#system .render-priority-panel{grid-column:span 3}
 #system .system-layout>.panel *,#system .terminal-row>*,#system .provisioning-row>*,#system .bootstrap-desk-row>*{min-width:0}
 #system .system-layout>.panel p,#system .system-layout>.panel small,#system .system-layout>.panel span,#system .system-layout>.panel strong,#system .system-layout>.panel b{overflow-wrap:anywhere}
-
 #system .capacity-head{display:flex;align-items:center;gap:8px;padding:8px 10px}
 #system .capacity-title{display:flex;align-items:baseline;gap:8px;flex:1;min-width:0}
 #system .capacity-title .eyebrow{font-size:9px;white-space:nowrap}
 #system .capacity-title small{font-size:7px;color:var(--muted);letter-spacing:.08em;white-space:nowrap}
 #system .capacity-mode{margin-left:auto}
-
 #system .system-collapse-toggle{flex:0 0 auto;width:24px;height:22px;padding:0;margin-left:8px;display:grid;place-items:center;border-color:rgba(103,215,255,.18);color:var(--muted);font-size:12px;line-height:1;box-shadow:none}
 #system .system-collapse-toggle:hover,#system .system-collapse-toggle:focus-visible{color:var(--cyan);border-color:rgba(103,215,255,.58);box-shadow:0 0 10px rgba(103,215,255,.12)}
 #system .system-layout>.panel.system-collapsed{min-height:30px!important;height:30px!important;align-self:start;border-color:rgba(103,215,255,.13)}
@@ -23,7 +21,6 @@ body.system-workspace-active main{overflow:hidden;max-width:100vw}
 #system .system-layout>.panel.system-collapsed .system-collapse-toggle{transform:rotate(-90deg)}
 #system .system-view-tools{position:absolute;right:4px;bottom:4px;z-index:8;display:flex;gap:5px;pointer-events:auto}
 #system .system-view-tools button{padding:5px 7px;font-size:7px;background:rgba(4,13,18,.94)}
-
 #system .render-governor-body{padding:8px;display:grid;gap:7px}
 #system .render-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px}
 #system .render-mode-switch button{padding:6px;font-size:7px}
@@ -35,27 +32,15 @@ body.system-workspace-active main{overflow:hidden;max-width:100vw}
 #system .render-signals span{display:flex;justify-content:space-between;gap:6px;color:var(--muted);font-size:7px}
 #system .render-signals b{color:var(--text);font-size:7px}
 #system #renderGovernorNote{margin:0;padding:6px;border-left:2px solid rgba(103,215,255,.32);background:rgba(103,215,255,.025);color:var(--muted);font-size:7px;line-height:1.35}
-
 body.render-spatial-reduced .scanlines{display:none}
 body.render-spatial-reduced .panel,body.render-spatial-reduced .hero-card{box-shadow:none}
 body.render-spatial-reduced .heat-tile:hover::after{animation:none;display:none}
 body.render-analytical-lite .scanlines,body.render-high-contrast .scanlines{display:none}
 body.render-no-motion *,body.render-no-motion *::before,body.render-no-motion *::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}
-/* A static profile must not merely slow the canvas; it replaces the spatial
- * Trading Floor with the already-existing analytical hierarchy surface. */
 body.render-no-motion #orbitalCanvas,body.render-no-motion .spatial-nav-cube{display:none!important}
 body.render-no-motion #hierarchyTree{display:block!important}
-
-@media(forced-colors:active){
-  body{background:Canvas;color:CanvasText}
-  .panel,.hero-card,#system .hardware-item,#system .capacity-summary div,#system #renderProfile{background:Canvas;color:CanvasText;border-color:ButtonText;box-shadow:none}
-  button,.ghost,#system .system-collapse-toggle{background:ButtonFace;color:ButtonText;border-color:ButtonText;box-shadow:none}
-  button:focus-visible,.ghost:focus-visible,#system .system-collapse-toggle:focus-visible{outline:2px solid Highlight;outline-offset:2px}
-  .state-NORMAL,.state-HEALTHY,.state-CAUTION,.state-DEGRADED,.state-FAULT,.state-FAULT-LATCHED{color:CanvasText}
-  .scanlines,.space-grid{display:none!important}
-}
-
+@media(forced-colors:active){body{background:Canvas;color:CanvasText}.panel,.hero-card,#system .hardware-item,#system .capacity-summary div,#system #renderProfile{background:Canvas;color:CanvasText;border-color:ButtonText;box-shadow:none}button,.ghost,#system .system-collapse-toggle{background:ButtonFace;color:ButtonText;border-color:ButtonText;box-shadow:none}button:focus-visible,.ghost:focus-visible,#system .system-collapse-toggle:focus-visible{outline:2px solid Highlight;outline-offset:2px}.state-NORMAL,.state-HEALTHY,.state-CAUTION,.state-DEGRADED,.state-FAULT,.state-FAULT-LATCHED{color:CanvasText}.scanlines,.space-grid{display:none!important}}
 @media(max-width:1500px){#system .hardware-panel,#system .terminal-manager,#system .provisioning-panel{grid-column:span 8}#system .capacity-panel,#system .qualification-panel,#system .system-table{grid-column:span 4}#system .hardware-grid{grid-template-columns:repeat(4,minmax(0,1fr))}#system .terminal-row{grid-template-columns:46px minmax(0,1.35fr) minmax(0,.9fr) 66px minmax(0,.75fr)}#system .provisioning-row{grid-template-columns:42px 34px 68px minmax(0,.9fr) 60px minmax(0,1.1fr)}#system .capacity-title small{display:none}}
 @media(max-width:1180px){#system .system-layout{gap:6px}#system .system-layout>.panel{grid-column:span 6}#system .terminal-manager,#system .provisioning-panel{grid-column:span 12}#system .hardware-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#system .capacity-summary,#system .bootstrap-summary{grid-template-columns:repeat(2,minmax(0,1fr))}#system .capacity-controls{grid-template-columns:1fr;padding:8px}#system .terminal-assignment{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:7px}#system .terminal-assignment>div,#system .terminal-assignment button{grid-column:1/-1}}
-@media(max-width:820px){#system.workspace.active{height:calc(100vh - 64px - 45px - 46px);min-height:0}#system .system-layout>.panel{grid-column:1/-1}#system .hardware-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#system .terminal-row{grid-template-columns:42px minmax(0,1fr) 70px}#system .terminal-row>span:nth-child(3),#system .terminal-row>span:nth-child(5){display:none}#system .provisioning-row{grid-template-columns:40px 34px 64px minmax(0,1fr)}#system .provisioning-row>span:nth-child(5),#system .provisioning-row>span:nth-child(6){display:none}#system .bootstrap-desk-row{grid-template-columns:42px 62px minmax(0,1fr) 70px}#system .bootstrap-desk-row>span:nth-child(5){display:none}}
+@media(max-width:820px){#system.workspace.active{height:calc(100vh - var(--app-shell-height,82px) - 46px);min-height:0}#system .system-layout>.panel{grid-column:1/-1}#system .hardware-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#system .terminal-row{grid-template-columns:42px minmax(0,1fr) 70px}#system .terminal-row>span:nth-child(3),#system .terminal-row>span:nth-child(5){display:none}#system .provisioning-row{grid-template-columns:40px 34px 64px minmax(0,1fr)}#system .provisioning-row>span:nth-child(5),#system .provisioning-row>span:nth-child(6){display:none}#system .bootstrap-desk-row{grid-template-columns:42px 62px minmax(0,1fr) 70px}#system .bootstrap-desk-row>span:nth-child(5){display:none}}
 @media(max-height:760px){#system .hardware-item{min-height:54px;padding:6px 7px}#system .hardware-item small{line-height:1.15}#system .capacity-summary div,#system .bootstrap-summary>div{padding:6px 7px}#system .terminal-row,#system .provisioning-row,#system .bootstrap-desk-row{padding-top:5px;padding-bottom:5px}#system .capacity-note,#system .bootstrap-note,#system .provisioning-policy,#system .terminal-status{padding:5px 7px;line-height:1.25}}
