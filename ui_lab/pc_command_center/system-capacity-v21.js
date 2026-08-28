@@ -18,12 +18,43 @@
 
   /*
    * Capacity is a machine-scheduling envelope, never trading authority.
-   * Production Auto should derive safe capacity from rolling telemetry (p95/p99
-   * CPU pressure, memory/paging, disk latency, MT5 responsiveness, broker/data
-   * latency, reconciliation backlog, thermals) and maintain reserve.
-   *
-   * Crucially, Auto activates min(provisioned eligible desks, proven-safe PC
+   * Production Auto activates min(provisioned eligible desks, proven-safe PC
    * capacity). A powerful PC does not manufacture desks or broker accounts.
+   *
+   * FUTURE WINDOWS TELEMETRY NOTES
+   * --------------------------------
+   * Use Microsoft-supported process/performance APIs for rolling samples rather
+   * than repeatedly spawning PowerShell/WMI queries from the UI thread.
+   * - PDH / Windows performance counters:
+   *   https://learn.microsoft.com/en-us/windows/win32/perfctrs/collecting-performance-data
+   *   https://learn.microsoft.com/en-us/windows/win32/perfctrs/performance-counters-functions
+   * - Memory telemetry:
+   *   https://learn.microsoft.com/en-us/windows/win32/memory/memory-performance-information
+   * - Process inspection reference:
+   *   https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/get-process
+   * - GPU inventory caveat (some Win32_VideoController properties can be
+   *   inaccurate on non-WDDM hardware):
+   *   https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-videocontroller
+   *
+   * A community Python report observed high overhead when repeatedly rebuilding
+   * WMI/OpenHardwareMonitor collectors. Diagnostic evidence only, but it matches
+   * our design: collectors are persistent/cached and sampled at bounded cadence.
+   * https://www.reddit.com/r/learnpython/comments/gkxp4q/
+   *
+   * MODEL POLICY FOR PRODUCTION
+   * - static hardware inventory: refresh rarely/on explicit rescan;
+   * - fast process/CPU/RAM/disk metrics: sampled worker, never UI animation loop;
+   * - latency/queue/MT5 health: timestamped observations from owning subsystems;
+   * - summarize p50/p95/p99 + violations over multi-day/weekly windows;
+   * - preserve safety reserve and hysteresis to prevent desk flapping;
+   * - reduce capacity faster on sustained violations than it increases after
+   *   good periods;
+   * - GUI quality degrades before execution/risk/reconciliation resources.
+   *
+   * Do not infer a universal MT5-instance maximum from CPU/RAM. Community reports
+   * show Windows GUI/session constraints can appear before raw hardware is full.
+   * Never auto-edit Windows desktop-heap/SharedSection settings; surface evidence
+   * and require explicit human/admin diagnosis instead.
    */
   const MODEL = {workloadBudget:55,mt5Cost:7,symbolCost:1.5,maxMt5:7,maxSymbols:24,provenSafeMt5:5,autoSymbols:12};
   let eligibleDeskCount = 1; // progressive first-launch mock: D01 only
@@ -73,8 +104,8 @@
   function setMode(next){mode=next;const manual=mode==="manual";autoButton.classList.toggle("active",!manual);manualButton.classList.toggle("active",manual);mt5Slider.disabled=!manual;symbolSlider.disabled=!manual;reconcile();}
   autoButton.addEventListener("click",()=>setMode("auto"));manualButton.addEventListener("click",()=>setMode("manual"));mt5Slider.addEventListener("input",()=>reconcile("mt5"));symbolSlider.addEventListener("input",()=>reconcile("symbols"));
 
-  // Small lab API lets the provisioning panel notify the capacity governor
-  // without coupling either module to the other's DOM implementation.
+  // Tiny lab API keeps provisioning and capacity modules decoupled. Production
+  // replaces this with typed application messages/view models, not DOM reach-in.
   window.DUSTY_CAPACITY={setEligibleDeskCount(count){eligibleDeskCount=Math.max(1,Number(count)||1);reconcile();},getMode(){return mode;}};
   setMode("auto");
 })();
