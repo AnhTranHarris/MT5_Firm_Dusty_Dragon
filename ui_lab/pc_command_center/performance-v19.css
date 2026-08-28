@@ -1,3 +1,5 @@
+@import url("shell-typography-v27.css");
+
 /* Dusty Dragon UI Lab v1.9 — render-efficiency layer.
    Keep continuous motion on compositor-friendly transforms and remove expensive
    full-screen compositing effects that add little analytical value. */
