@@ -45,21 +45,30 @@
   };
 
   /*
-   * Performance UI v3 is intentionally isolated from the trading/runtime core.
-   * It is presentation-only progressive disclosure: Investor -> Quant and
-   * Firm -> Portfolio/Layer -> Desk. Loading after DOMContentLoaded guarantees
-   * mock-data, hierarchy and the base app have initialized before replacement.
-   * Native Windows handoff: keep this view-model boundary; never let a UI scope
-   * selector mutate broker, risk, execution, or ledger state.
+   * Performance UI is intentionally isolated from the trading/runtime core.
+   * Native Windows handoff: preserve this read-model/view-state boundary; a UI
+   * scope or timeframe selector must never mutate broker, risk, execution,
+   * terminal, or ledger state.
    */
   window.addEventListener("DOMContentLoaded", () => {
     const style = document.createElement("link");
     style.rel = "stylesheet";
     style.href = "performance-dashboard-v30.css";
     document.head.append(style);
+
+    const timeframeStyle = document.createElement("link");
+    timeframeStyle.rel = "stylesheet";
+    timeframeStyle.href = "performance-timeframe-v31.css";
+    document.head.append(timeframeStyle);
+
     const script = document.createElement("script");
     script.src = "performance-dashboard-v30.js";
-    script.defer = true;
+    script.onload = () => {
+      const timeframeScript = document.createElement("script");
+      timeframeScript.src = "performance-timeframe-v31.js";
+      timeframeScript.defer = true;
+      document.body.append(timeframeScript);
+    };
     document.body.append(script);
   }, {once:true});
 })();
