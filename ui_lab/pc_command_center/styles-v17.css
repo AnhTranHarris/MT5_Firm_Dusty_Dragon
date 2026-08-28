@@ -1,10 +1,10 @@
 @import url("styles-v15.css");
 
 /* Trading Floor spatial navigation.
-   Keep the 3D container free of filter/opacity effects: CSS grouping properties
-   can flatten preserve-3d descendants. Hover emphasis belongs on the faces. */
+   The cube itself owns only transform animation. Glow/hover decoration stays on
+   the six faces so no grouping property can flatten the preserve-3d scene. */
 .spatial-nav-cube{
-  --cube-duration:24s;
+  --cube-duration:78s;
   position:absolute;
   z-index:18;
   top:14px;
@@ -13,12 +13,14 @@
   border:0;
   background:transparent;
   padding:0;
-  perspective:360px;
+  perspective:420px;
   cursor:pointer;
   color:var(--text);
+  box-shadow:none;
+  outline:none;
 }
-.spatial-nav-cube.home-cube{left:14px;--cube-duration:24s}
-.spatial-nav-cube.demo-cube{right:14px;--cube-duration:29s}
+.spatial-nav-cube.home-cube{left:14px;--cube-duration:78s}
+.spatial-nav-cube.demo-cube{right:14px;--cube-duration:107s}
 
 .cube-3d{
   position:absolute;
@@ -27,15 +29,15 @@
   animation:cubeYOrbit var(--cube-duration) linear infinite;
   will-change:transform;
 }
-.home-cube .cube-3d{animation-delay:-5s}
-.demo-cube .cube-3d{animation-delay:-13s;animation-direction:reverse}
+.home-cube .cube-3d{animation-delay:-17s}
+.demo-cube .cube-3d{animation-delay:-43s;animation-direction:reverse}
 
 .cube-face{
   position:absolute;
   inset:0;
   border:1px solid rgba(103,215,255,.5);
   background:rgba(6,29,40,.42);
-  box-shadow:inset 0 0 12px rgba(103,215,255,.08),0 0 13px rgba(103,215,255,.09);
+  box-shadow:inset 0 0 10px rgba(103,215,255,.07);
   transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease;
   backface-visibility:hidden;
 }
@@ -46,7 +48,7 @@
 .cube-face.top{transform:rotateX(90deg) translateZ(21px)}
 .cube-face.bottom{transform:rotateX(-90deg) translateZ(21px)}
 
-/* Labels are attached to the physical faces, not overlaid on the viewport. */
+/* Labels belong to each physical face so they rotate with the geometry. */
 .cube-label{display:none}
 .cube-face::after{
   content:"";
@@ -62,7 +64,7 @@
 .home-cube .cube-face::after{content:"CORE";color:var(--cyan)}
 .demo-cube .cube-face::after{content:"DEMO";color:var(--amber)}
 
-/* Face contrast makes Y-axis rotation legible. */
+/* Face contrast makes the slow Y-axis turn readable at a glance. */
 .home-cube .cube-face.front{background:rgba(8,34,47,.56)}
 .home-cube .cube-face.back{background:rgba(3,15,22,.30)}
 .home-cube .cube-face.right{background:rgba(14,43,56,.44)}
@@ -75,20 +77,26 @@
 .demo-cube .cube-face.left{background:rgba(48,35,10,.26)}
 .demo-cube .cube-face.top,.demo-cube .cube-face.bottom{background:rgba(72,51,14,.22)}
 
-/* Hover never touches filter/opacity/transform-style on the 3D container.
-   Only the face outlines/glow intensify, so the cube cannot flatten. */
-.home-cube:hover .cube-face{
-  border-color:rgba(126,230,255,.95);
-  box-shadow:inset 0 0 18px rgba(103,215,255,.18),0 0 22px rgba(103,215,255,.42);
+/* Base button hover styling adds a rectangular shadow to every button. Spatial
+   controls opt out; hover brightens only the cube faces and never changes the
+   transform, opacity, filter, or animation speed of the 3D object. */
+.spatial-nav-cube:hover,
+.spatial-nav-cube:focus-visible{
+  border-color:transparent;
+  background:transparent;
+  box-shadow:none;
 }
-.demo-cube:hover .cube-face{
+.home-cube:hover .cube-face,.home-cube:focus-visible .cube-face{
+  border-color:rgba(126,230,255,.96);
+  box-shadow:inset 0 0 16px rgba(103,215,255,.17),0 0 14px rgba(103,215,255,.34);
+}
+.demo-cube:hover .cube-face,.demo-cube:focus-visible .cube-face{
   border-color:rgba(255,214,125,.96);
-  box-shadow:inset 0 0 18px rgba(255,197,104,.16),0 0 22px rgba(255,197,104,.38);
+  box-shadow:inset 0 0 16px rgba(255,197,104,.15),0 0 14px rgba(255,197,104,.31);
 }
 
-/* A shortcut can be inactive at its current destination without freezing its
-   ambient motion. Disabled is semantic only; animation remains independent. */
-.spatial-nav-cube:disabled{opacity:.68;cursor:default}
+/* Shortcut availability never freezes ambient spatial motion. */
+.spatial-nav-cube:disabled{opacity:1;cursor:default}
 .spatial-nav-cube:disabled .cube-3d{animation-play-state:running}
 
 @keyframes cubeYOrbit{
@@ -98,6 +106,9 @@
 
 body.analytical-mode .spatial-nav-cube{display:none}
 
+/* F2 is the product's explicit no-spatial-motion mode. If the OS requests
+   reduced motion while Spatial mode is deliberately active, retain only an
+   ultra-slow 120-second orientation cue rather than silently freezing it. */
 @media(prefers-reduced-motion:reduce){
-  .cube-3d{animation:none;transform:rotateX(-18deg) rotateY(32deg)}
+  .cube-3d{animation-duration:120s}
 }
