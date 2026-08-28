@@ -12,12 +12,12 @@
 </head>
 <body class="spatial-mode">
   <div class="scanlines" aria-hidden="true"></div>
-  <header class="topbar">
-    <div class="brand"><span class="brand-mark">DD</span><div><b>DUSTY DRAGON</b><small>PC COMMAND CENTER / UI LAB v2.3</small></div></div>
+  <header class="topbar app-shell-header">
+    <div class="brand"><span class="brand-mark">DD</span><div><b>DUSTY DRAGON</b><small>PC COMMAND CENTER / UI LAB v2.5</small></div></div>
     <div id="serviceStrip" class="service-strip"></div>
     <div class="top-actions"><span id="clock">--:--:--</span><button id="modeButton" class="ghost">F2 ANALYTICAL</button></div>
+    <nav class="workspace-nav" aria-label="Workspaces"><button data-workspace="command" class="active">COMMAND</button><button data-workspace="trading">TRADING</button><button data-workspace="risk">RISK</button><button data-workspace="performance">PERFORMANCE</button><button data-workspace="research">RESEARCH</button><button data-workspace="lab">LAYER 0 LAB</button><button data-workspace="system">SYSTEM</button></nav>
   </header>
-  <nav class="workspace-nav" aria-label="Workspaces"><button data-workspace="command" class="active">COMMAND</button><button data-workspace="trading">TRADING</button><button data-workspace="risk">RISK</button><button data-workspace="performance">PERFORMANCE</button><button data-workspace="research">RESEARCH</button><button data-workspace="lab">LAYER 0 LAB</button><button data-workspace="system">SYSTEM</button></nav>
   <main>
     <section id="command" class="workspace active">
       <div class="brief-row"><article class="hero-card command-brief"><span class="eyebrow">COMMAND BRIEF</span><h1>Firm operational. One execution incident requires attention.</h1><div id="firmMetrics" class="metric-grid"></div><div class="brief-ticker"><span class="ticker-label">FIRM WIRE</span><div class="ticker-viewport"><div id="firmTicker" class="ticker-track"></div></div></div></article><article class="attention-card panel"><header><span>TOP ATTENTION</span><span class="severity critical">1 CRITICAL</span></header><div id="incidentList"></div></article></div>
