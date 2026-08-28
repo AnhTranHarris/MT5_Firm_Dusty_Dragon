@@ -48,7 +48,6 @@
 .cube-face.top{transform:rotateX(90deg) translateZ(21px)}
 .cube-face.bottom{transform:rotateX(-90deg) translateZ(21px)}
 
-/* Labels belong to each physical face so they rotate with the geometry. */
 .cube-label{display:none}
 .cube-face::after{
   content:"";
@@ -63,8 +62,6 @@
 }
 .home-cube .cube-face::after{content:"CORE";color:var(--cyan)}
 .demo-cube .cube-face::after{content:"DEMO";color:var(--amber)}
-
-/* Face contrast makes the slow Y-axis turn readable at a glance. */
 .home-cube .cube-face.front{background:rgba(8,34,47,.56)}
 .home-cube .cube-face.back{background:rgba(3,15,22,.30)}
 .home-cube .cube-face.right{background:rgba(14,43,56,.44)}
@@ -76,42 +73,14 @@
 .demo-cube .cube-face.right{background:rgba(76,54,14,.32)}
 .demo-cube .cube-face.left{background:rgba(48,35,10,.26)}
 .demo-cube .cube-face.top,.demo-cube .cube-face.bottom{background:rgba(72,51,14,.22)}
-
-/* Base button hover styling adds a rectangular shadow to every button. Spatial
-   controls opt out; hover brightens only the cube faces and never changes the
-   transform, opacity, filter, or animation speed of the 3D object. */
-.spatial-nav-cube:hover,
-.spatial-nav-cube:focus-visible{
-  border-color:transparent;
-  background:transparent;
-  box-shadow:none;
-}
-.home-cube:hover .cube-face,.home-cube:focus-visible .cube-face{
-  border-color:rgba(126,230,255,.96);
-  box-shadow:inset 0 0 16px rgba(103,215,255,.17),0 0 14px rgba(103,215,255,.34);
-}
-.demo-cube:hover .cube-face,.demo-cube:focus-visible .cube-face{
-  border-color:rgba(255,214,125,.96);
-  box-shadow:inset 0 0 16px rgba(255,197,104,.15),0 0 14px rgba(255,197,104,.31);
-}
-
-/* Shortcut availability never freezes ambient spatial motion. */
+.spatial-nav-cube:hover,.spatial-nav-cube:focus-visible{border-color:transparent;background:transparent;box-shadow:none}
+.home-cube:hover .cube-face,.home-cube:focus-visible .cube-face{border-color:rgba(126,230,255,.96);box-shadow:inset 0 0 16px rgba(103,215,255,.17),0 0 14px rgba(103,215,255,.34)}
+.demo-cube:hover .cube-face,.demo-cube:focus-visible .cube-face{border-color:rgba(255,214,125,.96);box-shadow:inset 0 0 16px rgba(255,197,104,.15),0 0 14px rgba(255,197,104,.31)}
 .spatial-nav-cube:disabled{opacity:1;cursor:default}
 .spatial-nav-cube:disabled .cube-3d{animation-play-state:running}
-
-@keyframes cubeYOrbit{
-  from{transform:rotateX(-18deg) rotateY(0deg)}
-  to{transform:rotateX(-18deg) rotateY(360deg)}
-}
-
+@keyframes cubeYOrbit{from{transform:rotateX(-18deg) rotateY(0deg)}to{transform:rotateX(-18deg) rotateY(360deg)}}
 body.analytical-mode .spatial-nav-cube{display:none}
-
-/* F2 is the product's explicit no-spatial-motion mode. If the OS requests
-   reduced motion while Spatial mode is deliberately active, retain only an
-   ultra-slow 120-second orientation cue rather than silently freezing it. */
-@media(prefers-reduced-motion:reduce){
-  .cube-3d{animation-duration:120s}
-}
+@media(prefers-reduced-motion:reduce){.cube-3d{animation-duration:120s}}
 
 /* Trading workspace: one quantitative surface, selectable at firm, portfolio,
    or individual-desk resolution. */
@@ -133,3 +102,54 @@ body.analytical-mode .spatial-nav-cube{display:none}
 .trading-scope-context b{color:var(--cyan);margin-right:7px;font-size:7px;letter-spacing:.08em}
 .empty-scope{padding:18px!important;text-align:center!important;color:var(--muted)!important}
 @media(max-width:1350px){.trading-scope-controls{grid-template-columns:1fr 145px 220px}.scope-note{grid-column:1/-1}.trading-scope-metrics{grid-template-columns:repeat(4,1fr)}}
+
+/* v2.5 — unified compact command shell.
+   The brand/service/clock row and workspace navigation are one sticky component,
+   reducing vertical chrome without hiding status or navigation. Keeping the nav
+   inside the same semantic header also avoids two independently sticky surfaces. */
+:root{--app-shell-height:76px}
+.topbar.app-shell-header{
+  height:var(--app-shell-height);
+  grid-template-columns:250px minmax(0,1fr) 220px;
+  grid-template-rows:48px 28px;
+  grid-template-areas:"brand services actions" "nav nav nav";
+  gap:0 12px;
+  padding:0 12px;
+  align-items:center;
+  border-bottom:1px solid var(--line);
+  backdrop-filter:none;
+}
+.app-shell-header .brand{grid-area:brand;gap:8px}
+.app-shell-header .brand-mark{width:30px;height:30px;font-size:9px;box-shadow:0 0 12px rgba(103,215,255,.18)}
+.app-shell-header .brand b{font-size:11px}
+.app-shell-header .brand small{font-size:7px;margin-top:2px}
+.app-shell-header .service-strip{grid-area:services;gap:5px;flex-wrap:nowrap;overflow:hidden;justify-content:center}
+.app-shell-header .service-pill{font-size:8px;padding:3px 5px;white-space:nowrap}
+.app-shell-header .top-actions{grid-area:actions;gap:8px;font-size:9px}
+.app-shell-header .top-actions button{padding:5px 7px;font-size:8px}
+.app-shell-header .workspace-nav{
+  grid-area:nav;
+  position:static;
+  top:auto;
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  gap:2px;
+  padding:2px 0 3px;
+  border-top:1px solid rgba(103,215,255,.10);
+  border-bottom:0;
+  background:transparent;
+  overflow:hidden;
+}
+.app-shell-header .workspace-nav button{padding:4px 9px;font-size:8px;min-height:22px;white-space:nowrap}
+@media(max-width:1150px){
+  .topbar.app-shell-header{grid-template-columns:210px minmax(0,1fr) 178px}
+  .app-shell-header .service-pill{font-size:7px;padding:3px 4px}
+  .app-shell-header .workspace-nav button{padding-inline:6px}
+}
+@media(max-width:900px){
+  :root{--app-shell-height:82px}
+  .topbar.app-shell-header{grid-template-columns:190px minmax(0,1fr);grid-template-areas:"brand actions" "nav nav"}
+  .app-shell-header .service-strip{display:none}
+  .app-shell-header .workspace-nav{overflow-x:auto}
+}
