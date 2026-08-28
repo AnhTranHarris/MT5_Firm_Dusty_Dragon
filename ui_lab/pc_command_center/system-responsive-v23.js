@@ -17,6 +17,16 @@
    *   4. a manual expansion is honored, then the lowest-priority *other* panel
    *      is collapsed if necessary to keep the workspace inside the viewport.
    *
+   * Browser implementation references retained for production translation:
+   * - Grid/flex items can retain a min-content automatic minimum; explicit
+   *   min-width:0 and minmax(0,1fr) prevent long paths/labels from widening the
+   *   cockpit beyond its container:
+   *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/min-width
+   *   https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Values/minmax
+   * - ResizeObserver is the supported element-size observation mechanism used
+   *   here to refit after window/container changes without polling:
+   *   https://developer.mozilla.org/en-US/docs/Web/API/Resize_Observer_API
+   *
    * Future native Windows app translation:
    * preserve the same policy in the view-model/layout layer. Do not make the
    * backend change sampling, MT5, execution, or risk behavior because a panel
