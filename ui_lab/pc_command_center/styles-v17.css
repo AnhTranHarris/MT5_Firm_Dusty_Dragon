@@ -112,3 +112,24 @@ body.analytical-mode .spatial-nav-cube{display:none}
 @media(prefers-reduced-motion:reduce){
   .cube-3d{animation-duration:120s}
 }
+
+/* Trading workspace: one quantitative surface, selectable at firm, portfolio,
+   or individual-desk resolution. */
+.trading-scope-console{margin-bottom:10px;overflow:visible}
+.trading-scope-controls{display:grid;grid-template-columns:minmax(180px,1.2fr) 155px 240px minmax(220px,1fr);gap:9px;align-items:end;padding:10px 12px;border-bottom:1px solid var(--line)}
+.scope-kicker{display:block;color:var(--cyan);font-size:8px;letter-spacing:.14em}
+.trading-scope-controls strong{display:block;margin-top:3px;font-size:14px;letter-spacing:.06em}
+.trading-scope-controls label{display:grid;gap:4px;color:var(--muted);font-size:8px;letter-spacing:.11em}
+.trading-scope-controls select{width:100%;height:30px;border:1px solid var(--line);background:#071219;color:var(--text);padding:0 8px;font-size:9px;outline:none}
+.trading-scope-controls select:focus{border-color:var(--cyan);box-shadow:0 0 12px rgba(103,215,255,.12)}
+.scope-note{align-self:center;color:var(--muted);font-size:9px;line-height:1.35}
+.trading-scope-metrics{display:grid;grid-template-columns:repeat(6,minmax(105px,1fr));gap:1px;background:rgba(103,215,255,.10)}
+.trading-scope-metrics>div{min-height:66px;padding:8px 9px;background:#071219}
+.trading-scope-metrics span{display:block;color:var(--muted);font-size:7px;letter-spacing:.09em}
+.trading-scope-metrics b{display:block;margin-top:4px;font-size:13px;font-variant-numeric:tabular-nums}
+.trading-scope-metrics small{display:block;margin-top:2px;color:rgba(127,168,187,.78);font-size:7px}
+.trading-scope-context{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;border-top:1px solid rgba(103,215,255,.08);background:rgba(103,215,255,.08)}
+.trading-scope-context span{padding:6px 9px;background:#061016;color:var(--muted);font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trading-scope-context b{color:var(--cyan);margin-right:7px;font-size:7px;letter-spacing:.08em}
+.empty-scope{padding:18px!important;text-align:center!important;color:var(--muted)!important}
+@media(max-width:1350px){.trading-scope-controls{grid-template-columns:1fr 145px 220px}.scope-note{grid-column:1/-1}.trading-scope-metrics{grid-template-columns:repeat(4,1fr)}}
