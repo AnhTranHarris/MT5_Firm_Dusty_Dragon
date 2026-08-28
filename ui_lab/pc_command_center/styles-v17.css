@@ -103,53 +103,92 @@ body.analytical-mode .spatial-nav-cube{display:none}
 .empty-scope{padding:18px!important;text-align:center!important;color:var(--muted)!important}
 @media(max-width:1350px){.trading-scope-controls{grid-template-columns:1fr 145px 220px}.scope-note{grid-column:1/-1}.trading-scope-metrics{grid-template-columns:repeat(4,1fr)}}
 
-/* v2.5 — unified compact command shell.
-   The brand/service/clock row and workspace navigation are one sticky component,
-   reducing vertical chrome without hiding status or navigation. Keeping the nav
-   inside the same semantic header also avoids two independently sticky surfaces. */
-:root{--app-shell-height:76px}
+/* v2.6 — desktop-first single-row application shell.
+   Maximized desktop windows keep brand + workspace navigation + health/clock on
+   one line. Narrower monitors intentionally fall back to the two-row shell.
+   The old F2/F3 keyboard behavior remains available, but the visible F2 button
+   is removed from the chrome to reduce clutter. */
+:root{--app-shell-height:56px}
 .topbar.app-shell-header{
   height:var(--app-shell-height);
-  grid-template-columns:250px minmax(0,1fr) 220px;
-  grid-template-rows:48px 28px;
-  grid-template-areas:"brand services actions" "nav nav nav";
-  gap:0 12px;
+  grid-template-columns:220px minmax(590px,1fr) minmax(430px,auto) 88px;
+  grid-template-rows:1fr;
+  grid-template-areas:"brand nav services actions";
+  gap:0 10px;
   padding:0 12px;
   align-items:center;
   border-bottom:1px solid var(--line);
   backdrop-filter:none;
 }
-.app-shell-header .brand{grid-area:brand;gap:8px}
+.app-shell-header .brand{grid-area:brand;gap:8px;min-width:0}
 .app-shell-header .brand-mark{width:30px;height:30px;font-size:9px;box-shadow:0 0 12px rgba(103,215,255,.18)}
-.app-shell-header .brand b{font-size:11px}
-.app-shell-header .brand small{font-size:7px;margin-top:2px}
-.app-shell-header .service-strip{grid-area:services;gap:5px;flex-wrap:nowrap;overflow:hidden;justify-content:center}
-.app-shell-header .service-pill{font-size:8px;padding:3px 5px;white-space:nowrap}
-.app-shell-header .top-actions{grid-area:actions;gap:8px;font-size:9px}
-.app-shell-header .top-actions button{padding:5px 7px;font-size:8px}
+.app-shell-header .brand b{font-size:11px;white-space:nowrap}
+.app-shell-header .brand small{font-size:7px;margin-top:2px;white-space:nowrap}
 .app-shell-header .workspace-nav{
   grid-area:nav;
   position:static;
   top:auto;
-  align-self:stretch;
   display:flex;
   align-items:center;
-  gap:2px;
-  padding:2px 0 3px;
-  border-top:1px solid rgba(103,215,255,.10);
-  border-bottom:0;
+  gap:1px;
+  padding:0;
+  border:0;
   background:transparent;
   overflow:hidden;
+  min-width:0;
 }
-.app-shell-header .workspace-nav button{padding:4px 9px;font-size:8px;min-height:22px;white-space:nowrap}
-@media(max-width:1150px){
-  .topbar.app-shell-header{grid-template-columns:210px minmax(0,1fr) 178px}
-  .app-shell-header .service-pill{font-size:7px;padding:3px 4px}
-  .app-shell-header .workspace-nav button{padding-inline:6px}
+.app-shell-header .workspace-nav button{padding:5px 6px;font-size:7.5px;min-height:24px;white-space:nowrap}
+.app-shell-header .service-strip{grid-area:services;gap:4px;flex-wrap:nowrap;overflow:hidden;justify-content:flex-end;min-width:0}
+.app-shell-header .service-pill{font-size:7px;padding:3px 4px;white-space:nowrap}
+.app-shell-header .top-actions{grid-area:actions;gap:0;font-size:8px;justify-content:flex-end;white-space:nowrap}
+.app-shell-header #modeButton{display:none!important}
+
+/* Command startup cockpit: reclaim vertical room instead of introducing another
+   collapse system. Trading Floor is exactly ~10% shorter than the 552px base. */
+main{padding:8px 10px}
+#command .brief-row{gap:8px;margin-bottom:8px}
+#command .hero-card{padding:10px 14px 0}
+#command .hero-card h1{font-size:18px;margin:4px 0 9px}
+#command .metric-grid{gap:5px}
+#command .metric{padding:3px 6px}
+#command .metric strong{font-size:14px}
+#command .metric label,#command .metric small{font-size:8px}
+#command .brief-ticker{height:26px;margin:8px -14px 0}
+#command .command-grid{min-height:0;height:635px;gap:8px}
+#command .left-stack,#command .right-stack{gap:8px;min-height:0}
+#command .firm-stage{min-height:635px;height:635px}
+#command .trading-floor-viewport{height:497px;min-height:497px}
+#command .dossier{min-height:107px;padding:7px 10px}
+#command .left-stack>.panel:first-child{flex:0 0 330px;max-height:330px;overflow:hidden}
+#command .timeline{padding:4px 7px}
+#command .timeline-row{padding:4px 0;font-size:9px}
+
+/* At narrower desktop widths the shell intentionally becomes two rows. */
+@media(max-width:1450px){
+  :root{--app-shell-height:76px}
+  .topbar.app-shell-header{
+    grid-template-columns:230px minmax(0,1fr) 105px;
+    grid-template-rows:48px 28px;
+    grid-template-areas:"brand services actions" "nav nav nav";
+    gap:0 10px;
+  }
+  .app-shell-header .workspace-nav{align-self:stretch;border-top:1px solid rgba(103,215,255,.10);padding:2px 0 3px}
+  .app-shell-header .workspace-nav button{padding:4px 8px;font-size:8px;min-height:22px}
+  .app-shell-header .service-strip{justify-content:center}
 }
 @media(max-width:900px){
   :root{--app-shell-height:82px}
   .topbar.app-shell-header{grid-template-columns:190px minmax(0,1fr);grid-template-areas:"brand actions" "nav nav"}
   .app-shell-header .service-strip{display:none}
   .app-shell-header .workspace-nav{overflow-x:auto}
+}
+
+/* Short maximized windows get one more density step so the Command startup
+   remains a cockpit rather than a vertically scrolling document. */
+@media(max-height:900px) and (min-width:1451px){
+  #command .command-grid{height:600px}
+  #command .firm-stage{height:600px;min-height:600px}
+  #command .trading-floor-viewport{height:462px;min-height:462px}
+  #command .dossier{min-height:107px}
+  #command .left-stack>.panel:first-child{flex-basis:300px;max-height:300px}
 }
