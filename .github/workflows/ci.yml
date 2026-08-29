@@ -40,7 +40,7 @@ jobs:
           node --check ui_lab/pc_command_center/performance-scope-mock-v39.js
           node --check ui_lab/pc_command_center/performance-panel-sync-v39.js
           node --check ui_lab/pc_command_center/performance-quant-scope-mock-v40.js
-          node --check ui_lab/pc_command_center/performance-quant-sync-v40.js
+          node --check ui_lab/pc_command_center/performance-quant-sync-v41.js
           node --check ui_lab/pc_command_center/animation-governor-v19.js
 
       - name: Performance read-model contract
