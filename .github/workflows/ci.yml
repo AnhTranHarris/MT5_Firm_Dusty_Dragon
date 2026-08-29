@@ -34,6 +34,8 @@ jobs:
 
       - name: UI JavaScript syntax
         run: |
+          node --check ui_lab/pc_command_center/hierarchy-data.js
+          node --check ui_lab/pc_command_center/hierarchy-tree-density-v30.js
           node --check ui_lab/pc_command_center/performance-dashboard-v33.js
           node --check ui_lab/pc_command_center/performance-timeframe-v38.js
           node --check ui_lab/pc_command_center/performance-mock-history.js
