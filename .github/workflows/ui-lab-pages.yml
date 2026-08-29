@@ -13,10 +13,10 @@ on:
 # from dev/ui-lab-v1; backend, broker, MT5, credentials and execution code are
 # never staged into the Pages artifact.
 #
-# Preview checkpoint: Performance v3.6.5 — CUMULATIVE RETURN is aligned directly
-# above the percentage axis, the redundant IMPLIED CAPITAL heading is removed,
-# and the blue as-of badge physically joins the blue cutoff line. Investor rail,
-# vertical actual-return bars and objective/HWM/watch-floor semantics remain intact.
+# Preview checkpoint: Performance v3.6.5 — CUMULATIVE RETURN now uses the same
+# visual scale as the investor legend and stays inside the chart, the as-of badge
+# physically overlaps its cutoff line, and objective variance uses a white boxed
+# annotation for contrast against the yellow objective path.
 
 permissions:
   contents: read
