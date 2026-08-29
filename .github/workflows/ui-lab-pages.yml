@@ -13,16 +13,10 @@ on:
 # content checked out from dev/ui-lab-v1; no backend, broker, MT5, credential,
 # or execution files are staged into the Pages artifact.
 #
-# Why this indirection exists:
-# - GitHub Pages deploy-pages requires pages:write + id-token:write, a Pages
-#   artifact, and the github-pages environment.
-# - Environment deployment rules may restrict which GITHUB_REF may deploy.
-# - actions/checkout explicitly reads dev/ui-lab-v1 while deployment authority
-#   remains attached to this protected main-branch workflow.
-#
-# Preview checkpoint: final investor-grade Performance panel audit:
-# measured metrics only, explicit policy math, reconciled return attribution,
-# corrected expanded-chart selector, and v3.4 compounded objective chart.
+# Preview checkpoint: institutional quant Performance lens:
+# absolute efficiency, trade edge, tail/diversification diagnostics, and explicit
+# benchmark-relative metrics that remain unavailable until a valid benchmark and
+# periodic return series are selected. Investor objective chart remains v3.4.
 # References:
 # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 # https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
@@ -53,8 +47,9 @@ jobs:
         run: |
           set -euo pipefail
           test -f ui_lab/pc_command_center/index.html
-          test -f ui_lab/pc_command_center/performance-dashboard-v31.js
+          test -f ui_lab/pc_command_center/performance-dashboard-v32.js
           test -f ui_lab/pc_command_center/performance-dashboard-v30.css
+          test -f ui_lab/pc_command_center/performance-quant-v32.css
           test -f ui_lab/pc_command_center/performance-timeframe-v34.js
           test -f ui_lab/pc_command_center/performance-timeframe-v34.css
           rm -rf _site
