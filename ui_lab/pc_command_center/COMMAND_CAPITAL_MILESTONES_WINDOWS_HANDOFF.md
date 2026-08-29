@@ -12,6 +12,23 @@ The left rail is intentionally ordered by operator value:
 
 Timeline and Research Delta line spacing should be compact but never overlapping. Reclaim padding/leading there before reducing milestone typography.
 
+## Command rail typography contract
+
+The Command left rail must read as one cockpit surface, not three unrelated typographic systems. Use one semantic scale across Timeline, Research Delta, Capital Milestones, and the Firm Master Gain Goal:
+
+```text
+panel header      ~10 px equivalent
+ordinary row/body ~9 px equivalent
+secondary label   ~8 px equivalent
+secondary note    ~7-8 px equivalent
+primary numeric   ~12-14 px equivalent
+master value      ~15 px equivalent maximum
+```
+
+The Master Goal is allowed stronger weight/color, but not a radically larger font that steals visual focus from the rest of Command. At constrained heights, reduce vertical padding, margins, and explanatory prose before shrinking primary financial values or ordinary row text. Never permit line overlap to preserve a particular fixed panel height.
+
+For WinUI/WebView2 migration, implement this as semantic typography tokens rather than per-panel hard-coded font sizes so Windows scaling at 100/125/150/200% preserves the hierarchy consistently.
+
 The UI-Lab timeline still uses fixture-text matching because legacy events are plain `[time, message]` arrays. Production must use explicit event metadata (`scopeType`, `scopeId`, `category`, `severity`, `operatorImpact`, `occurredAtUtc`, `snapshotVersion`). The five-row limit is presentation only; full audit history remains immutable in Core/persistence.
 
 ## Capital milestone surfaces
@@ -49,14 +66,7 @@ When `remainingMonthlyGain == 0`, display `MET`, not a negative or zero-trade es
 
 ## UI-Lab planning fixture
 
-`capital-planning-mock-v33.js` is explicit simulated planning data. It exists so the UI does **not** infer recognized realized gain from equity changes or generic Net P&L. It provides:
-
-- recognized cumulative realized trading gain;
-- recognized MTD realized trading gain;
-- milestone ladder;
-- monthly gain goals.
-
-Delete/replace this fixture when Core supplies the production planning snapshot.
+`capital-planning-mock-v33.js` is explicit simulated planning data. It exists so the UI does **not** infer recognized realized gain from equity changes or generic Net P&L. It provides recognized cumulative realized trading gain, recognized MTD realized trading gain, milestone ladder, and monthly gain goals. Delete/replace this fixture when Core supplies the production planning snapshot.
 
 ## Trade expectancy reference
 
@@ -141,6 +151,6 @@ Core owns capital-flow classification, realized-gain recognition, milestone adva
 
 ## Windows QC
 
-Test: newest-five event ordering; full audit retention; compact non-overlapping timeline/research spacing; milestone transitions exactly at 10K/50K/100K/500K/1M/5M/10M/50M; monthly goal states below/at/above 5K/10K/15K; positive/zero/negative expectancy; deposits/withdrawals around boundaries; stale/mixed snapshots; master horizon calculations; 100/125/150/200% scaling; forced colors/high contrast; and minimum supported Command Center height.
+Test: newest-five event ordering; full audit retention; compact non-overlapping timeline/research spacing; one semantic typography scale across the rail; milestone transitions exactly at 10K/50K/100K/500K/1M/5M/10M/50M; monthly goal states below/at/above 5K/10K/15K; positive/zero/negative expectancy; deposits/withdrawals around boundaries; stale/mixed snapshots; master horizon calculations; 100/125/150/200% scaling; forced colors/high contrast; and minimum supported Command Center height.
 
 Engineering target: zero known presentation/contract ambiguity before migration. Literal zero debugging cannot be guaranteed for live MT5/Windows integration.
