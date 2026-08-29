@@ -14,8 +14,9 @@ on:
 # never staged into the Pages artifact.
 #
 # Preview checkpoint: Performance v3.7 — all reporting horizons consume explicit
-# dated UTC cumulative-return series. Mock quarterly/annual/5Y histories are
-# simulated fixtures, never arithmetic extrapolations from MTD/WTD values.
+# dated UTC cumulative-return series. The UI contract, Python performance read
+# model, Ruff, Pytest, JS syntax, and mock-history validator passed on dev head
+# 947c412b29c06e59a33e029eab5de37db6ef51ec before this refresh.
 
 permissions:
   contents: read
