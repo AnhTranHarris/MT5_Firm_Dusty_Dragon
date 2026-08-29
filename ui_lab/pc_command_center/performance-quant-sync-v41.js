@@ -38,11 +38,11 @@
   }
 
   function model(sel) {
-    if (sel.portfolio===0) return {scopeLabel:"DUSTY DRAGON · FIRM",quant:quantMock.firm};
+    if (sel.portfolio===0) return {scopeLabel:"DUSTY DRAGON · FIRM",contextLabel:"FIRM",quant:quantMock.firm};
     const portfolio = scopeMock.portfolios?.[sel.portfolio];
     const entity = portfolio?.entities?.[sel.entity];
     const quant = sel.entity==="layer" ? quantMock.portfolios?.[sel.portfolio]?.layer : quantMock.portfolios?.[sel.portfolio]?.desks?.[sel.entity];
-    return portfolio&&entity&&quant ? {scopeLabel:`PORTFOLIO ${sel.portfolio} · ${entity.label}`,quant} : null;
+    return portfolio&&entity&&quant ? {scopeLabel:`PORTFOLIO ${sel.portfolio} · ${entity.label}`,contextLabel:`P${sel.portfolio} · ${entity.label}`,quant} : null;
   }
 
   function captureInvestor() {
@@ -69,11 +69,11 @@
     $(".perf-investor-notes")?.removeAttribute("hidden");
   }
 
-  function paint(slotKey,metrics) {
+  function paint(slotKey,metrics,contextLabel) {
     const slot=slots[slotKey];
     const panel=$(slot.panel);
     panel.querySelector("[data-panel-title]").textContent=slot.title;
-    panel.querySelector("[data-panel-state]").textContent=slot.state;
+    panel.querySelector("[data-panel-state]").textContent=`${contextLabel} · ${slot.state}`;
     $(slot.body).innerHTML=metrics.join("");
   }
 
@@ -82,7 +82,7 @@
     const m=model(selection());
     const q=m?.quant;
     if (!q) {
-      Object.keys(slots).forEach(key=>paint(key,[metric("STATUS","—","Quant scope read model unavailable.")]));
+      Object.keys(slots).forEach(key=>paint(key,[metric("STATUS","—","Quant scope read model unavailable.")],"SCOPE UNAVAILABLE"));
       return;
     }
     const payoff=q.avgWin!=null&&q.avgLoss!=null?safeDivide(Math.abs(q.avgWin),Math.abs(q.avgLoss)):null;
@@ -93,32 +93,30 @@
     const benchmarkReady=benchmarkState==="SELECTED";
     const volTarget=numberFrom(q.volatilityTargetPct??quantPolicy.targetVolatilityPct);
 
-    // Reading order: efficiency -> trade edge -> tail structure -> relative/benchmark skill.
-    // This moves from absolute outcome quality to mechanism, then failure shape, then comparison.
     paint("absolute",[
       metric("SHARPE",ratio(q.sharpe),"excess return / total volatility"),
       metric("SORTINO",ratio(q.sortino),"return / downside deviation"),
       metric("RECOVERY",ratio(q.recovery),"return efficiency / drawdown"),
       metric("VOL TARGET",volTarget==null?"UNSET":pct(volTarget,1),volTarget==null?"no scope policy":"annualized risk budget")
-    ]);
+    ],m.contextLabel);
     paint("trade",[
       metric("EXPECTANCY",q.expectancyR==null?"—":`${q.expectancyR>=0?"+":""}${Number(q.expectancyR).toFixed(2)}R`,"expected R per trade"),
       metric("PAYOFF",ratio(payoff),"|avg win| / |avg loss|"),
       metric("PROFIT FACTOR",ratio(q.profitFactor),"gross profit / gross loss"),
       metric("COST DRAG",pct(costDrag,2),"cost / pre-cost P&L")
-    ]);
+    ],m.contextLabel);
     paint("tail",[
       metric("VaR 95",pct(q.var95Pct,2),"scope loss-threshold estimate"),
       metric("EXPECTED SHORTFALL",pct(q.expectedShortfallPct,2),"average loss beyond VaR"),
       metric("ES / VaR",ratio(tailAmp),"tail amplification"),
       metric("MAX PAIR CORR",ratio(q.maxPairCorrelation),"largest reported dependence")
-    ]);
+    ],m.contextLabel);
     paint("benchmark",[
       metric("BENCHMARK",benchmarkState,benchmarkReady?(q.benchmark?.label||benchmarkPolicy.label||"SELECTED"):"objective is not a benchmark"),
       metric("ALPHA / BETA","—",benchmarkReady?"regression model not exposed":"benchmark series required"),
       metric("TRACKING ERROR","—",benchmarkReady?"active-return series not exposed":"benchmark series required"),
       metric("INFORMATION RATIO","—",benchmarkReady?"active-return series not exposed":"benchmark series required")
-    ]);
+    ],m.contextLabel);
     $(".perf-investor-notes")?.setAttribute("hidden","");
     const title=$("#perfScopeTitle");
     const note=$("#perfScopeNote");
@@ -127,18 +125,20 @@
   }
 
   function renderForLens() {
-    const quant=document.body.classList.contains("perf-quant-active");
-    if(quant) renderQuant(); else restoreInvestor();
+    if(document.body.classList.contains("perf-quant-active")) renderQuant(); else restoreInvestor();
   }
 
+  // The Capital controller emits this only after its internal portfolio/entity
+  // state and DOM controls are committed. Quant therefore never races a raw click.
+  window.addEventListener("dusty:performance-capital-scope-changed",()=>{
+    if(document.body.classList.contains("perf-quant-active")) renderQuant();
+  });
   window.addEventListener("dusty:performance-scope-synchronized",()=>{
     if(document.body.classList.contains("perf-quant-active")) renderQuant();
     else { investorSnapshot.clear(); captureInvestor(); }
   });
   window.addEventListener("dusty:performance-lens-changed",event=>setTimeout(()=>event.detail?.lens==="quant"?renderQuant():restoreInvestor(),0));
-  root.addEventListener("change",event=>{if(event.target.id==="perfCapitalEntity"&&document.body.classList.contains("perf-quant-active"))setTimeout(renderQuant,0);});
-  root.addEventListener("click",event=>{if(event.target.closest("[data-capital-scope]")&&document.body.classList.contains("perf-quant-active"))setTimeout(renderQuant,0);});
 
-  window.DUSTY_PERFORMANCE_QUANT_SYNC=Object.freeze({version:"4.1",render:renderForLens,selection});
+  window.DUSTY_PERFORMANCE_QUANT_SYNC=Object.freeze({version:"4.2",render:renderForLens,selection});
   captureInvestor();
 })();
