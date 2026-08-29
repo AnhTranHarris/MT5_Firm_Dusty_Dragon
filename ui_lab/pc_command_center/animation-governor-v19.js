@@ -46,11 +46,12 @@
 
   /*
    * Performance UI is intentionally isolated from the trading/runtime core.
-   * Native Windows handoff: preserve this read-model/view-state boundary; a UI
-   * scope or timeframe selector must never mutate broker, risk, execution,
-   * terminal, ledger, benchmark, or return-objective policy state. Spatial
-   * profiles use the animated timeframe slider; global NO MOTION/HIGH CONTRAST
-   * swaps to static buttons below the chart.
+   * Native Windows handoff: preserve this read-model/view-state boundary; UI
+   * controls never mutate broker, risk, execution, terminal, ledger, benchmark,
+   * volatility-target, or return-objective policy. The quant lens measures
+   * absolute efficiency separately from benchmark-relative skill. Spatial
+   * profiles use the animated timeframe slider; NO MOTION/HIGH CONTRAST swaps
+   * to static buttons below the chart.
    */
   window.addEventListener("DOMContentLoaded", () => {
     const style = document.createElement("link");
@@ -58,13 +59,18 @@
     style.href = "performance-dashboard-v30.css";
     document.head.append(style);
 
+    const quantStyle = document.createElement("link");
+    quantStyle.rel = "stylesheet";
+    quantStyle.href = "performance-quant-v32.css";
+    document.head.append(quantStyle);
+
     const timeframeStyle = document.createElement("link");
     timeframeStyle.rel = "stylesheet";
     timeframeStyle.href = "performance-timeframe-v34.css";
     document.head.append(timeframeStyle);
 
     const script = document.createElement("script");
-    script.src = "performance-dashboard-v31.js";
+    script.src = "performance-dashboard-v32.js";
     script.onload = () => {
       const timeframeScript = document.createElement("script");
       timeframeScript.src = "performance-timeframe-v34.js";
