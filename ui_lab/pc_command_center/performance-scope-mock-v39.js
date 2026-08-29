@@ -23,8 +23,9 @@
   };
 
   const finite = value => {
+    if (value == null || value === "") return null;
     if (typeof value === "number") return Number.isFinite(value) ? value : null;
-    const parsed = Number(String(value ?? "").replace(/[^0-9.+-]/g, ""));
+    const parsed = Number(String(value).replace(/[^0-9.+-]/g, ""));
     return Number.isFinite(parsed) ? parsed : null;
   };
   const clonePoint = point => ({ atUtc: point.atUtc, cumulativeReturnPct: Number(point.cumulativeReturnPct) });
