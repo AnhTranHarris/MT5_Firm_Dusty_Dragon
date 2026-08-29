@@ -49,9 +49,9 @@
    * Native Windows handoff: preserve this read-model/view-state boundary; UI
    * controls never mutate broker, risk, execution, terminal, ledger, benchmark,
    * volatility-target, or return-objective policy. The quant lens measures
-   * absolute efficiency separately from benchmark-relative skill. Spatial
-   * profiles use the animated timeframe slider; NO MOTION/HIGH CONTRAST swaps
-   * to static buttons below the chart.
+   * absolute efficiency separately from benchmark-relative skill. The investor
+   * graph renders only period-consistent history and explicit capital-policy
+   * references; it never fabricates quarterly/annual/5Y actual return paths.
    */
   window.addEventListener("DOMContentLoaded", () => {
     const style = document.createElement("link");
@@ -66,14 +66,14 @@
 
     const timeframeStyle = document.createElement("link");
     timeframeStyle.rel = "stylesheet";
-    timeframeStyle.href = "performance-timeframe-v34.css";
+    timeframeStyle.href = "performance-timeframe-v35.css";
     document.head.append(timeframeStyle);
 
     const script = document.createElement("script");
     script.src = "performance-dashboard-v32.js";
     script.onload = () => {
       const timeframeScript = document.createElement("script");
-      timeframeScript.src = "performance-timeframe-v34.js";
+      timeframeScript.src = "performance-timeframe-v35.js";
       timeframeScript.defer = true;
       document.body.append(timeframeScript);
     };
