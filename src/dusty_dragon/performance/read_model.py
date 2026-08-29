@@ -42,7 +42,6 @@ class PerformancePoint:
     cumulative_return_pct: float
 
 
-
 def build_time_weighted_curve(
     observations: tuple[EquityObservation, ...],
     flows: tuple[CapitalFlowObservation, ...] = (),
@@ -87,7 +86,7 @@ def build_time_weighted_curve(
     ):
         flow_index += 1
 
-    for previous, current in zip(ordered, ordered[1:], strict=True):
+    for previous, current in zip(ordered, ordered[1:]):
         if previous.equity <= 0:
             raise ValueError("equity observation preceding a return period must be positive")
 
