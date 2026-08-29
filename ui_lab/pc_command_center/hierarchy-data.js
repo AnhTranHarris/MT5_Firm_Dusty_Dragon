@@ -9,8 +9,8 @@
   };
 
   /*
-   * UI-LAB STATUS CONTRACT
-   * ----------------------
+   * UI-LAB STATUS + QUICK-PERFORMANCE CONTRACT
+   * -------------------------------------------
    * Operational state and provisioning are different dimensions. A desk can be
    * NORMAL yet unavailable because no MT5 account is bound; visual presentation
    * must therefore resolve both facts before choosing a color.
@@ -22,10 +22,15 @@
    *   CAPACITY-PARKED       -> blue
    *   NOT PROVISIONED / no bound MT5 account / LOCKED -> gray
    *
-   * Production note: this status registry becomes a read-only view-model fed by
-   * authoritative desk/provisioning state. The frontend must never infer whether
-   * a broker account is bound from a filename, broker label, or visual color.
+   * Quick hierarchy values are UI-Lab fixtures only. `realizedPnlToday` is an
+   * explicit mock read-model field so the presentation does not calculate
+   * realized P&L itself. Production Core must populate it from reconciled closed
+   * deals/capital-flow-aware ledger state. `dailyTargetPct` is a presentation
+   * policy reference, never authority to increase risk.
    */
+
+  const DAILY_TARGET_PCT = 0.23;
+  const generalistRealized = [64.20, 93.70, 18.50, -24.30, 31.60, 0];
 
   data.desks.forEach((desk, index) => Object.assign(
     desk,
@@ -34,7 +39,9 @@
       accountAlias: `${desk.id}-A${String(index + 1).padStart(2, "0")}`,
       mt5Mode: desk.id === "G06" ? "DEMO / SESSION FAULT" : "DEMO / VERIFIED",
       provisioned: true,
-      mt5Bound: true
+      mt5Bound: true,
+      realizedPnlToday: generalistRealized[index] ?? 0,
+      dailyTargetPct: DAILY_TARGET_PCT
     }
   ));
 
@@ -52,6 +59,7 @@
 
   function mkDesk(id, name, layer, parentId, slot, profile, state = "NORMAL", lifecycle = {}) {
     const base = 4850 + layer * 340 + slot * 73;
+    const today = ((slot % 5) - 1) * 0.17;
     const provisioned = lifecycle.provisioned ?? true;
     const mt5Bound = lifecycle.mt5Bound ?? provisioned;
     const effectiveProfile = mt5Bound ? profile : {broker:"—", accountType:"UNBOUND", server:"—", environment:"—"};
@@ -63,7 +71,9 @@
       environment: effectiveProfile.environment,
       accountAlias: mt5Bound ? `${id}-A${String(slot).padStart(2, "0")}` : "—",
       equity: base,
-      today: ((slot % 5) - 1) * 0.17,
+      today,
+      realizedPnlToday: Number((base * today / 100 * 0.78).toFixed(2)),
+      dailyTargetPct: DAILY_TARGET_PCT,
       mtd: 1.7 + (slot % 6) * 0.43,
       dd: 0.7 + (slot % 7) * 0.31,
       pf: 1.22 + (slot % 5) * 0.13,
@@ -76,16 +86,7 @@
 
   const nodes = [];
   for (let i = 0; i < 6; i++) {
-    nodes.push(mkDesk(
-      `D0${i + 1}`,
-      `Demo Proof ${i + 1}`,
-      0,
-      "L0",
-      i + 1,
-      brokers[i % brokers.length],
-      "NORMAL",
-      {provisioned: i === 0, mt5Bound: i === 0}
-    ));
+    nodes.push(mkDesk(`D0${i + 1}`, `Demo Proof ${i + 1}`, 0, "L0", i + 1, brokers[i % brokers.length], "NORMAL", {provisioned: i === 0, mt5Bound: i === 0}));
   }
 
   data.desks.forEach((desk, i) => nodes.push({ ...desk, name: `Generalist ${i + 1}`, layer: 1, parentId: "FIRM" }));
@@ -112,6 +113,7 @@
   });
 
   data.hierarchy = {
+    dailyTargetPct: DAILY_TARGET_PCT,
     layers: [
       { id: "L0", layer: 0, name: "Layer 0 — Adversarial Demo Laboratory", kind: "layer", childIds: nodes.filter(n => n.layer === 0).map(n => n.id) },
       { id: "L1", layer: 1, name: "Layer 1 — Generalist Live Floor", kind: "layer", childIds: data.desks.map(d => d.id) },
