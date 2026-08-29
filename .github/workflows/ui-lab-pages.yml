@@ -20,9 +20,9 @@ on:
 # - actions/checkout explicitly reads dev/ui-lab-v1 while deployment authority
 #   remains attached to this protected main-branch workflow.
 #
-# Preview checkpoint: Performance panels use investor-grade measurement semantics:
-# no synthetic quality scores, explicit risk-budget math, reconciled attribution,
-# and reported/transparent quant diagnostics. Objective chart remains v3.4.
+# Preview checkpoint: final investor-grade Performance panel audit:
+# measured metrics only, explicit policy math, reconciled return attribution,
+# corrected expanded-chart selector, and v3.4 compounded objective chart.
 # References:
 # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 # https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
