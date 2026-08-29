@@ -38,7 +38,20 @@
   const maintained=reachedAt instanceof Date&&!Number.isNaN(reachedAt.valueOf())&&asOf.valueOf()-reachedAt.valueOf()>=maintenanceMs&&recognizedGain>=baseMaster;
   const masterGoal=maintained?baseMaster+masterIncrement:baseMaster;
 
-  function horizonModel(years){if(equity==null||equity<=0)return{years,monthlyPct:null,annualPct:null,status:"UNAVAILABLE",tone:"unavailable"};const terminalEquity=equity+masterGoal,annualRate=Math.pow(terminalEquity/equity,1/years)-1,monthlyRate=Math.pow(1+annualRate,1/12)-1,monthlyPct=monthlyRate*100,annualPct=annualRate*100;if(years===1)return{years,monthlyPct,annualPct,status:"RESTRICTED",tone:"restricted"};if(monthlyPct>monthlyObjectivePct*2)return{years,monthlyPct,annualPct,status:"RESTRICTED",tone:"restricted"};if(monthlyPct>monthlyObjectivePct)return{years,monthlyPct,annualPct,status:"STRETCH",tone:"stretch"};return{years,monthlyPct,annualPct,status:"POLICY RANGE",tone:"aligned"};}
+  function horizonModel(years){
+    const remainingGain=remainingTo(masterGoal,recognizedGain);
+    const averageWeeklyGainUsd=remainingGain/(years*52);
+    if(equity==null||equity<=0)return{years,weeklyPct:null,averageWeeklyGainUsd,monthlyPct:null,annualPct:null,status:"UNAVAILABLE",tone:"unavailable"};
+    const terminalEquity=equity+masterGoal;
+    const annualRate=Math.pow(terminalEquity/equity,1/years)-1;
+    const monthlyRate=Math.pow(1+annualRate,1/12)-1;
+    const weeklyCompoundedRate=Math.pow(1+annualRate,1/52)-1;
+    const weeklyPct=weeklyCompoundedRate*100, monthlyPct=monthlyRate*100, annualPct=annualRate*100;
+    if(years===1)return{years,weeklyPct,averageWeeklyGainUsd,monthlyPct,annualPct,status:"RESTRICTED",tone:"restricted"};
+    if(monthlyPct>monthlyObjectivePct*2)return{years,weeklyPct,averageWeeklyGainUsd,monthlyPct,annualPct,status:"RESTRICTED",tone:"restricted"};
+    if(monthlyPct>monthlyObjectivePct)return{years,weeklyPct,averageWeeklyGainUsd,monthlyPct,annualPct,status:"STRETCH",tone:"stretch"};
+    return{years,weeklyPct,averageWeeklyGainUsd,monthlyPct,annualPct,status:"POLICY RANGE",tone:"aligned"};
+  }
   const horizons=[1,5,10,20].map(horizonModel);
 
   const panel=document.createElement("article");panel.className="panel compact capital-milestones-panel";panel.innerHTML=`
@@ -46,8 +59,8 @@
     <div class="capital-goal-strip"><div><small>DAILY REALIZED GOAL</small><strong>${money(dailyGoal)}</strong><span>${dailyTargetPct.toFixed(2)}% of current equity</span></div><div><small>WEEKLY REALIZED GOAL</small><strong>${money(weeklyGoal)}</strong><span>5-day geometric reference</span></div></div>
     <div class="capital-trade-model"><div class="capital-model-head"><span>NEXT CUMULATIVE GAIN MILESTONES</span><b>${expectancyDollars>0?`${money(expectancyDollars)} / trade`:"UNAVAILABLE"}</b></div><div class="capital-goal-grid capital-standard-goals">${milestoneRows.length?milestoneRows.map(goal=>`<div class="capital-goal-row"><span>${compactMoney(goal.amount)}</span><strong>${integer(goal.expectedTrades)}</strong><small>trades · ${compactMoney(goal.remaining)} left</small></div>`).join(""):`<div class="capital-goal-row milestone-complete"><span>LADDER</span><strong>MET</strong><small>master-goal logic continues below</small></div>`}</div><div class="capital-progress-note">Recognized cumulative realized gain: <b>${money(recognizedGain)}</b>.</div></div>
     <div class="capital-month-model"><div class="capital-model-head"><span>AVERAGE WEEKLY INCOME GOALS</span><b>QUARTERLY REVIEW</b></div><div class="capital-month-grid">${weeklyRows.map(goal=>`<div class="capital-month-row ${goal.active?"active":""}"><span>${compactMoney(goal.amount)}/WK</span><strong>${goal.remaining<=0?"MET":integer(goal.expectedTrades)}</strong><small>${goal.remaining<=0?"avg reached":`trades · ${compactMoney(goal.remaining)} avg gap`}</small></div>`).join("")}</div><div class="capital-progress-note">Quarter average: <b>${money(quarterWeeklyAverage)}/wk</b> across ${weeks} completed trading week${weeks===1?"":"s"}. Next-quarter tier: <b>${compactMoney(nextQuarterGoal)}/wk</b>.</div></div>
-    <section class="capital-master-goal" aria-label="Firm master gain goal"><div class="capital-master-head"><span>FIRM MASTER GAIN GOAL</span><strong>${money(masterGoal)}</strong><small>${maintained?`prior ${compactMoney(baseMaster)} goal maintained 1Y · +${compactMoney(masterIncrement)} ratchet applied`:`${integer(tradesForGain(remainingTo(masterGoal,recognizedGain)))} trades @ current static expectancy`}</small></div><div class="capital-master-horizons">${horizons.map(item=>`<div class="capital-horizon ${item.tone}"><div><b>${item.years}Y</b><em>${item.status}</em></div><strong>${percent(item.monthlyPct)} / mo</strong><small>${percent(item.annualPct,1)} annualized</small></div>`).join("")}</div></section>
+    <section class="capital-master-goal" aria-label="Firm master gain goal"><div class="capital-master-head"><span>FIRM MASTER GAIN GOAL</span><strong>${money(masterGoal)}</strong><small>${maintained?`prior ${compactMoney(baseMaster)} goal maintained 1Y · +${compactMoney(masterIncrement)} ratchet applied`:`${integer(tradesForGain(remainingTo(masterGoal,recognizedGain)))} trades @ current static expectancy`}</small></div><div class="capital-master-horizons">${horizons.map(item=>`<div class="capital-horizon ${item.tone}"><div><b>${item.years}Y</b><em>${item.status}</em></div><strong>${percent(item.monthlyPct)} / mo</strong><small>${percent(item.weeklyPct)} / wk · ${compactMoney(item.averageWeeklyGainUsd)} avg/wk</small><small>${percent(item.annualPct,1)} annualized</small></div>`).join("")}</div></section>
     <p class="capital-model-note">Planning reference only. Weekly income tiers change at quarterly review; master goal ratchets by $25M after the active goal is reached and maintained for one additional year.</p>`;
   leftStack.append(panel);
-  window.DUSTY_COMMAND_CAPITAL_MILESTONES=Object.freeze({version:"3.4",dailyTargetPct,dailyGoal,weeklyGoal,expectancyDollars,recognizedGain,quarterWeeklyAverage,activeWeeklyGoal,nextQuarterGoal,quarterTierQualified,masterGoal:Object.freeze({gainGoalUsd:masterGoal,baseGoalUsd:baseMaster,incrementUsd:masterIncrement,maintained,horizons})});
+  window.DUSTY_COMMAND_CAPITAL_MILESTONES=Object.freeze({version:"3.5",dailyTargetPct,dailyGoal,weeklyGoal,expectancyDollars,recognizedGain,quarterWeeklyAverage,activeWeeklyGoal,nextQuarterGoal,quarterTierQualified,masterGoal:Object.freeze({gainGoalUsd:masterGoal,baseGoalUsd:baseMaster,incrementUsd:masterIncrement,maintained,horizons})});
 })();
