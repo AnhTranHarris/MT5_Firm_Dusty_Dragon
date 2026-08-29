@@ -43,10 +43,10 @@
   };
 
   /*
-   * Performance remains read-only presentation. v3.8 adds an independent chart
-   * scope selector: Firm or Portfolio 1-4, then Layer / Desk 1-6. UI Lab scope
-   * histories are explicitly simulated fixtures. Production must supply immutable
-   * Core read models for every scope; presentation never reads MT5 directly.
+   * Performance remains read-only presentation. v3.9 makes Capital & Objectives
+   * the single investor-scope selector. Firm or Portfolio 1-4 + Layer/Desk 1-6
+   * drives every investor panel and attribution. Production replaces all mock scope
+   * fixtures with immutable Dusty Core read models; UI never reads MT5 directly.
    */
   window.addEventListener(
     "DOMContentLoaded",
@@ -56,7 +56,8 @@
         "performance-quant-v32.css",
         "performance-timeframe-v36.css",
         "performance-layout-v36.css",
-        "performance-scope-v38.css"
+        "performance-scope-v38.css",
+        "performance-panel-sync-v39.css"
       ].forEach(href => {
         const style = document.createElement("link");
         style.rel = "stylesheet";
@@ -65,14 +66,19 @@
       });
 
       const scopeFixture = document.createElement("script");
-      scopeFixture.src = "performance-scope-mock-v38.js";
+      scopeFixture.src = "performance-scope-mock-v39.js";
       scopeFixture.onload = () => {
         const dashboard = document.createElement("script");
         dashboard.src = "performance-dashboard-v32.js";
         dashboard.onload = () => {
           const timeframe = document.createElement("script");
           timeframe.src = "performance-timeframe-v38.js";
-          timeframe.defer = true;
+          timeframe.onload = () => {
+            const panelSync = document.createElement("script");
+            panelSync.src = "performance-panel-sync-v39.js";
+            panelSync.defer = true;
+            document.body.append(panelSync);
+          };
           document.body.append(timeframe);
         };
         document.body.append(dashboard);
