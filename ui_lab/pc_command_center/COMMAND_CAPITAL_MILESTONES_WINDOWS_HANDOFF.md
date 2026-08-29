@@ -1,156 +1,99 @@
 # Dusty Dragon Command Capital Milestones — Windows Handoff
 
-Status: UI-Lab planning/read-model contract. This panel is a quick-reference planning surface, not execution authority and not a promise of returns.
+Status: UI-Lab planning/read-model contract. This panel is a quick-reference planning surface, not execution authority.
 
 ## Command left-rail priority
-
-The left rail is intentionally ordered by operator value:
-
-1. **FIRM EVENT TIMELINE** — only the five most recent events classified by Core as materially affecting a Desk's trading/execution/risk state.
+1. **FIRM EVENT TIMELINE** — five newest major Desk-impact events.
 2. **RESEARCH DELTA** — compact research throughput/status.
-3. **CAPITAL MILESTONES** — the remaining vertical area, optimized for comfortable human reading.
+3. **CAPITAL MILESTONES** — remaining vertical area for readable planning references.
 
-Timeline and Research Delta line spacing should be compact but never overlapping. Reclaim padding/leading there before reducing milestone typography.
-
-## Command rail typography contract
-
-The Command left rail must read as one cockpit surface, not three unrelated typographic systems. Use one semantic scale across Timeline, Research Delta, Capital Milestones, and the Firm Master Gain Goal:
-
-```text
-panel header      ~10 px equivalent
-ordinary row/body ~9 px equivalent
-secondary label   ~8 px equivalent
-secondary note    ~7-8 px equivalent
-primary numeric   ~12-14 px equivalent
-master value      ~15 px equivalent maximum
-```
-
-The Master Goal is allowed stronger weight/color, but not a radically larger font that steals visual focus from the rest of Command. At constrained heights, reduce vertical padding, margins, and explanatory prose before shrinking primary financial values or ordinary row text. Never permit line overlap to preserve a particular fixed panel height.
-
-For WinUI/WebView2 migration, implement this as semantic typography tokens rather than per-panel hard-coded font sizes so Windows scaling at 100/125/150/200% preserves the hierarchy consistently.
-
-The UI-Lab timeline still uses fixture-text matching because legacy events are plain `[time, message]` arrays. Production must use explicit event metadata (`scopeType`, `scopeId`, `category`, `severity`, `operatorImpact`, `occurredAtUtc`, `snapshotVersion`). The five-row limit is presentation only; full audit history remains immutable in Core/persistence.
+Timeline/Research spacing may compress before financial typography. System-wide typography is governed by `SYSTEM_PANEL_TYPOGRAPHY_WINDOWS_HANDOFF.md`.
 
 ## Capital milestone surfaces
+The Command Center shows daily/weekly realized references, the next three rolling cumulative realized-gain milestones, **average weekly income goals reviewed quarterly**, and a ratcheting **FIRM MASTER GAIN GOAL**.
 
-The Command Center shows:
-
-- daily realized-gain goal;
-- weekly realized-gain goal;
-- the next three **rolling cumulative realized-gain milestones**;
-- monthly realized-gain goals of **$5,000, $10,000, and $15,000**, with remaining expected trades from current recognized MTD realized gain;
-- a separate **FIRM MASTER GAIN GOAL** of $50,000,000 with 1Y / 5Y / 10Y / 20Y planning horizons.
-
-## Rolling milestone ladder
-
-The current explicit UI-Lab ladder is:
-
+## Rolling cumulative milestone ladder
+Initial UI-Lab ladder:
 ```text
 $10K -> $50K -> $100K -> $500K -> $1M -> $5M -> $10M -> $50M
 ```
+The UI shows the next three unachieved values. Core owns recognized realized gain and advancement.
 
-The UI always shows the next three unachieved milestones. Once Core's recognized cumulative realized gain meets or exceeds a milestone, that milestone disappears and the next ladder value moves into the quick view. The ladder is explicit and bounded; the UI must never invent a larger target after $50M.
+## Average weekly income goals — quarterly cadence
+This replaces the previous monthly $5K/$10K/$15K interpretation. The planning concept is average recognized realized trading income **per completed trading week**, evaluated over a quarter.
 
-The $50M endpoint remains separately governed as the master goal even when it also becomes the next rolling milestone.
-
-## Monthly realized-gain goals
-
-The monthly quick line is fixed at $5K / $10K / $15K in the current mock contract. For each target:
-
+Initial series:
 ```text
-remainingMonthlyGain = max(0, monthlyGoal - recognizedMonthRealizedGain)
-expectedTradesRemaining = remainingMonthlyGain / expectancyUsdPerTrade
+$5K/wk -> $10K/wk -> $15K/wk -> $20K/wk -> $25K/wk -> $30K/wk ->
+$40K/wk -> $50K/wk -> $75K/wk -> $100K/wk
 ```
+The first three values preserve the user's original 5K/10K/15K pattern. The UI displays the active tier plus the next two reference tiers.
 
-When `remainingMonthlyGain == 0`, display `MET`, not a negative or zero-trade estimate. Production policy may change these monthly targets only through an explicit versioned configuration/read model.
+During a quarter:
+```text
+quarterWeeklyAverage = recognizedQuarterRealizedGain / completedTradingWeeksInQuarter
+```
+Targets **do not change intra-quarter**. At the quarter boundary, if the completed quarter's weekly average meets or exceeds the active tier, the next quarter advances **one tier**. A very strong quarter does not skip multiple tiers. If the active tier is not met, the next quarter retains the same tier. Production Core owns the quarter boundary, completed-week count, recognized gain, and tier state; WebView2 only formats the snapshot.
 
-## UI-Lab planning fixture
-
-`capital-planning-mock-v33.js` is explicit simulated planning data. It exists so the UI does **not** infer recognized realized gain from equity changes or generic Net P&L. It provides recognized cumulative realized trading gain, recognized MTD realized trading gain, milestone ladder, and monthly gain goals. Delete/replace this fixture when Core supplies the production planning snapshot.
+This makes the goal a stable quarterly planning reference rather than a target that moves every week.
 
 ## Trade expectancy reference
-
-The mock uses static dollar expectancy from win rate, average win, and average loss:
-
+Expected-trade counts remain a planning aid:
 ```text
 expectancyUsdPerTrade = winRate * avgWin - lossRate * abs(avgLoss)
-expectedTradesToGoal = remainingRealizedGain / expectancyUsdPerTrade
+expectedTradesToGoal = remainingGain / expectancyUsdPerTrade
 ```
+If expectancy is non-positive, stale, or unavailable, Core returns the count as unavailable.
 
-Round displayed trade count upward. If expectancy is zero, negative, stale, or unavailable, show `UNAVAILABLE` rather than an infinite or misleading count.
+## Daily / weekly reference goals
+The existing daily target percentage and five-day geometric weekly reference remain separate from the quarterly average-income ladder. Do not conflate the two concepts.
 
-Trade-count estimates are planning references only. They must never force trading frequency, authorize larger size, or relax risk gates.
+## Firm Master Gain Goal ratchet
+Initial master recognized realized-gain goal: **$50M**.
 
-## Daily / weekly goals
-
-The mock uses explicit `dailyTargetPct`. Daily realized-gain goal is current firm equity × daily rate. Weekly goal is the five-trading-day geometric equivalent. These are planning references, not execution quotas.
-
-## $50M horizon mathematics
-
-Target terminal equity is current equity + $50,000,000 recognized realized trading gain:
-
+After Core verifies that the active master goal has been reached, it records `masterGoalReachedAtUtc`. The active master goal does **not** increase immediately. The firm must remain at or above that recognized realized-gain watermark for one additional year. Once that maintenance period completes, the next active master goal increases by **$25M**:
 ```text
-requiredAnnualRate = (targetTerminalEquity / currentEquity)^(1 / years) - 1
-requiredMonthlyRate = (1 + requiredAnnualRate)^(1 / 12) - 1
+$50M -> $75M -> $100M -> $125M -> ...
 ```
+The same rule repeats for every subsequent master level: reach the active goal, maintain it for one additional year, then ratchet by $25M. Production should store the active master goal and its reached/maintenance timestamps explicitly rather than infer historical maintenance from the current value alone.
 
-These are mathematical requirements, not forecasts.
+The 1Y/5Y/10Y/20Y horizon math is recalculated against the current active master goal. The UI does not display a verbose master-goal warning paragraph; this is understood as a general planning-goal surface. Risk/execution governance remains enforced elsewhere by Core regardless of whether warning prose is visible.
 
-## Master-goal horizon restrictions
-
-- **1 YEAR — RESTRICTED.** Scenario/research reference only; no leverage, risk, drawdown, trade-frequency, or execution-policy override.
-- **5 YEARS — RESTRICTED** when required monthly performance is more than 2× the current firm monthly objective. Explicit master-policy review required.
-- **10 YEARS — STRETCH** when required monthly performance exceeds the current objective but is not above the 2× threshold.
-- **20 YEARS — POLICY RANGE** only when the required monthly rate is within the current firm objective. This does not imply probability or guarantee.
-
-## Hard recognition restrictions
-
-Recognized gain must be **realized trading gain only**. Exclude deposits, withdrawals, credits, demo resets, broker corrections, inter-account transfers, and other external capital flows.
-
-Neither ordinary milestones, monthly goals, nor the master goal may authorize larger position size/leverage, relax risk/drawdown limits, force minimum trade count, override broker/session/reconciliation safety, convert planning horizons into deadlines, or count external capital as trading gain.
+## Recognition semantics
+Only Core-recognized realized trading gain should advance cumulative milestones, quarterly weekly-income averages, or the master goal. Capital-flow classification remains a Core/ledger responsibility. This rule belongs in the contract and audit layer rather than occupying Command Center screen space.
 
 ## Production read model
-
-Core should supply one immutable planning snapshot, for example:
-
+Core should supply one immutable planning snapshot containing at minimum:
 ```text
 snapshotVersion
 asOfUtc
 firmEquity
 recognizedCumulativeRealizedGainUsd
-recognizedMonthRealizedGainUsd
-dailyTargetPct (nullable)
-dailyRealizedGoalUsd (nullable)
-weeklyRealizedGoalUsd (nullable)
+recognizedQuarterRealizedGainUsd
+completedTradingWeeksInQuarter
+quarterId
+quarterReviewState
+weeklyIncomeGoalSeries[]
+activeWeeklyIncomeTierIndex
+activeWeeklyIncomeGoalUsd
+quarterWeeklyAverageUsd
+nextQuarterWeeklyIncomeGoalUsd
 expectancyUsdPerTrade (nullable)
-expectancySampleTrades
-expectancyWindowStartUtc
-expectancyWindowEndUtc
-monthlyObjectivePct (nullable)
 rollingMilestoneLadder[]
-monthlyGainGoals[]
-nextMilestones[]:
-  gainGoalUsd
-  remainingGainUsd
-  expectedTradesRemaining (nullable)
+nextMilestones[]
 masterGoal:
-  gainGoalUsd
-  recognizedRealizedGainUsd
-  expectedTradesRemaining (nullable)
-  horizons[]:
-    years
-    requiredMonthlyPct
-    requiredAnnualPct
-    policyState
-    policyReason
+  activeGainGoalUsd
+  incrementUsd
+  reachedAtUtc (nullable)
+  maintenanceYearsRequired
+  maintenanceSatisfied
+  nextGainGoalUsd
+  horizons[]
 provenance
 calculationVersion
 ```
 
-Core owns capital-flow classification, realized-gain recognition, milestone advancement, and production expectancy. WebView2 formats immutable values and must not reconstruct authoritative gain from equity deltas.
-
 ## Windows QC
-
-Test: newest-five event ordering; full audit retention; compact non-overlapping timeline/research spacing; one semantic typography scale across the rail; milestone transitions exactly at 10K/50K/100K/500K/1M/5M/10M/50M; monthly goal states below/at/above 5K/10K/15K; positive/zero/negative expectancy; deposits/withdrawals around boundaries; stale/mixed snapshots; master horizon calculations; 100/125/150/200% scaling; forced colors/high contrast; and minimum supported Command Center height.
+Test quarter boundaries, partial first/last trading weeks, zero completed weeks, tier met/not met, no multi-tier skipping, top tier behavior, stale snapshots, realized-gain reconciliation, master goal reached but not maintained, maintenance exactly one year, falling below watermark during maintenance, $25M repeated ratchets, horizon recalculation, positive/zero/negative expectancy, DPI 100/125/150/200%, forced colors/high contrast, and minimum Command Center height.
 
 Engineering target: zero known presentation/contract ambiguity before migration. Literal zero debugging cannot be guaranteed for live MT5/Windows integration.
