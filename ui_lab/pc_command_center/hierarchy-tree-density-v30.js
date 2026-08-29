@@ -88,15 +88,17 @@
     });
   }
 
+  /* app-v16 replaces the hierarchy root as a whole. Observe only direct root
+     replacement so our own quick-data inserts never recursively trigger us. */
   new MutationObserver(mutations => {
     if (mutations.some(mutation => mutation.type === "childList")) safeDecorate();
-  }).observe(target,{childList:true,subtree:true});
+  }).observe(target,{childList:true});
 
   document.addEventListener("dusty:desk-status-changed",safeDecorate);
   safeDecorate();
 
   window.DUSTY_HIERARCHY_QUICK_VIEW = Object.freeze({
-    version:"3.0",
+    version:"3.0.1",
     dailyTargetPct,
     refresh:safeDecorate
   });
