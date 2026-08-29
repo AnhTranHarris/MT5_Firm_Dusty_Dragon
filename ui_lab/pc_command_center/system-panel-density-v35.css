@@ -1,92 +1,96 @@
-/* Dusty Dragon system panel density v3.6
+/* Dusty Dragon system panel density v3.7
    -------------------------------------
-   Global cockpit typography/spacing authority. Firm Event Timeline is the
-   readability floor: no ordinary operator-facing panel text may render smaller
-   than its 9px body baseline.
+   Global cockpit typography/spacing authority. All operator-facing panel text
+   shares one readable scale. Space is recovered from margins, padding and gaps
+   before typography is reduced.
 
-   Rule: reclaim margins/padding/leading and optional prose before shrinking
-   text. Specialized visualization geometry may vary, but panel text stays on
-   one shared scale so operators do not continually refocus between workspaces. */
+   Contract:
+   Panel header 11px | body/secondary/caption minimum 10px |
+   primary values ~12px | key/master values ~14px. */
 
 :root{
-  --dd-panel-header:10px;
-  --dd-body:9px;
-  --dd-secondary:9px;
-  --dd-caption:9px;
+  --dd-panel-header:11px;
+  --dd-body:10px;
+  --dd-secondary:10px;
+  --dd-caption:10px;
   --dd-value:12px;
   --dd-key-value:14px;
-  --dd-line:1.14;
-  --dd-row-min:19px;
-  --dd-panel-pad-x:8px;
-  --dd-panel-pad-y:4px;
+  --dd-line:1.16;
+  --dd-row-min:21px;
+  --dd-panel-pad-x:7px;
+  --dd-panel-pad-y:3px;
+  --dd-gap:3px;
 }
 
-.workspace .panel>header,.workspace .hero-card>header{min-height:27px!important;padding:5px var(--dd-panel-pad-x)!important;font-size:var(--dd-panel-header)!important;line-height:1!important;letter-spacing:.11em!important}
+/* Panels stretch into the grid/flex area assigned by each workspace. Do not
+   create artificial whitespace with fixed internal heights. */
+.workspace.active .panel,.workspace.active .hero-card{box-sizing:border-box;align-self:stretch;min-height:0}
+.workspace .panel>header,.workspace .hero-card>header{min-height:28px!important;padding:4px var(--dd-panel-pad-x)!important;font-size:var(--dd-panel-header)!important;line-height:1!important;letter-spacing:.10em!important}
 .workspace .panel>header span,.workspace .panel>header b,.workspace .panel>header strong{line-height:1!important}
 .workspace .panel>header span:last-child{font-size:var(--dd-secondary)!important}
 
 .workspace .panel p,.workspace .panel li,.workspace .panel td,.workspace .panel th,.workspace .panel label,.workspace .panel button,.workspace .panel select,.workspace .panel input,.workspace .panel .kv,.workspace .panel .timeline-row,.workspace .panel .incident,.workspace .panel .decision-item,.workspace .panel .research-item,.workspace .panel .evidence-item,.workspace .panel .audit-row,.workspace .panel .attrib-row,.workspace .panel .note-stack p{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
 .workspace .panel small,.workspace .panel .muted,.workspace .panel .eyebrow,.workspace .panel .severity,.workspace .panel .scope-kicker{font-size:var(--dd-secondary)!important;line-height:var(--dd-line)!important}
-.workspace .panel .kv,.workspace .panel .timeline-row,.workspace .panel .audit-row,.workspace .panel .attrib-row{min-height:var(--dd-row-min)!important;padding:2px 0!important}
-.workspace .panel .data-table th,.workspace .panel .data-table td{padding:4px 6px!important}
-.workspace .panel .note-stack{gap:4px!important;padding:5px 7px!important}.workspace .panel .note-stack p{margin:0!important}
+.workspace .panel .kv,.workspace .panel .timeline-row,.workspace .panel .audit-row,.workspace .panel .attrib-row{min-height:var(--dd-row-min)!important;padding:1px 0!important}
+.workspace .panel .data-table th,.workspace .panel .data-table td{padding:3px 5px!important}
+.workspace .panel .note-stack{gap:var(--dd-gap)!important;padding:4px 6px!important}.workspace .panel .note-stack p{margin:0!important}
 
-.workspace .metric strong,.workspace .stat-block strong,.workspace .perf-kpi strong,.workspace .numbers strong,.workspace .resource-gauges b,.workspace .cohort-grid b,.workspace .contractor-cards strong{font-size:var(--dd-value)!important;line-height:1!important}
+.workspace .metric strong,.workspace .stat-block strong,.workspace .perf-kpi strong,.workspace .numbers strong,.workspace .resource-gauges b,.workspace .cohort-grid b,.workspace .contractor-cards strong{font-size:var(--dd-value)!important;line-height:1.05!important}
 .workspace .metric label,.workspace .metric small,.workspace .stat-block span,.workspace .stat-block small,.workspace .perf-kpi span,.workspace .perf-kpi small{font-size:var(--dd-secondary)!important;line-height:var(--dd-line)!important}
 
 /* Command reference cadence. */
-#command .command-major-timeline-panel .timeline{padding:3px 7px 4px!important}
-#command .command-major-timeline-panel .timeline-row{grid-template-columns:42px minmax(0,1fr)!important;gap:5px!important;min-height:19px!important;padding:2px 0!important}
+#command .command-major-timeline-panel .timeline{padding:2px 6px 3px!important}
+#command .command-major-timeline-panel .timeline-row{grid-template-columns:44px minmax(0,1fr)!important;gap:4px!important;min-height:21px!important;padding:1px 0!important}
 #command .command-major-timeline-panel .timeline-row time,#command .command-major-timeline-panel .timeline-row span{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
-#command #researchDelta{padding:3px 8px 4px!important}#command #researchDelta .kv{min-height:19px!important;padding:1px 0!important}#command #researchDelta .kv span{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
+#command #researchDelta{padding:2px 7px 3px!important}#command #researchDelta .kv{min-height:21px!important;padding:0!important}#command #researchDelta .kv span{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
 
-/* Capital planning: protect the 9px readability floor and give rows enough
-   vertical room so captions never collide with values. */
-#command .capital-milestones-panel{overflow:hidden!important}
+/* Capital planning: larger readable text, but less dead spacing between blocks. */
+#command .capital-milestones-panel{overflow:hidden!important;padding-bottom:3px!important}
 #command .capital-milestones-panel>header span:first-child{font-size:var(--dd-panel-header)!important}#command .capital-milestones-panel>header span:last-child{font-size:var(--dd-body)!important}
-#command .capital-goal-strip{margin:0 7px 5px!important}#command .capital-goal-strip>div{padding:6px 7px!important}
-#command .capital-goal-strip small,#command .capital-goal-strip span{font-size:var(--dd-body)!important;line-height:1.14!important}
-#command .capital-goal-strip strong{font-size:var(--dd-key-value)!important;line-height:1!important;margin-top:3px!important;margin-bottom:2px!important}
-#command .capital-model-head{padding:5px 7px!important;min-height:25px!important}#command .capital-model-head span,#command .capital-model-head b{font-size:var(--dd-body)!important;line-height:1.1!important}
-#command .capital-goal-row,#command .capital-month-row{padding:5px 6px!important;min-height:44px!important;align-content:center!important}
-#command .capital-goal-row span,#command .capital-month-row span,#command .capital-goal-row small,#command .capital-month-row small,#command .capital-progress-note{font-size:var(--dd-body)!important;line-height:1.14!important}
-#command .capital-goal-row strong,#command .capital-month-row strong{font-size:var(--dd-value)!important;line-height:1!important;margin:1px 0!important}
-#command .capital-progress-note{padding:4px 7px 5px!important}
+#command .capital-goal-strip{margin:0 6px 3px!important}#command .capital-goal-strip>div{padding:5px 6px!important}
+#command .capital-goal-strip small,#command .capital-goal-strip span{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
+#command .capital-goal-strip strong{font-size:var(--dd-key-value)!important;line-height:1.05!important;margin:2px 0 1px!important}
+#command .capital-trade-model,#command .capital-month-model{margin:0 6px 3px!important}
+#command .capital-model-head{padding:4px 6px!important;min-height:27px!important}#command .capital-model-head span,#command .capital-model-head b{font-size:var(--dd-body)!important;line-height:1.1!important}
+#command .capital-goal-row,#command .capital-month-row{padding:4px 5px!important;min-height:47px!important;align-content:center!important;row-gap:2px!important}
+#command .capital-goal-row span,#command .capital-month-row span,#command .capital-goal-row small,#command .capital-month-row small,#command .capital-progress-note{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
+#command .capital-goal-row strong,#command .capital-month-row strong{font-size:var(--dd-value)!important;line-height:1.05!important;margin:1px 0!important}
+#command .capital-progress-note{padding:3px 6px 4px!important}
 
-#command .capital-master-goal{margin-top:5px!important}
-#command .capital-master-head{padding:6px 7px!important;min-height:45px!important}#command .capital-master-head span,#command .capital-master-head small{font-size:var(--dd-body)!important;line-height:1.14!important}#command .capital-master-head strong{font-size:var(--dd-key-value)!important;line-height:1!important}
+#command .capital-master-goal{margin:3px 6px 0!important}
+#command .capital-master-head{padding:5px 6px!important;min-height:48px!important;row-gap:2px!important}#command .capital-master-head span,#command .capital-master-head small{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}#command .capital-master-head strong{font-size:var(--dd-key-value)!important;line-height:1.05!important}
 #command .capital-master-horizons{align-items:stretch!important}
-#command .capital-horizon{padding:6px!important;min-height:52px!important;display:flex!important;flex-direction:column!important;justify-content:center!important}
+#command .capital-horizon{padding:5px!important;min-height:58px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;gap:1px!important}
 #command .capital-horizon>div>b,#command .capital-horizon em,#command .capital-horizon>small{font-size:var(--dd-body)!important;line-height:1.12!important}
-#command .capital-horizon>strong{font-size:var(--dd-value)!important;line-height:1!important;margin:3px 0 2px!important}
-#command .capital-model-note{font-size:var(--dd-body)!important;line-height:1.14!important;margin:5px 7px 0!important}
+#command .capital-horizon>strong{font-size:var(--dd-value)!important;line-height:1.05!important;margin:2px 0!important}
+#command .capital-model-note{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important;margin:3px 6px 0!important}
 
-/* Command right rail and all remaining workspaces use the same floor. */
-#command .right-stack .desk-tile{padding:5px 6px!important}#command .right-stack .desk-tile b,#command .right-stack .desk-tile span,#command .right-stack .desk-tile small,#command .right-stack .numbers span{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
-#command .right-stack #rejectedSummary .kv{padding:1px 0!important;min-height:19px!important}#command .authority-zone p{margin:4px 7px!important}#command .authority-zone button{font-size:var(--dd-body)!important;padding:5px 7px!important;margin:2px 7px!important}
+/* Command right rail and all remaining workspaces use the same readable floor. */
+#command .right-stack .desk-tile{padding:4px 5px!important}#command .right-stack .desk-tile b,#command .right-stack .desk-tile span,#command .right-stack .desk-tile small,#command .right-stack .numbers span{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
+#command .right-stack #rejectedSummary .kv{padding:0!important;min-height:21px!important}#command .authority-zone p{margin:3px 6px!important}#command .authority-zone button{font-size:var(--dd-body)!important;padding:4px 6px!important;margin:2px 6px!important}
 
-body.analytical-mode #command .hierarchy-tree-view{--tree-body:9px;--tree-secondary:9px;--tree-value:10px}
+body.analytical-mode #command .hierarchy-tree-view{--tree-body:10px;--tree-secondary:10px;--tree-value:12px}
 body.analytical-mode #command .tree-layer-head,body.analytical-mode #command .tree-desk{line-height:var(--dd-line)!important}
 body.analytical-mode #command .tree-layer-head small,body.analytical-mode #command .tree-desk small,body.analytical-mode #command .tree-quick span,body.analytical-mode #command .tree-layer-head b,body.analytical-mode #command .tree-desk b,body.analytical-mode #command .tree-state{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
 
-#trading .decision-item,#research .research-item,#research .evidence-item,#system .audit-row{padding:5px 7px!important}#trading .decision-item b,#trading .decision-item small,#research .research-item b,#research .research-item small,#research .evidence-item b,#research .evidence-item small,#system .audit-row b,#system .audit-row small{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
-#risk .heat-tile strong{font-size:var(--dd-value)!important;line-height:1!important}#risk .heat-tile span,#risk .heat-tile small,#risk .corr-cell{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
-#performance .perf-contrib,#performance .perf-contrib span,#performance .perf-contrib b,#performance .perf-state-badge,#performance .perf-contrib-meta>strong{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}#performance .perf-card-grid{gap:3px!important}
-#research .contractor-cards{padding:5px!important;gap:4px!important}#research .contractor-cards>div{padding:5px 6px!important}#research .contractor-cards b,#research .contractor-cards span,#research .contractor-cards strong{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
-#lab .cohort-grid{padding:6px!important;gap:4px!important}#lab .cohort-grid span{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
-#system .system-layout .panel p,#system .system-layout .panel span,#system .system-layout .panel label,#system .system-layout .panel td,#system .system-layout .panel th{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}#system .resource-gauges>div{padding:4px 6px!important}
+#trading .decision-item,#research .research-item,#research .evidence-item,#system .audit-row{padding:4px 6px!important}#trading .decision-item b,#trading .decision-item small,#research .research-item b,#research .research-item small,#research .evidence-item b,#research .evidence-item small,#system .audit-row b,#system .audit-row small{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
+#risk .heat-tile strong{font-size:var(--dd-value)!important;line-height:1.05!important}#risk .heat-tile span,#risk .heat-tile small,#risk .corr-cell{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
+#performance .perf-contrib,#performance .perf-contrib span,#performance .perf-contrib b,#performance .perf-state-badge,#performance .perf-contrib-meta>strong{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}#performance .perf-card-grid{gap:2px!important}
+#research .contractor-cards{padding:4px!important;gap:3px!important}#research .contractor-cards>div{padding:4px 5px!important}#research .contractor-cards b,#research .contractor-cards span,#research .contractor-cards strong{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
+#lab .cohort-grid{padding:5px!important;gap:3px!important}#lab .cohort-grid span{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}
+#system .system-layout .panel p,#system .system-layout .panel span,#system .system-layout .panel label,#system .system-layout .panel td,#system .system-layout .panel th{font-size:var(--dd-body)!important;line-height:var(--dd-line)!important}#system .resource-gauges>div{padding:3px 5px!important}
 
-/* Under height pressure, remove low-value prose and spacing before reducing text. */
+/* Height pressure: remove optional prose and spacing before changing typography. */
 @media(max-height:820px){
-  :root{--dd-row-min:18px;--dd-panel-pad-y:3px}
-  .workspace .panel>header,.workspace .hero-card>header{min-height:25px!important;padding:4px 7px!important}
-  .workspace .panel .kv,.workspace .panel .timeline-row,.workspace .panel .audit-row,.workspace .panel .attrib-row{padding:1px 0!important}
-  #command .capital-goal-strip>div{padding:5px 6px!important}
-  #command .capital-goal-row,#command .capital-month-row{min-height:41px!important;padding:4px 5px!important}
-  #command .capital-horizon{min-height:48px!important;padding:5px!important}
+  :root{--dd-row-min:20px}
+  .workspace .panel>header,.workspace .hero-card>header{min-height:27px!important;padding:3px 6px!important}
+  .workspace .panel .kv,.workspace .panel .timeline-row,.workspace .panel .audit-row,.workspace .panel .attrib-row{padding:0!important}
+  #command .capital-goal-strip>div{padding:4px 5px!important}
+  #command .capital-goal-row,#command .capital-month-row{min-height:44px!important;padding:3px 4px!important}
+  #command .capital-horizon{min-height:54px!important;padding:4px!important}
   #command .capital-model-note{display:none!important}
 }
 
-/* Never go below the Timeline's 9px operator-facing text floor. */
-@media(max-height:680px){:root{--dd-body:9px;--dd-secondary:9px;--dd-caption:9px;--dd-value:11.5px;--dd-key-value:13px}}
+/* 10px is the absolute ordinary/secondary/caption floor at every supported height. */
+@media(max-height:680px){:root{--dd-body:10px;--dd-secondary:10px;--dd-caption:10px;--dd-value:12px;--dd-key-value:14px}}
 @media(forced-colors:active){.workspace .panel>header,.workspace .hero-card>header{border-color:CanvasText!important}}
