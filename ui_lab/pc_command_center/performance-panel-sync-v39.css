@@ -1,0 +1,8 @@
+/* Performance panel synchronization v3.9 */
+#performance .perf-legacy-scope-retired > select{display:none!important}
+#performance .perf-legacy-scope-retired{gap:6px}
+#performance .perf-contrib.selected{outline:1px solid rgba(101,242,176,.42);background:rgba(101,242,176,.06);padding:3px 4px;margin-left:-4px;margin-right:-4px}
+#performance .perf-contrib.selected>b{color:#dffff0}
+#performance .perf-contrib.selected>div{box-shadow:0 0 0 1px rgba(101,242,176,.16) inset}
+#performance .perf-contrib.selected>span{color:#dffff0}
+@media(max-width:720px){#performance .perf-contrib.selected{padding:2px 3px;margin-left:-3px;margin-right:-3px}}
