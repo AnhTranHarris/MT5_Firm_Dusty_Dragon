@@ -1,0 +1,22 @@
+/* Command Center capital milestones v3.1 — compact planning reference. */
+#command .left-stack>.capital-milestones-panel{flex:1 1 auto;min-height:0;overflow:hidden;padding-bottom:5px}
+#command .capital-milestones-panel>header{min-height:28px}
+#command .capital-milestones-panel>header span:last-child{color:var(--muted);font-size:7px;letter-spacing:.08em}
+#command .capital-goal-strip{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(103,215,255,.10);margin:0 7px 5px}
+#command .capital-goal-strip>div{min-width:0;padding:7px 8px;background:#071219;border-left:2px solid rgba(103,215,255,.48)}
+#command .capital-goal-strip small{display:block;color:var(--muted);font-size:7px;letter-spacing:.07em;white-space:nowrap}
+#command .capital-goal-strip strong{display:block;margin-top:3px;font-size:15px;line-height:1;color:#eefaff;font-variant-numeric:tabular-nums}
+#command .capital-goal-strip span{display:block;margin-top:3px;color:#7fa8bb;font-size:7px;line-height:1.2}
+#command .capital-trade-model{margin:0 7px;border:1px solid rgba(103,215,255,.13);background:rgba(3,13,18,.64)}
+#command .capital-model-head{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 7px;border-bottom:1px solid rgba(103,215,255,.11)}
+#command .capital-model-head span{color:var(--cyan);font-size:7px;letter-spacing:.08em}
+#command .capital-model-head b{font-size:8px;color:#dceef5;font-variant-numeric:tabular-nums;white-space:nowrap}
+#command .capital-goal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:rgba(103,215,255,.08)}
+#command .capital-goal-row{display:grid;grid-template-columns:42px 1fr auto;align-items:baseline;gap:5px;padding:6px 7px;background:#061016;min-width:0}
+#command .capital-goal-row span{font-size:9px;font-weight:800;color:#dff7ff}
+#command .capital-goal-row strong{font-size:12px;text-align:right;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+#command .capital-goal-row small{font-size:7px;color:var(--muted)}
+#command .capital-goal-row:last-child span,#command .capital-goal-row:last-child strong{color:var(--amber)}
+#command .capital-model-note{margin:5px 8px 0;color:#6f8f9e;font-size:6.5px;line-height:1.25}
+@media(max-height:820px){#command .capital-goal-strip>div{padding:5px 7px}#command .capital-goal-strip strong{font-size:13px}#command .capital-goal-row{padding:4px 6px}#command .capital-goal-row strong{font-size:11px}#command .capital-model-note{font-size:6px}}
+@media(forced-colors:active){#command .capital-goal-strip,#command .capital-trade-model,#command .capital-goal-row,#command .capital-goal-strip>div{background:Canvas;border-color:CanvasText}#command .capital-goal-strip>div{border-left-color:Highlight}#command .capital-goal-row:last-child span,#command .capital-goal-row:last-child strong{color:CanvasText}}
