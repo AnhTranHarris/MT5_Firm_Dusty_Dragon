@@ -36,13 +36,22 @@ Quant reading order:
 
 ## Lens color contract
 
-Quant uses one bright-purple semantic accent across the complete analytical workspace: the four Quant rail panels, the persistent `CAPITAL & OBJECTIVES` panel chrome, and the active `QUANT` segmented-control button. This gives the operator an immediate whole-workspace cue that the current interpretation lens is Quant even though the capital chart and selected scope remain shared.
+Quant uses one bright-purple semantic accent across the complete analytical workspace: the four Quant rail panels, the persistent `CAPITAL & OBJECTIVES` panel chrome, and the active `QUANT` segmented-control button. Purple is presentation/lens metadata only; it never encodes broker health, desk health, P&L sign, risk state, warning severity, order state, or execution authority.
 
-Purple is **presentation/lens metadata only**. It must never encode broker health, desk health, P&L sign, risk state, warning severity, order state, or execution authority. Green/amber/red retain those established operational meanings. Chart-series semantics also remain unchanged when the lens changes: actual return/capital stays green, objective stays amber, as-of stays blue, and risk-reference lines keep their defined semantics. Only container chrome changes to purple.
+Chart-series semantics remain invariant across lenses: actual return/capital stays green, the absolute-return objective/reference stays amber, as-of stays blue, HWM stays neutral-light, and the drawdown-watch floor stays red. In Windows forced-colors/high-contrast mode, system colors supersede these accents.
 
-In Windows forced-colors/high-contrast mode, system colors supersede the purple brand accent. Reduced/no-motion modes must not depend on animation to communicate the active lens.
+## Capital chart integrity contract
 
-A lens change replaces rail labels and contents in place while preserving selected Performance scope, chart horizon, snapshot version and Capital & Objectives context. Investor-only notes are hidden in Quant mode rather than duplicated.
+The capital graph uses one dated cumulative-return series per selected scope. Bars must be width-limited by the minimum visible spacing between adjacent timestamps so two observations never visually overlap even on compressed annual/five-year horizons. Timestamp order remains authoritative; the renderer must not merge distinct observations merely to make the plot fit.
+
+The drawdown protection band is a background layer. HWM and drawdown-watch-floor **lines and labels are foreground reference annotations** and must render after the green bars so they remain legible. Labels use a dark text stroke/halo only for contrast; that stroke carries no financial meaning.
+
+The yellow line has two contexts:
+
+- at `FIRM`, it is the firm's authoritative absolute-return objective trajectory;
+- at Portfolio/Layer/Desk scopes, it remains visible as a **firm objective reference** for visual comparison only.
+
+The child scope must never silently inherit that firm objective as its own target. Readouts and legends must identify the distinction (`ABSOLUTE-RETURN OBJECTIVE` vs `FIRM OBJECTIVE REFERENCE`). A future Core-supplied child objective may replace the reference only when its explicit policy reference is present.
 
 ## Investor semantics
 
@@ -66,6 +75,22 @@ Quant calculations belong in Core. The UI may perform only transparent display t
 
 The current `performance-quant-scope-mock-v40.js` is UI-Lab-only simulated data. It must be removed when Core exposes real quant read models.
 
+## Benchmark / Active Risk population contract
+
+An empty benchmark-relative panel is not a calculation failure when no benchmark policy exists. Alpha, beta, tracking error, information ratio, active return, and similar statistics require an explicitly selected, strategy-appropriate benchmark plus a dated benchmark return series aligned to the selected scope's measurement window.
+
+Do **not** substitute the yellow absolute-return objective, S&P 500, cash, or another convenient index merely to populate the panel. When the benchmark is absent, the UI should show `BENCHMARK REQUIRED` / `NOT CALCULATED` with the missing inputs clearly stated. When Core supplies a valid benchmark, the same panel may expose the benchmark label, alpha/beta regression read model, tracking error and information ratio.
+
+Recommended production benchmark payload fields include:
+
+- `benchmark_policy_id`;
+- stable benchmark label / identifier;
+- benchmark return series with UTC observation timestamps;
+- alignment/sample-window metadata;
+- calculation/version identifier;
+- alpha and beta only when the regression model is authoritative;
+- tracking error and information ratio only from aligned active-return observations.
+
 ## Production read-model identity
 
 ```text
@@ -82,7 +107,7 @@ Layer, Portfolio, and Firm aggregates belong in Core. The UI must not average de
 
 ## Objectives, benchmarks, and risk limits
 
-The firm absolute-return objective is not automatically a Portfolio or Desk objective. A firm open-risk limit is not silently inherited by child scopes. Likewise, the yellow objective is never a benchmark.
+The firm absolute-return objective is not automatically a Portfolio or Desk objective. A firm open-risk limit is not silently inherited by child scopes. Likewise, the yellow objective/reference is never a benchmark.
 
 Portfolio/Layer/Desk objective, volatility target, benchmark, and risk-budget utilization remain unset unless Core explicitly supplies the appropriate policy reference for that scope.
 
@@ -107,6 +132,6 @@ Neither message may be interpreted as a broker or trading command.
 
 ## QC before migration
 
-Require automated tests for all portfolios/entities; attribution reconciliation; identical scope/snapshot identity across Investor and Quant; lens changes preserving scope and timeframe; lens color never altering chart/risk semantics; missing/retired/parked desks; stale/out-of-order responses; optional objectives/volatility targets/benchmarks; VaR/ES horizon consistency; benchmark-relative metric rejection without benchmark series; Core-side aggregation; UTC/DST; reduced motion; forced colors/high contrast; 100/125/150/200% Windows scaling; and WebView2 schema/version rejection.
+Require automated tests for all portfolios/entities; strict increasing chart timestamps; no bar overlap at every supported horizon/viewport; foreground HWM/watch-floor annotations; objective-vs-reference labelling; attribution reconciliation; identical scope/snapshot identity across Investor and Quant; lens changes preserving scope and timeframe; missing/retired/parked desks; stale/out-of-order responses; optional objectives/volatility targets/benchmarks; benchmark-relative metrics rejected when benchmark series are absent; VaR/ES horizon consistency; Core-side aggregation; UTC/DST; reduced motion; forced colors/high contrast; 100/125/150/200% Windows scaling; and WebView2 schema/version rejection.
 
 The engineering target is zero known contract ambiguity before migration. Literal zero debugging cannot be guaranteed for a real Windows/MT5 integration.
