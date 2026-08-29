@@ -1,0 +1,41 @@
+/* Trading Floor analytical hierarchy v3.0 — dense information, not empty space. */
+body.analytical-mode .hierarchy-tree-view{padding:10px 12px 58px;overflow:auto}
+body.analytical-mode .tree-root{min-height:100%;height:100%;gap:10px;align-items:stretch}
+body.analytical-mode .tree-core{align-self:center;min-width:240px;padding:10px 24px}
+body.analytical-mode .tree-core b{font-size:13px}
+body.analytical-mode .tree-core span{font-size:9px}
+body.analytical-mode .tree-trunk{height:14px;align-self:center}
+body.analytical-mode .tree-layers{flex:1;min-height:0;grid-template-columns:repeat(5,minmax(150px,1fr));gap:8px;align-items:stretch}
+body.analytical-mode .tree-layer{display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0}
+body.analytical-mode .tree-layer-head{padding:8px 7px 7px;text-align:left}
+body.analytical-mode .tree-layer-head>b{font-size:12px;line-height:1.12}
+body.analytical-mode .tree-layer-head>span{font-size:8px;line-height:1.2;white-space:normal}
+body.analytical-mode .tree-layer-head>em{font-size:8px}
+body.analytical-mode .tree-children{display:grid;grid-template-rows:repeat(6,minmax(0,1fr));gap:4px;padding:5px;min-height:0}
+body.analytical-mode .tree-child{display:grid;grid-template-columns:42px minmax(0,1fr);grid-template-rows:auto auto;gap:3px 6px;align-content:center;min-height:0;padding:6px 7px;font-size:9px;overflow:hidden}
+body.analytical-mode .tree-child>b{font-size:10px;line-height:1}
+body.analytical-mode .tree-child>span{font-size:9px;line-height:1.1}
+body.analytical-mode .tree-child>em{font-size:8px;justify-self:end;align-self:center}
+body.analytical-mode .tree-child .tree-desk-quick{grid-column:1/-1}
+
+.tree-quick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:3px;margin-top:5px;color:#d9edf5;font-variant-numeric:tabular-nums}
+.tree-quick>span{display:block!important;min-width:0;margin:0!important;padding:3px 4px;border-left:1px solid rgba(103,215,255,.18);background:rgba(2,10,15,.30)}
+.tree-quick small,.tree-quick b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tree-quick small{color:#7895a3;font-size:6.5px;letter-spacing:.06em;line-height:1}
+.tree-quick b{margin-top:2px;color:#eaf7fb;font-size:9px;line-height:1.05}
+.tree-layer-quick{margin-top:6px}
+.tree-layer-quick small{font-size:7px}.tree-layer-quick b{font-size:10px}
+.tree-target i{display:block;height:2px;margin-top:3px;background:rgba(255,255,255,.07);overflow:hidden}.tree-target i em{display:block;height:100%;background:#65f2b0}.tree-target.behind b{color:#ff7b88}.tree-target.behind i em{background:#ff6175}.tree-target.tracking b{color:#ffc568}.tree-target.tracking i em{background:#ffc568}.tree-target.ahead b{color:#65f2b0}
+
+/* At constrained widths preserve legibility through scroll rather than crushing five columns. */
+@media(max-width:1350px){
+  body.analytical-mode .tree-root{min-width:900px}
+  body.analytical-mode .tree-layers{grid-template-columns:repeat(5,minmax(160px,1fr))}
+}
+@media(max-height:820px){
+  body.analytical-mode .hierarchy-tree-view{padding-top:7px;padding-bottom:48px}
+  body.analytical-mode .tree-layer-head{padding:6px}
+  body.analytical-mode .tree-child{padding:4px 6px}
+  .tree-quick{margin-top:3px}.tree-quick>span{padding:2px 3px}.tree-quick b{font-size:8px}
+}
+@media(forced-colors:active){.tree-quick>span{border-color:CanvasText;background:Canvas}.tree-target i{border:1px solid CanvasText;background:Canvas}.tree-target i em{background:Highlight}}
