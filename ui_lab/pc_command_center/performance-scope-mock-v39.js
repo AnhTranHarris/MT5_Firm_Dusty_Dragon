@@ -22,7 +22,11 @@
     4: "PORTFOLIO 4 · SYMBOL"
   };
 
-  const finite = value => Number.isFinite(Number(value)) ? Number(value) : null;
+  const finite = value => {
+    if (typeof value === "number") return Number.isFinite(value) ? value : null;
+    const parsed = Number(String(value ?? "").replace(/[^0-9.+-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : null;
+  };
   const clonePoint = point => ({ atUtc: point.atUtc, cumulativeReturnPct: Number(point.cumulativeReturnPct) });
   const openingCapital = (equity, returnPct) => equity > 0 && returnPct > -100 ? equity / (1 + returnPct / 100) : null;
 
