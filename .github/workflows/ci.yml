@@ -50,3 +50,6 @@ jobs:
 
       - name: Performance read-model contract
         run: node ui_lab/pc_command_center/performance-contract-check.mjs
+
+      - name: Capital planning contract
+        run: node ui_lab/pc_command_center/capital-planning-contract-check.mjs
