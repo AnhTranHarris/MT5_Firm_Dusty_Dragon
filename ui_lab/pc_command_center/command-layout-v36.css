@@ -1,0 +1,29 @@
+/* Command layout v3.6 — information-first rail rebalance. */
+#command .left-stack{display:flex!important;flex-direction:column!important;min-height:0!important;gap:6px!important}
+#command .left-stack>.command-major-timeline-panel{flex:0 0 auto!important}
+#command .left-stack>.capital-milestones-panel{flex:1 1 auto!important;min-height:0!important}
+#command .right-stack{display:flex!important;flex-direction:column!important;min-height:0!important;gap:6px!important}
+#command .right-stack>.panel{flex:0 0 auto!important}
+#command .right-stack>.research-delta-relocated{margin:0!important}
+
+/* Application-level authority lives immediately after SYSTEM. Keep the same
+   11/10/12/14 cockpit scale and use compact controls rather than a tall panel. */
+.workspace-nav{display:flex;align-items:center;min-width:0}
+.workspace-nav .nav-command-authority{display:inline-flex;align-items:center;gap:3px;margin-left:5px;padding-left:5px;border-left:1px solid rgba(91,211,255,.28)}
+.workspace-nav .nav-authority-button{min-height:24px;padding:3px 7px;border:1px solid rgba(91,211,255,.42);background:rgba(5,24,31,.82);color:#d8f4ff;font-size:10px!important;line-height:1!important;letter-spacing:.035em;white-space:nowrap}
+.workspace-nav .nav-authority-button:hover,.workspace-nav .nav-authority-button:focus-visible{border-color:#69e6ff;color:#fff}
+.workspace-nav .nav-authority-button.danger{border-color:rgba(255,100,116,.65);color:#ff9ba6}
+
+/* The 10px operator-facing floor applies to every panel in every workspace,
+   including nested/custom structures not covered by older component selectors. */
+.workspace .panel :where(span,small,b,strong,em,time,div:not([class]),a){font-size:max(10px,1em)}
+.workspace .panel>header,.workspace .panel>header :where(span,b,strong){font-size:11px!important}
+
+@media(max-width:1500px){
+  .workspace-nav .nav-authority-button{max-width:112px;overflow:hidden;text-overflow:ellipsis}
+}
+@media(max-width:1280px){
+  .workspace-nav .nav-command-authority{gap:2px;margin-left:3px;padding-left:3px}
+  .workspace-nav .nav-authority-button{max-width:86px;padding-inline:5px}
+}
+@media(forced-colors:active){.workspace-nav .nav-command-authority{border-color:CanvasText}.workspace-nav .nav-authority-button{border-color:ButtonText;color:ButtonText}}
