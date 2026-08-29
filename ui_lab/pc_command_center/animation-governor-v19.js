@@ -43,10 +43,9 @@
   };
 
   /*
-   * Performance v4.0 uses one synchronized presentation scope for Investor and
-   * Quant lenses. The shell owns no financial math. Firm/Portfolio/Layer/Desk
-   * read models are supplied by fixtures in UI Lab and by Dusty Core in production.
-   * Presentation never reads MT5 directly or mutates broker/risk/ledger authority.
+   * Performance v4.1 keeps one synchronized scope and one four-slot diagnostic
+   * rail. Investor/Quant lens changes replace rail semantics in place; they do
+   * not create a second dashboard or alter Core/MT5 authority.
    */
   window.addEventListener(
     "DOMContentLoaded",
@@ -81,7 +80,7 @@
               panelSync.src = "performance-panel-sync-v39.js";
               panelSync.onload = () => {
                 const quantSync = document.createElement("script");
-                quantSync.src = "performance-quant-sync-v40.js";
+                quantSync.src = "performance-quant-sync-v41.js";
                 quantSync.defer = true;
                 document.body.append(quantSync);
               };
