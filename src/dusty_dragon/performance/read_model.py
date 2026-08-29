@@ -86,7 +86,7 @@ def build_time_weighted_curve(
     ):
         flow_index += 1
 
-    for previous, current in zip(ordered, ordered[1:]):
+    for previous, current in zip(ordered[:-1], ordered[1:], strict=True):
         if previous.equity <= 0:
             raise ValueError("equity observation preceding a return period must be positive")
 
