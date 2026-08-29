@@ -31,3 +31,12 @@ jobs:
 
       - name: Pytest
         run: pytest
+
+      - name: UI JavaScript syntax
+        run: |
+          node --check ui_lab/pc_command_center/performance-timeframe-v37.js
+          node --check ui_lab/pc_command_center/performance-mock-history.js
+          node --check ui_lab/pc_command_center/animation-governor-v19.js
+
+      - name: Performance read-model contract
+        run: node ui_lab/pc_command_center/performance-contract-check.mjs
