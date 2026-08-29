@@ -13,10 +13,10 @@ on:
 # from dev/ui-lab-v1; backend, broker, MT5, credentials and execution code are
 # never staged into the Pages artifact.
 #
-# Preview checkpoint: Performance v4.4 — Investor and Quant share one scope.
-# Capital chart keeps the firm objective visible as a child-scope reference,
-# prevents overlapping bars, raises HWM/watch-floor annotations above bars, and
-# makes benchmark-relative data requirements explicit instead of fabricating data.
+# Preview checkpoint: Trading Floor analytical hierarchy v3.0 + Performance v4.4.
+# The analytical tree uses the available floor area for readable quick telemetry:
+# desk realized P&L/day return/target progress and Layer aggregates. These are
+# UI-Lab fixtures only; production aggregation and realized P&L belong in Core.
 
 permissions:
   contents: read
@@ -39,10 +39,12 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
-      - name: Validate Performance UI contract
+      - name: Validate UI contracts
         shell: bash
         run: |
           set -euo pipefail
+          node --check ui_lab/pc_command_center/hierarchy-data.js
+          node --check ui_lab/pc_command_center/hierarchy-tree-density-v30.js
           node --check ui_lab/pc_command_center/performance-dashboard-v33.js
           node --check ui_lab/pc_command_center/performance-timeframe-v38.js
           node --check ui_lab/pc_command_center/performance-mock-history.js
@@ -57,6 +59,9 @@ jobs:
         run: |
           set -euo pipefail
           test -f ui_lab/pc_command_center/index.html
+          test -f ui_lab/pc_command_center/hierarchy-tree-density-v30.js
+          test -f ui_lab/pc_command_center/hierarchy-tree-density-v30.css
+          test -f ui_lab/pc_command_center/TRADING_FLOOR_WINDOWS_HANDOFF.md
           test -f ui_lab/pc_command_center/performance-dashboard-v33.js
           test -f ui_lab/pc_command_center/performance-dashboard-v30.css
           test -f ui_lab/pc_command_center/performance-quant-v32.css
