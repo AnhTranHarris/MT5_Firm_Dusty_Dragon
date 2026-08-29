@@ -42,14 +42,26 @@
     scheduled.delete(id);
   };
 
-  /* Performance presentation adapters are loaded deterministically so the
-     Windows/WebView2 migration can replace fixtures without changing semantics. */
+  /* Presentation adapters are loaded deterministically so the future
+     WinUI/WebView2 host can replace fixtures without changing UI semantics. */
   window.addEventListener("DOMContentLoaded", () => {
-    ["performance-dashboard-v30.css","performance-quant-v32.css","performance-timeframe-v36.css","performance-layout-v36.css","performance-scope-v38.css","performance-panel-sync-v39.css"].forEach(href => {
-      const style=document.createElement("link"); style.rel="stylesheet"; style.href=href; document.head.append(style);
+    [
+      "performance-dashboard-v30.css",
+      "performance-quant-v32.css",
+      "performance-timeframe-v36.css",
+      "performance-layout-v36.css",
+      "performance-scope-v38.css",
+      "performance-panel-sync-v39.css",
+      "hierarchy-tree-density-v30.css"
+    ].forEach(href => {
+      const style=document.createElement("link");
+      style.rel="stylesheet";
+      style.href=href;
+      document.head.append(style);
     });
 
     const load=(src,onload)=>{const script=document.createElement("script");script.src=src;if(onload)script.onload=onload;document.body.append(script);};
+    load("hierarchy-tree-density-v30.js");
     load("performance-scope-mock-v39.js",()=>load("performance-quant-scope-mock-v40.js",()=>load("performance-dashboard-v33.js",()=>load("performance-timeframe-v38.js",()=>load("performance-panel-sync-v39.js",()=>{
       load("performance-state-language-v310.js",()=>load("performance-quant-sync-v41.js"));
     })))));
