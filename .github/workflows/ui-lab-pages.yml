@@ -13,11 +13,12 @@ on:
 # from dev/ui-lab-v1; backend, broker, MT5, credentials and execution code are
 # never staged into the Pages artifact.
 #
-# Preview checkpoint: Performance v3.6.2 — the three investor diagnostics remain
-# stacked in the left rail, Capital & Objectives consumes the flexible right-side
-# height, and Return Attribution is content-sized beneath the capital canvas.
-# Vertical actual-return bars and institutional objective/HWM/watch-floor semantics
-# remain intact; unavailable horizon histories are never synthesized.
+# Preview checkpoint: Performance v3.6.3 — Capital Protection, Return Quality,
+# Liquidity & Exposure, and Return Attribution are stacked in one left rail.
+# Capital & Objectives owns the full right-side height so graph labels, controls,
+# legend, objective/HWM/watch-floor references and readouts have maximum room.
+# Vertical actual-return bars remain intact; unavailable horizon histories are
+# never synthesized.
 
 permissions:
   contents: read
