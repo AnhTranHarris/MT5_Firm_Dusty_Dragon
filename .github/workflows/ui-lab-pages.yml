@@ -13,10 +13,10 @@ on:
 # from dev/ui-lab-v1; backend, broker, MT5, credentials and execution code are
 # never staged into the Pages artifact.
 #
-# Preview checkpoint: Performance v3.7 — all reporting horizons consume explicit
-# dated UTC cumulative-return series. The UI contract, Python performance read
-# model, Ruff, Pytest, JS syntax, and mock-history validator passed on dev head
-# 947c412b29c06e59a33e029eab5de37db6ef51ec before this refresh.
+# Preview checkpoint: Performance v3.8 — Capital & Objectives has a local scope
+# selector for Firm or Portfolio 1-4, with Layer / Desk 1-6 drill-down. Portfolio
+# histories are explicit UI-lab simulated fixtures only; production requires Core
+# scope read models and never derives broker truth in JavaScript.
 
 permissions:
   contents: read
@@ -43,8 +43,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node --check ui_lab/pc_command_center/performance-timeframe-v37.js
+          node --check ui_lab/pc_command_center/performance-timeframe-v38.js
           node --check ui_lab/pc_command_center/performance-mock-history.js
+          node --check ui_lab/pc_command_center/performance-scope-mock-v38.js
           node ui_lab/pc_command_center/performance-contract-check.mjs
 
       - name: Stage PC Command Center only
@@ -55,11 +56,14 @@ jobs:
           test -f ui_lab/pc_command_center/performance-dashboard-v32.js
           test -f ui_lab/pc_command_center/performance-dashboard-v30.css
           test -f ui_lab/pc_command_center/performance-quant-v32.css
-          test -f ui_lab/pc_command_center/performance-timeframe-v37.js
+          test -f ui_lab/pc_command_center/performance-timeframe-v38.js
           test -f ui_lab/pc_command_center/performance-timeframe-v36.css
           test -f ui_lab/pc_command_center/performance-layout-v36.css
+          test -f ui_lab/pc_command_center/performance-scope-v38.css
           test -f ui_lab/pc_command_center/performance-mock-history.js
+          test -f ui_lab/pc_command_center/performance-scope-mock-v38.js
           test -f ui_lab/pc_command_center/PERFORMANCE_WINDOWS_HANDOFF.md
+          test -f ui_lab/pc_command_center/PERFORMANCE_SCOPE_WINDOWS_HANDOFF.md
           rm -rf _site
           mkdir -p _site
           cp -a ui_lab/pc_command_center/. _site/
