@@ -1,11 +1,22 @@
-/* Command timeline v3.2 — five major desk-impact events only. */
+/* Command timeline v3.3 — five major desk-impact events, compact but readable. */
 #command .left-stack>.command-major-timeline-panel{flex:0 0 auto!important;min-height:0!important}
-#command .command-major-timeline-panel .timeline{padding:5px 7px 6px}
-#command .command-major-timeline-panel .timeline-row{padding:5px 0;font-size:9.5px;line-height:1.18;grid-template-columns:44px minmax(0,1fr)}
-#command .command-major-timeline-panel .timeline-row time{font-size:9px}
-#command .command-major-timeline-panel .timeline-row span{font-size:9.5px;line-height:1.18}
+#command .command-major-timeline-panel .timeline{padding:3px 7px 4px}
+#command .command-major-timeline-panel .timeline-row{padding:3px 0;font-size:9.5px;line-height:1.12;grid-template-columns:44px minmax(0,1fr)}
+#command .command-major-timeline-panel .timeline-row time{font-size:9px;line-height:1.12}
+#command .command-major-timeline-panel .timeline-row span{font-size:9.5px;line-height:1.12}
+
+/* Research Delta is a scan list, not prose. Reclaim vertical room here before
+   shrinking capital-planning typography. */
+#command #researchDelta{padding-top:2px;padding-bottom:3px}
+#command #researchDelta .kv{min-height:0!important;padding:2px 8px!important;line-height:1.12!important}
+#command #researchDelta .kv>span{font-size:9.5px;line-height:1.12}
+#command #researchDelta .kv>span:last-child{font-weight:700}
 #command .left-stack>.capital-milestones-panel{flex:1 1 0!important;min-height:0}
+
 @media(max-height:820px){
-  #command .command-major-timeline-panel .timeline-row{padding:4px 0;font-size:9px}
-  #command .command-major-timeline-panel .timeline-row span,#command .command-major-timeline-panel .timeline-row time{font-size:8.7px}
+  #command .command-major-timeline-panel .timeline{padding-top:2px;padding-bottom:3px}
+  #command .command-major-timeline-panel .timeline-row{padding:2px 0;font-size:9px;line-height:1.08}
+  #command .command-major-timeline-panel .timeline-row span,#command .command-major-timeline-panel .timeline-row time{font-size:8.7px;line-height:1.08}
+  #command #researchDelta .kv{padding:1.5px 7px!important}
+  #command #researchDelta .kv>span{font-size:9px;line-height:1.08}
 }
