@@ -54,7 +54,8 @@
       "performance-panel-sync-v39.css",
       "hierarchy-tree-density-v30.css",
       "command-capital-milestones-v31.css",
-      "command-timeline-v32.css"
+      "command-timeline-v32.css",
+      "command-left-rail-density-v34.css"
     ].forEach(href => {
       const style=document.createElement("link");
       style.rel="stylesheet";
