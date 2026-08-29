@@ -1,50 +1,54 @@
-/* Command Center capital milestones v3.3 — human-readable planning + protected firm master goal. */
+/* Command Center capital milestones v3.4 — readable rolling goals + monthly gain targets. */
 #command .left-stack>.capital-milestones-panel{flex:1 1 0;min-height:0;overflow:hidden;padding-bottom:7px}
 #command .capital-milestones-panel>header{min-height:30px}
 #command .capital-milestones-panel>header span:first-child{font-size:10px;letter-spacing:.12em}
 #command .capital-milestones-panel>header span:last-child{color:var(--muted);font-size:8px;letter-spacing:.08em}
 
-#command .capital-goal-strip{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(103,215,255,.10);margin:0 8px 7px}
-#command .capital-goal-strip>div{min-width:0;padding:8px 9px;background:#071219;border-left:2px solid rgba(103,215,255,.48)}
+#command .capital-goal-strip{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(103,215,255,.10);margin:0 8px 6px}
+#command .capital-goal-strip>div{min-width:0;padding:7px 9px;background:#071219;border-left:2px solid rgba(103,215,255,.48)}
 #command .capital-goal-strip small{display:block;color:var(--muted);font-size:8px;letter-spacing:.07em;white-space:nowrap}
-#command .capital-goal-strip strong{display:block;margin-top:4px;font-size:18px;line-height:1;color:#eefaff;font-variant-numeric:tabular-nums}
-#command .capital-goal-strip span{display:block;margin-top:4px;color:#7fa8bb;font-size:8px;line-height:1.25}
+#command .capital-goal-strip strong{display:block;margin-top:3px;font-size:18px;line-height:1;color:#eefaff;font-variant-numeric:tabular-nums}
+#command .capital-goal-strip span{display:block;margin-top:3px;color:#7fa8bb;font-size:8px;line-height:1.2}
 
-#command .capital-trade-model{margin:0 8px 7px;border:1px solid rgba(103,215,255,.13);background:rgba(3,13,18,.64)}
-#command .capital-model-head{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:7px 8px;border-bottom:1px solid rgba(103,215,255,.11)}
+#command .capital-trade-model,#command .capital-month-model{margin:0 8px 6px;border:1px solid rgba(103,215,255,.13);background:rgba(3,13,18,.64)}
+#command .capital-model-head{display:flex;align-items:center;justify-content:space-between;gap:7px;padding:6px 8px;border-bottom:1px solid rgba(103,215,255,.11)}
 #command .capital-model-head span{color:var(--cyan);font-size:8px;letter-spacing:.08em;line-height:1.2}
 #command .capital-model-head b{font-size:9px;color:#dceef5;font-variant-numeric:tabular-nums;white-space:nowrap}
-#command .capital-goal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:rgba(103,215,255,.08)}
-#command .capital-goal-row{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:baseline;gap:2px 6px;padding:8px 7px;background:#061016;min-width:0}
-#command .capital-goal-row span{font-size:9px;font-weight:800;color:#dff7ff}
-#command .capital-goal-row strong{font-size:14px;text-align:right;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
-#command .capital-goal-row small{grid-column:2;text-align:right;font-size:8px;color:var(--muted)}
+#command .capital-goal-grid,#command .capital-month-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:rgba(103,215,255,.08)}
+#command .capital-goal-row,#command .capital-month-row{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;align-items:baseline;gap:2px 6px;padding:6px 7px;background:#061016;min-width:0}
+#command .capital-goal-row span,#command .capital-month-row span{font-size:9px;font-weight:800;color:#dff7ff}
+#command .capital-goal-row strong,#command .capital-month-row strong{font-size:13px;text-align:right;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}
+#command .capital-goal-row small,#command .capital-month-row small{grid-column:1/-1;text-align:right;font-size:7px;color:var(--muted);white-space:nowrap}
+#command .capital-month-row.met strong,#command .capital-month-row.met span{color:#65f2b0}
+#command .capital-progress-note{padding:4px 7px;color:#7898a6;font-size:7px;line-height:1.18;border-top:1px solid rgba(103,215,255,.08)}
+#command .capital-progress-note b{color:#dceef5}
 
 #command .capital-master-goal{margin:0 8px;border:1px solid rgba(255,197,104,.44);background:linear-gradient(180deg,rgba(59,42,10,.27),rgba(8,14,17,.72));box-shadow:inset 4px 0 0 rgba(255,197,104,.78)}
-#command .capital-master-head{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;padding:8px 9px;border-bottom:1px solid rgba(255,197,104,.22)}
+#command .capital-master-head{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;padding:7px 9px;border-bottom:1px solid rgba(255,197,104,.22)}
 #command .capital-master-head span{font-size:9px;letter-spacing:.11em;color:#ffd47b;font-weight:800}
 #command .capital-master-head strong{grid-column:2;grid-row:1/3;align-self:center;color:#ffe5a9;font-size:18px;font-variant-numeric:tabular-nums;white-space:nowrap}
 #command .capital-master-head small{font-size:8px;color:#b49d70;margin-top:3px;line-height:1.2}
 #command .capital-master-horizons{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(255,197,104,.11)}
-#command .capital-horizon{padding:8px 8px 7px;background:#071219;min-width:0}
+#command .capital-horizon{padding:7px 8px 6px;background:#071219;min-width:0}
 #command .capital-horizon>div{display:flex;align-items:center;justify-content:space-between;gap:6px}
 #command .capital-horizon>div>b{font-size:10px;color:#eefaff}
 #command .capital-horizon em{font-style:normal;font-size:7.5px;font-weight:800;letter-spacing:.05em;white-space:nowrap}
 #command .capital-horizon>strong{display:block;margin-top:3px;font-size:14px;color:#fff;font-variant-numeric:tabular-nums}
 #command .capital-horizon>small{display:block;margin-top:2px;font-size:8px;color:#87a0ad}
-#command .capital-horizon>p{margin:4px 0 0;font-size:7.5px;line-height:1.25;color:#91a7b1}
+#command .capital-horizon>p{margin:4px 0 0;font-size:7.5px;line-height:1.22;color:#91a7b1}
 #command .capital-horizon.restricted em,#command .capital-horizon.restricted>strong{color:#ff7b88}
 #command .capital-horizon.stretch em,#command .capital-horizon.stretch>strong{color:#ffc568}
 #command .capital-horizon.aligned em,#command .capital-horizon.aligned>strong{color:#65f2b0}
 #command .capital-horizon.unavailable em{color:var(--muted)}
-#command .capital-master-rule{margin:0;padding:7px 8px;border-top:1px solid rgba(255,197,104,.14);font-size:7.5px;line-height:1.3;color:#b09b70}
+#command .capital-master-rule{margin:0;padding:6px 8px;border-top:1px solid rgba(255,197,104,.14);font-size:7.5px;line-height:1.28;color:#b09b70}
 #command .capital-master-rule b{color:#ffd47b}
-#command .capital-model-note{margin:6px 9px 0;color:#7899a8;font-size:7.5px;line-height:1.3}
+#command .capital-model-note{margin:5px 9px 0;color:#7899a8;font-size:7.3px;line-height:1.25}
 
-/* Short-height fallback: retain legibility by trimming spacing before typography. */
+/* Short-height fallback trims spacing before text size. */
 @media(max-height:820px){
-  #command .capital-goal-strip>div{padding:6px 7px}#command .capital-goal-strip strong{font-size:16px}
-  #command .capital-goal-row{padding:6px}#command .capital-goal-row strong{font-size:12px}
+  #command .capital-goal-strip>div{padding:5px 7px}#command .capital-goal-strip strong{font-size:16px}
+  #command .capital-goal-row,#command .capital-month-row{padding:5px 6px}#command .capital-goal-row strong,#command .capital-month-row strong{font-size:12px}
+  #command .capital-model-head{padding:5px 7px}
   #command .capital-master-head{padding:6px 8px}#command .capital-master-head strong{font-size:16px}
   #command .capital-horizon{padding:6px 7px}#command .capital-horizon>strong{font-size:12px}#command .capital-horizon>p{font-size:7px}
   #command .capital-master-rule,#command .capital-model-note{font-size:7px}
@@ -54,7 +58,7 @@
   #command .capital-horizon{padding:5px 6px}
 }
 @media(forced-colors:active){
-  #command .capital-goal-strip,#command .capital-trade-model,#command .capital-goal-row,#command .capital-goal-strip>div,#command .capital-master-goal,#command .capital-horizon{background:Canvas;border-color:CanvasText;box-shadow:none}
+  #command .capital-goal-strip,#command .capital-trade-model,#command .capital-month-model,#command .capital-goal-row,#command .capital-month-row,#command .capital-goal-strip>div,#command .capital-master-goal,#command .capital-horizon{background:Canvas;border-color:CanvasText;box-shadow:none}
   #command .capital-goal-strip>div{border-left-color:Highlight}
   #command .capital-master-head span,#command .capital-master-head strong,#command .capital-master-rule b,#command .capital-horizon em,#command .capital-horizon>strong{color:CanvasText!important}
 }
