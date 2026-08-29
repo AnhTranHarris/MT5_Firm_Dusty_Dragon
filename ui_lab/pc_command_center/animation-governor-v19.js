@@ -53,7 +53,8 @@
       "performance-scope-v38.css",
       "performance-panel-sync-v39.css",
       "hierarchy-tree-density-v30.css",
-      "command-capital-milestones-v31.css"
+      "command-capital-milestones-v31.css",
+      "command-timeline-v32.css"
     ].forEach(href => {
       const style=document.createElement("link");
       style.rel="stylesheet";
@@ -63,6 +64,7 @@
 
     const load=(src,onload)=>{const script=document.createElement("script");script.src=src;if(onload)script.onload=onload;document.body.append(script);};
     load("hierarchy-tree-density-v30.js");
+    load("command-timeline-v32.js");
     load("command-capital-milestones-v31.js");
     load("performance-scope-mock-v39.js",()=>load("performance-quant-scope-mock-v40.js",()=>load("performance-dashboard-v33.js",()=>load("performance-timeframe-v38.js",()=>load("performance-panel-sync-v39.js",()=>{
       load("performance-state-language-v310.js",()=>load("performance-quant-sync-v41.js"));
