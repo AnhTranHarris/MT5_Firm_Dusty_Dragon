@@ -2,15 +2,18 @@
   "use strict";
 
   /*
-   * PERFORMANCE SHELL v3.3
+   * PERFORMANCE SHELL v3.4
    * ----------------------
-   * This module owns structure, lens state and chart expansion only.
-   * Investor metrics are rendered by performance-panel-sync-v39.js.
-   * Quant metrics are rendered by performance-quant-sync-v40.js.
-   * Capital/timeframe/scope controls are rendered by performance-timeframe-v38.js.
+   * Owns structure, lens state and chart expansion only. Investor and Quant use
+   * the same four physical rail slots so switching lenses preserves information
+   * geography instead of appending a second dashboard below the first.
    *
-   * Keeping the shell free of financial calculations prevents duplicate authority
-   * and maps directly to a future WinUI/WebView2 presentation boundary.
+   * Investor values: performance-panel-sync-v39.js
+   * Quant values:    performance-quant-sync-v41.js
+   * Scope/chart:     performance-timeframe-v38.js
+   *
+   * Windows migration: keep these rail slots presentation-only. A lens change
+   * changes labels/renderers, never Performance scope, MT5, risk or ledger state.
    */
 
   const root = document.querySelector("#performance .performance-layout");
@@ -42,23 +45,15 @@
       <div id="perfGrowthChart" class="perf-growth-chart"></div>
       <div id="perfChartReadout" class="perf-chart-readout"></div>
     </article>
-    <article class="panel perf-protection"><header><span>CAPITAL PROTECTION</span><span id="perfProtectionState">POLICY SNAPSHOT</span></header><div id="perfProtection" class="perf-card-grid"></div></article>
-    <article class="panel perf-quality"><header><span>RETURN QUALITY</span><span id="perfQualityState">OBSERVED METRICS</span></header><div id="perfQuality" class="perf-card-grid"></div></article>
-    <article class="panel perf-exposure"><header><span>LIQUIDITY & EXPOSURE</span><span id="perfExposureState">FIRM FOOTPRINT</span></header><div id="perfExposure" class="perf-card-grid"></div></article>
-    <article class="panel perf-contributors"><header><span>RETURN ATTRIBUTION</span><span id="perfContributionScope">RECONCILED</span></header><div id="perfContributors"></div></article>
-    <article class="panel perf-investor-notes"><header><span>INVESTOR READOUT</span><span id="perfInvestorState">MEASURED / POLICY-AWARE</span></header><div id="perfInvestorNotes"></div></article>
-    <article class="panel perf-quant" id="perfQuant" hidden>
-      <header class="perf-quant-header">
-        <span>QUANT RESEARCH / PERFORMANCE DIAGNOSTICS</span>
-        <span id="perfQuantScopeState">FIRM · SYNCHRONIZED</span>
-      </header>
-      <div id="perfQuantGrid" class="perf-quant-grid"></div>
-    </article>`;
+    <article class="panel perf-protection perf-lens-panel" data-quant-section="absolute"><header><span data-panel-title>CAPITAL PROTECTION</span><span id="perfProtectionState" data-panel-state>POLICY SNAPSHOT</span></header><div id="perfProtection" class="perf-card-grid"></div></article>
+    <article class="panel perf-quality perf-lens-panel" data-quant-section="trade"><header><span data-panel-title>RETURN QUALITY</span><span id="perfQualityState" data-panel-state>OBSERVED METRICS</span></header><div id="perfQuality" class="perf-card-grid"></div></article>
+    <article class="panel perf-exposure perf-lens-panel" data-quant-section="tail"><header><span data-panel-title>LIQUIDITY & EXPOSURE</span><span id="perfExposureState" data-panel-state>FIRM FOOTPRINT</span></header><div id="perfExposure" class="perf-card-grid"></div></article>
+    <article class="panel perf-contributors perf-lens-panel" data-quant-section="benchmark"><header><span data-panel-title>RETURN ATTRIBUTION</span><span id="perfContributionScope" data-panel-state>RECONCILED</span></header><div id="perfContributors"></div></article>
+    <article class="panel perf-investor-notes"><header><span>INVESTOR READOUT</span><span id="perfInvestorState">MEASURED / POLICY-AWARE</span></header><div id="perfInvestorNotes"></div></article>`;
 
   const lensButtons = [...root.querySelectorAll("[data-lens]")];
   const chartPanel = root.querySelector("#perfChartPanel");
   const expandButton = root.querySelector("#perfExpandChart");
-  const quantPanel = root.querySelector("#perfQuant");
 
   function setLens(next) {
     lens = next === "quant" ? "quant" : "investor";
@@ -67,7 +62,6 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
-    quantPanel.hidden = lens !== "quant";
     document.body.classList.toggle("perf-quant-active", lens === "quant");
     window.dispatchEvent(new CustomEvent("dusty:performance-lens-changed", { detail:{ lens } }));
   }
@@ -87,7 +81,7 @@
   });
 
   window.DUSTY_PERFORMANCE_SHELL = Object.freeze({
-    version:"3.3",
+    version:"3.4",
     lens:() => lens,
     setLens,
     chartExpanded:() => chartExpanded
