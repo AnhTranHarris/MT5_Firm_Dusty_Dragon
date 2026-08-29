@@ -43,7 +43,9 @@
   };
 
   /* Presentation adapters are loaded deterministically so the future
-     WinUI/WebView2 host can replace fixtures without changing UI semantics. */
+     WinUI/WebView2 host can replace fixtures without changing UI semantics.
+     system-panel-density-v35.css loads last and is the single system-wide
+     typography/spacing authority for ordinary cockpit panels. */
   window.addEventListener("DOMContentLoaded", () => {
     [
       "performance-dashboard-v30.css",
@@ -55,7 +57,7 @@
       "hierarchy-tree-density-v30.css",
       "command-capital-milestones-v31.css",
       "command-timeline-v32.css",
-      "command-left-rail-density-v34.css"
+      "system-panel-density-v35.css"
     ].forEach(href => {
       const style=document.createElement("link");
       style.rel="stylesheet";
