@@ -43,10 +43,10 @@
   };
 
   /*
-   * Performance remains read-only presentation. v3.9 makes Capital & Objectives
-   * the single investor-scope selector. Firm or Portfolio 1-4 + Layer/Desk 1-6
-   * drives every investor panel and attribution. Production replaces all mock scope
-   * fixtures with immutable Dusty Core read models; UI never reads MT5 directly.
+   * Performance v4.0 uses one synchronized presentation scope for Investor and
+   * Quant lenses. The shell owns no financial math. Firm/Portfolio/Layer/Desk
+   * read models are supplied by fixtures in UI Lab and by Dusty Core in production.
+   * Presentation never reads MT5 directly or mutates broker/risk/ledger authority.
    */
   window.addEventListener(
     "DOMContentLoaded",
@@ -68,20 +68,30 @@
       const scopeFixture = document.createElement("script");
       scopeFixture.src = "performance-scope-mock-v39.js";
       scopeFixture.onload = () => {
-        const dashboard = document.createElement("script");
-        dashboard.src = "performance-dashboard-v32.js";
-        dashboard.onload = () => {
-          const timeframe = document.createElement("script");
-          timeframe.src = "performance-timeframe-v38.js";
-          timeframe.onload = () => {
-            const panelSync = document.createElement("script");
-            panelSync.src = "performance-panel-sync-v39.js";
-            panelSync.defer = true;
-            document.body.append(panelSync);
+        const quantFixture = document.createElement("script");
+        quantFixture.src = "performance-quant-scope-mock-v40.js";
+        quantFixture.onload = () => {
+          const dashboard = document.createElement("script");
+          dashboard.src = "performance-dashboard-v33.js";
+          dashboard.onload = () => {
+            const timeframe = document.createElement("script");
+            timeframe.src = "performance-timeframe-v38.js";
+            timeframe.onload = () => {
+              const panelSync = document.createElement("script");
+              panelSync.src = "performance-panel-sync-v39.js";
+              panelSync.onload = () => {
+                const quantSync = document.createElement("script");
+                quantSync.src = "performance-quant-sync-v40.js";
+                quantSync.defer = true;
+                document.body.append(quantSync);
+              };
+              document.body.append(panelSync);
+            };
+            document.body.append(timeframe);
           };
-          document.body.append(timeframe);
+          document.body.append(dashboard);
         };
-        document.body.append(dashboard);
+        document.body.append(quantFixture);
       };
       document.body.append(scopeFixture);
     },
