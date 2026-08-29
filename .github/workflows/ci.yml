@@ -36,6 +36,7 @@ jobs:
         run: |
           node --check ui_lab/pc_command_center/hierarchy-data.js
           node --check ui_lab/pc_command_center/hierarchy-tree-density-v30.js
+          node --check ui_lab/pc_command_center/capital-planning-mock-v33.js
           node --check ui_lab/pc_command_center/command-timeline-v32.js
           node --check ui_lab/pc_command_center/command-capital-milestones-v31.js
           node --check ui_lab/pc_command_center/performance-dashboard-v33.js
