@@ -47,20 +47,13 @@
   const tradesForGain = gain => expectancyDollars != null && expectancyDollars > 0 ? Math.max(0,gain) / expectancyDollars : null;
   const remainingTo = (target,current) => Math.max(0,Number(target)-Number(current||0));
 
-  // Always surface the next three ordinary milestones. Once one is recognized as
-  // achieved, the quick-view automatically advances through the established
-  // 10K -> 50K -> 100K -> 500K -> 1M -> 5M -> 10M -> 50M pattern.
-  const upcomingMilestones = milestonePattern.filter(amount => amount > recognizedGain && amount < masterGoal).slice(0,3);
-  while (upcomingMilestones.length < 3) {
-    const last = upcomingMilestones.at(-1) ?? milestonePattern.filter(x => x < masterGoal).at(-1) ?? 10_000_000;
-    const candidate = Math.min(masterGoal, last * (last / 10_000 % 10 === 1 ? 5 : 2));
-    if (candidate <= last || candidate >= masterGoal) break;
-    upcomingMilestones.push(candidate);
-  }
-
+  // Explicit rolling ladder. Completed milestones disappear; the next three
+  // values advance automatically through the user-defined pattern. The $50M
+  // endpoint is bounded and remains separately governed as the master goal.
+  const upcomingMilestones = milestonePattern.filter(amount => amount > recognizedGain).slice(0,3);
   const milestoneRows = upcomingMilestones.map(amount => {
     const remaining=remainingTo(amount,recognizedGain);
-    return {amount,remaining,expectedTrades:tradesForGain(remaining)};
+    return {amount,remaining,expectedTrades:tradesForGain(remaining),master:amount===masterGoal};
   });
   const monthlyRows = monthlyGainGoals.map(amount => {
     const remaining=remainingTo(amount,monthGain);
@@ -93,7 +86,7 @@
     <div class="capital-trade-model">
       <div class="capital-model-head"><span>NEXT CUMULATIVE GAIN MILESTONES</span><b>${expectancyDollars != null && expectancyDollars > 0 ? `${money(expectancyDollars)} / trade` : "UNAVAILABLE"}</b></div>
       <div class="capital-goal-grid capital-standard-goals">
-        ${milestoneRows.map(goal => `<div class="capital-goal-row"><span>${compactMoney(goal.amount)}</span><strong>${integer(goal.expectedTrades)}</strong><small>trades · ${compactMoney(goal.remaining)} left</small></div>`).join("")}
+        ${milestoneRows.length ? milestoneRows.map(goal => `<div class="capital-goal-row ${goal.master?"master-next":""}"><span>${compactMoney(goal.amount)}</span><strong>${integer(goal.expectedTrades)}</strong><small>trades · ${compactMoney(goal.remaining)} left</small></div>`).join("") : `<div class="capital-goal-row milestone-complete"><span>MASTER</span><strong>MET</strong><small>no higher goal defined</small></div>`}
       </div>
       <div class="capital-progress-note">Recognized cumulative realized gain: <b>${money(recognizedGain)}</b>. Completed milestones roll forward automatically.</div>
     </div>
@@ -117,7 +110,7 @@
   leftStack.append(panel);
 
   window.DUSTY_COMMAND_CAPITAL_MILESTONES = Object.freeze({
-    version:"3.3",
+    version:"3.3.1",
     dailyTargetPct,dailyGoal,weeklyGoal,expectancyDollars,monthlyObjectivePct,
     recognizedGain,monthGain,
     upcomingMilestones:milestoneRows,
