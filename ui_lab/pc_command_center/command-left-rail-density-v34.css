@@ -1,0 +1,68 @@
+/* Command left rail density v3.4 — one readable cockpit type scale.
+   Reclaims vertical space from leading/padding, not from primary data. */
+#command .left-stack{--rail-label:8px;--rail-body:9px;--rail-value:12px;--rail-key:14px;--rail-note:7.5px}
+
+/* Shared panel chrome: consistent headers stop visual jumping between panels. */
+#command .left-stack>.panel>header{min-height:27px;padding:5px 8px;font-size:10px;line-height:1;letter-spacing:.12em}
+#command .left-stack>.panel>header span:last-child{font-size:7.5px;line-height:1;letter-spacing:.08em}
+
+/* Timeline: keep 5 meaningful rows, but remove excess leading and whitespace. */
+#command .command-major-timeline-panel .timeline{padding:3px 7px 4px}
+#command .command-major-timeline-panel .timeline-row{grid-template-columns:42px minmax(0,1fr);gap:5px;padding:2px 0;min-height:18px;font-size:var(--rail-body);line-height:1.08}
+#command .command-major-timeline-panel .timeline-row time{font-size:8.5px;line-height:1.08}
+#command .command-major-timeline-panel .timeline-row span{font-size:var(--rail-body);line-height:1.08}
+
+/* Research Delta is a scan list, not prose. Tight rows but readable figures. */
+#command #researchDelta{padding:3px 8px 4px}
+#command #researchDelta .kv{min-height:18px;padding:1px 0;line-height:1.08}
+#command #researchDelta .kv span:first-child{font-size:var(--rail-body);line-height:1.08}
+#command #researchDelta .kv span:last-child{font-size:var(--rail-body);line-height:1.08;font-weight:700}
+
+/* Capital Milestones: flatten the previous extreme hierarchy. Important values
+   remain larger than labels, but no single number dominates the entire rail. */
+#command .capital-milestones-panel>header span:first-child{font-size:10px!important}
+#command .capital-milestones-panel>header span:last-child{font-size:7.5px!important}
+#command .capital-goal-strip{margin:0 7px 5px!important}
+#command .capital-goal-strip>div{padding:6px 8px!important}
+#command .capital-goal-strip small{font-size:var(--rail-label)!important;line-height:1.05}
+#command .capital-goal-strip strong{margin-top:2px!important;font-size:var(--rail-key)!important;line-height:1}
+#command .capital-goal-strip span{margin-top:2px!important;font-size:var(--rail-note)!important;line-height:1.12}
+
+#command .capital-trade-model,#command .capital-month-model{margin:0 7px 5px!important}
+#command .capital-model-head{padding:4px 7px!important;min-height:23px}
+#command .capital-model-head span{font-size:var(--rail-label)!important;line-height:1.05}
+#command .capital-model-head b{font-size:var(--rail-body)!important;line-height:1}
+#command .capital-goal-row,#command .capital-month-row{padding:5px 6px!important;min-height:42px}
+#command .capital-goal-row span,#command .capital-month-row span{font-size:var(--rail-body)!important;line-height:1}
+#command .capital-goal-row strong,#command .capital-month-row strong{font-size:var(--rail-value)!important;line-height:1}
+#command .capital-goal-row small,#command .capital-month-row small{font-size:var(--rail-note)!important;line-height:1.08}
+#command .capital-progress-note{padding:3px 7px 4px!important;font-size:var(--rail-note)!important;line-height:1.12}
+
+/* Master goal: still visually privileged, but brought into the same hierarchy. */
+#command .capital-master-goal{margin:0 7px!important}
+#command .capital-master-head{padding:6px 8px!important}
+#command .capital-master-head span{font-size:9px!important;line-height:1.05}
+#command .capital-master-head strong{font-size:15px!important;line-height:1}
+#command .capital-master-head small{font-size:var(--rail-note)!important;line-height:1.1;margin-top:2px!important}
+#command .capital-horizon{padding:5px 7px!important}
+#command .capital-horizon>div>b{font-size:9px!important;line-height:1}
+#command .capital-horizon em{font-size:7px!important;line-height:1}
+#command .capital-horizon>strong{margin-top:2px!important;font-size:12px!important;line-height:1.02}
+#command .capital-horizon>small{margin-top:1px!important;font-size:var(--rail-note)!important;line-height:1.05}
+#command .capital-horizon>p{margin:2px 0 0!important;font-size:7px!important;line-height:1.12}
+#command .capital-master-rule{padding:4px 7px!important;font-size:7px!important;line-height:1.15}
+#command .capital-model-note{margin:4px 8px 0!important;font-size:7px!important;line-height:1.15}
+
+/* At short heights, spacing contracts first. Do not collapse primary values. */
+@media(max-height:820px){
+  #command .left-stack>.panel>header{min-height:25px;padding:4px 7px}
+  #command .command-major-timeline-panel .timeline-row{min-height:17px;padding:1px 0}
+  #command #researchDelta .kv{min-height:17px;padding:0}
+  #command .capital-goal-strip>div{padding:5px 7px!important}
+  #command .capital-goal-row,#command .capital-month-row{min-height:38px;padding:4px 5px!important}
+  #command .capital-horizon{padding:4px 6px!important}
+}
+@media(max-height:700px){
+  #command .left-stack{--rail-body:8.5px;--rail-value:11px;--rail-key:13px;--rail-note:7px}
+}
+@media(forced-colors:active){#command .left-stack>.panel>header{border-color:CanvasText}}
