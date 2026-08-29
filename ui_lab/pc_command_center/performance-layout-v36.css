@@ -1,44 +1,42 @@
-/* Performance layout v3.6 — left analysis rail + dominant capital/objective canvas. */
+/* Performance layout v3.6.1 — explicit left rail; no overlapping same-cell alignment. */
 #performance .performance-layout{
-  grid-template-columns:minmax(250px,.78fr) minmax(0,1.42fr) minmax(0,1.42fr)!important;
-  grid-template-rows:auto auto minmax(0,1.42fr) minmax(0,.78fr)!important;
+  display:grid!important;
+  grid-template-columns:minmax(300px,.78fr) minmax(0,1.42fr) minmax(0,1.42fr)!important;
+  grid-template-rows:auto auto repeat(3,minmax(0,1fr))!important;
   grid-template-areas:
     "command command command"
     "headline headline headline"
     "protection capital capital"
-    "quality contributors contributors"!important;
+    "quality capital capital"
+    "exposure contributors contributors"!important;
+  gap:8px!important;
   overflow:hidden;
 }
-.perf-protection{grid-area:protection!important}.perf-quality{grid-area:quality!important}.perf-capital{grid-area:capital!important}.perf-contributors{grid-area:contributors!important}
-/* Exposure completes the left analysis rail without shrinking the capital canvas. */
-.perf-exposure{grid-area:auto!important;position:absolute;left:0;bottom:0;width:calc((100% - 16px)*.78/3.62);height:calc((100% - 8px - var(--perf-top-reserve,0px))*0.23);min-height:0;z-index:2}
-/* Use a deterministic nested rail at normal desktop sizes instead of overlay geometry. */
-@supports(display:grid){
-  #performance .performance-layout{grid-template-areas:"command command command" "headline headline headline" "rail capital capital" "rail contributors contributors"!important}
-  .perf-protection,.perf-quality,.perf-exposure{position:static;width:auto;height:auto}
-  .perf-protection{grid-area:auto!important}.perf-quality{grid-area:auto!important}.perf-exposure{grid-area:auto!important}
-  .perf-protection,.perf-quality,.perf-exposure{min-height:0}
-  #performance .performance-layout::before{content:"";grid-area:rail;pointer-events:none}
-  .perf-protection{grid-column:1;grid-row:3;align-self:start;height:33%}
-  .perf-quality{grid-column:1;grid-row:3;align-self:center;height:33%}
-  .perf-exposure{grid-column:1;grid-row:3;align-self:end;height:33%}
-  .perf-capital{grid-column:2/4;grid-row:3!important}
-  .perf-contributors{grid-column:2/4;grid-row:4!important}
-}
-/* Left rail is one-column information architecture; retain current type scale. */
-.perf-protection .perf-card-grid,.perf-quality .perf-card-grid,.perf-exposure .perf-card-grid{grid-template-columns:1fr 1fr;grid-auto-rows:1fr;gap:4px;padding:5px 6px}
-.perf-protection .perf-kpi,.perf-quality .perf-kpi,.perf-exposure .perf-kpi{padding:5px 7px}
-/* Capital panel receives the vertical budget freed by moving supporting panels left. */
-.perf-capital .perf-growth-chart{min-height:210px}
-.perf-capital .investor-detail-chart{min-height:210px}
+.perf-protection{grid-area:protection!important;position:static!important;width:auto!important;height:auto!important;align-self:stretch!important;min-height:0!important}
+.perf-quality{grid-area:quality!important;position:static!important;width:auto!important;height:auto!important;align-self:stretch!important;min-height:0!important}
+.perf-exposure{grid-area:exposure!important;position:static!important;width:auto!important;height:auto!important;align-self:stretch!important;min-height:0!important;z-index:auto!important}
+.perf-capital{grid-area:capital!important;min-height:0!important}
+.perf-contributors{grid-area:contributors!important;min-height:0!important}
+/* Supporting investor diagnostics remain readable as a compact vertical rail. */
+.perf-protection .perf-card-grid,.perf-quality .perf-card-grid,.perf-exposure .perf-card-grid{grid-template-columns:1fr 1fr;grid-auto-rows:minmax(0,1fr);gap:4px;padding:5px 6px;overflow:hidden}
+.perf-protection .perf-kpi,.perf-quality .perf-kpi,.perf-exposure .perf-kpi{padding:5px 7px;min-width:0}
+/* Main capital story gets the full upper-right height; attribution follows below. */
+.perf-capital .perf-growth-chart,.perf-capital .investor-detail-chart{min-height:210px}
 #perfContributors{justify-content:center}
 @media(max-width:1050px){
-  #performance .performance-layout{grid-template-columns:minmax(210px,.8fr) minmax(0,1.6fr)!important;grid-template-rows:auto auto minmax(0,1.45fr) minmax(0,.72fr)!important;grid-template-areas:"command command" "headline headline" "rail capital" "rail contributors"!important}
-  .perf-capital{grid-column:2;grid-row:3!important}.perf-contributors{grid-column:2;grid-row:4!important}
-  .perf-protection,.perf-quality,.perf-exposure{grid-column:1;grid-row:3}
+  #performance .performance-layout{
+    grid-template-columns:minmax(250px,.82fr) minmax(0,1.8fr)!important;
+    grid-template-rows:auto auto repeat(3,minmax(0,1fr))!important;
+    grid-template-areas:
+      "command command"
+      "headline headline"
+      "protection capital"
+      "quality capital"
+      "exposure contributors"!important;
+  }
 }
 @media(max-width:720px){
-  #performance .performance-layout{grid-template-columns:minmax(170px,.72fr) minmax(0,1.55fr)!important;gap:5px}
+  #performance .performance-layout{grid-template-columns:minmax(205px,.82fr) minmax(0,1.65fr)!important;gap:5px!important}
   .perf-protection .perf-card-grid,.perf-quality .perf-card-grid,.perf-exposure .perf-card-grid{grid-template-columns:1fr;overflow:hidden}
   .perf-protection .perf-kpi,.perf-quality .perf-kpi,.perf-exposure .perf-kpi{padding:3px 5px}
   .perf-capital .perf-growth-chart,.perf-capital .investor-detail-chart{min-height:180px}
