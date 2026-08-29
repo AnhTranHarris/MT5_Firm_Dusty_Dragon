@@ -8,7 +8,7 @@ vm.createContext(sandbox);
 for (const file of [
   "mock-data.js",
   "performance-mock-history.js",
-  "performance-scope-mock-v38.js",
+  "performance-scope-mock-v39.js",
 ]) {
   const source = fs.readFileSync(new URL(file, root), "utf8");
   vm.runInContext(source, sandbox, { filename: file });
@@ -24,6 +24,12 @@ if (!Number.isFinite(asOfMs) || !performance.asOfUtc.endsWith("Z")) {
 }
 
 const requiredHorizons = ["month", "quarter", "year", "fiveYear"];
+const requiredMetricKeys = [
+  "equity", "freeMargin", "mtdReturnPct", "netPnl", "currentDrawdownPct",
+  "maxDrawdownPct", "openRiskPct", "winRatePct", "profitFactor", "sharpe",
+  "expectancyR", "grossExposurePct", "netExposurePct", "unresolvedExecutions",
+  "activeDesks", "totalDesks"
+];
 
 function validateSeries(series, label) {
   if (!Array.isArray(series) || series.length < 2) {
@@ -47,6 +53,19 @@ function validateSeries(series, label) {
   }
 }
 
+function validatePanelMetrics(metrics, label) {
+  if (!metrics || typeof metrics !== "object") throw new Error(`${label} panel metrics missing`);
+  for (const key of requiredMetricKeys) {
+    if (!Number.isFinite(Number(metrics[key]))) throw new Error(`${label}.${key} must be finite`);
+  }
+  if (Number(metrics.equity) < 0 || Number(metrics.freeMargin) < 0) {
+    throw new Error(`${label} capital values cannot be negative`);
+  }
+  if (Number(metrics.activeDesks) < 0 || Number(metrics.activeDesks) > Number(metrics.totalDesks)) {
+    throw new Error(`${label} active desk count invalid`);
+  }
+}
+
 for (const horizon of requiredHorizons) {
   validateSeries(performance.horizonSeries?.[horizon], `firm.${horizon}`);
 }
@@ -60,14 +79,16 @@ if (performance.historyProvenance !== "MOCK_SIMULATED") {
 }
 
 const scopeMock = sandbox.window.DUSTY_PERFORMANCE_SCOPE_MOCK;
-if (scopeMock?.contractVersion !== "UI_LAB_SCOPE_1") {
+if (scopeMock?.contractVersion !== "UI_LAB_SCOPE_2") {
   throw new Error("hierarchical performance scope fixture missing or incompatible");
 }
 if (scopeMock.asOfUtc !== performance.asOfUtc) {
   throw new Error("scope fixture as-of timestamp must match firm performance as-of timestamp");
 }
+
 for (let portfolio = 1; portfolio <= 4; portfolio += 1) {
-  const entities = scopeMock.portfolios?.[portfolio]?.entities;
+  const portfolioModel = scopeMock.portfolios?.[portfolio];
+  const entities = portfolioModel?.entities;
   if (!entities) throw new Error(`portfolio ${portfolio} entities missing`);
   for (const entityId of ["layer", "desk1", "desk2", "desk3", "desk4", "desk5", "desk6"]) {
     const entity = entities[entityId];
@@ -78,10 +99,30 @@ for (let portfolio = 1; portfolio <= 4; portfolio += 1) {
     if (!Number.isFinite(Number(entity.snapshot?.equity)) || Number(entity.snapshot.equity) < 0) {
       throw new Error(`portfolio ${portfolio} ${entityId} equity snapshot invalid`);
     }
+    validatePanelMetrics(entity.panelMetrics, `portfolio${portfolio}.${entityId}`);
     for (const horizon of requiredHorizons) {
       validateSeries(entity.horizonSeries?.[horizon], `portfolio${portfolio}.${entityId}.${horizon}`);
     }
   }
+
+  const deskRows = portfolioModel.attribution?.desks;
+  if (!Array.isArray(deskRows) || deskRows.length !== 6) {
+    throw new Error(`portfolio ${portfolio} attribution must contain exactly six desks`);
+  }
+  const shareTotal = deskRows.reduce((sum, row) => sum + Number(row.sharePct || 0), 0);
+  if (Math.abs(shareTotal - 100) > 0.2) {
+    throw new Error(`portfolio ${portfolio} attribution shares must reconcile to 100%`);
+  }
 }
+
+const firmRows = scopeMock.firmAttribution?.portfolios;
+if (!Array.isArray(firmRows) || firmRows.length !== 4) {
+  throw new Error("firm attribution must contain exactly four portfolios");
+}
+const firmShareTotal = firmRows.reduce((sum, row) => sum + Number(row.sharePct || 0), 0);
+if (Math.abs(firmShareTotal - 100) > 0.2) throw new Error("firm attribution shares must reconcile to 100%");
+const firmPnl = firmRows.reduce((sum, row) => sum + Number(row.pnl || 0), 0);
+const expectedFirmPnl = Number((performance.stats || []).find(([label]) => label === "Net P&L")?.[1] || 0);
+if (Math.abs(firmPnl - expectedFirmPnl) > 0.05) throw new Error("firm portfolio attribution must reconcile to Net P&L");
 
 console.log("performance contract OK");
