@@ -25,7 +25,7 @@ if (!Number.isFinite(asOfMs) || !performance.asOfUtc.endsWith("Z")) {
 
 const requiredHorizons = ["month", "quarter", "year", "fiveYear"];
 const requiredMetricKeys = [
-  "equity", "freeMargin", "mtdReturnPct", "netPnl", "currentDrawdownPct",
+  "equity", "freeMargin", "mtdReturnPct", "currentDrawdownPct",
   "maxDrawdownPct", "openRiskPct", "winRatePct", "profitFactor", "sharpe",
   "expectancyR", "grossExposurePct", "netExposurePct", "unresolvedExecutions",
   "activeDesks", "totalDesks"
@@ -58,8 +58,15 @@ function validatePanelMetrics(metrics, label) {
   for (const key of requiredMetricKeys) {
     if (!Number.isFinite(Number(metrics[key]))) throw new Error(`${label}.${key} must be finite`);
   }
-  if (Number(metrics.equity) < 0 || Number(metrics.freeMargin) < 0) {
+  const equity = Number(metrics.equity);
+  if (equity < 0 || Number(metrics.freeMargin) < 0) {
     throw new Error(`${label} capital values cannot be negative`);
+  }
+  if (metrics.netPnl != null && !Number.isFinite(Number(metrics.netPnl))) {
+    throw new Error(`${label}.netPnl must be finite when supplied`);
+  }
+  if (metrics.netPnl == null && equity !== 0) {
+    throw new Error(`${label}.netPnl may be unavailable only for a zero-equity inactive scope`);
   }
   if (Number(metrics.activeDesks) < 0 || Number(metrics.activeDesks) > Number(metrics.totalDesks)) {
     throw new Error(`${label} active desk count invalid`);
