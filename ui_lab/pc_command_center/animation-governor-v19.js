@@ -64,7 +64,7 @@
     document.head.append(timeframeStyle);
 
     const script = document.createElement("script");
-    script.src = "performance-dashboard-v30.js";
+    script.src = "performance-dashboard-v31.js";
     script.onload = () => {
       const timeframeScript = document.createElement("script");
       timeframeScript.src = "performance-timeframe-v34.js";
