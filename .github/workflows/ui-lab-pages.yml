@@ -13,10 +13,9 @@ on:
 # from dev/ui-lab-v1; backend, broker, MT5, credentials and execution code are
 # never staged into the Pages artifact.
 #
-# Preview checkpoint: Trading Floor analytical hierarchy v3.0 + Performance v4.4.
-# The analytical tree uses the available floor area for readable quick telemetry:
-# desk realized P&L/day return/target progress and Layer aggregates. These are
-# UI-Lab fixtures only; production aggregation and realized P&L belong in Core.
+# Preview checkpoint: Command capital planning v3.3 + Trading Floor analytical
+# hierarchy + Performance v4.4. Capital planning is UI-Lab simulated; realized
+# gain recognition, milestone advancement and expectancy belong in Core.
 
 permissions:
   contents: read
@@ -45,6 +44,9 @@ jobs:
           set -euo pipefail
           node --check ui_lab/pc_command_center/hierarchy-data.js
           node --check ui_lab/pc_command_center/hierarchy-tree-density-v30.js
+          node --check ui_lab/pc_command_center/capital-planning-mock-v33.js
+          node --check ui_lab/pc_command_center/command-timeline-v32.js
+          node --check ui_lab/pc_command_center/command-capital-milestones-v31.js
           node --check ui_lab/pc_command_center/performance-dashboard-v33.js
           node --check ui_lab/pc_command_center/performance-timeframe-v38.js
           node --check ui_lab/pc_command_center/performance-mock-history.js
@@ -53,6 +55,7 @@ jobs:
           node --check ui_lab/pc_command_center/performance-quant-scope-mock-v40.js
           node --check ui_lab/pc_command_center/performance-quant-sync-v41.js
           node ui_lab/pc_command_center/performance-contract-check.mjs
+          node ui_lab/pc_command_center/capital-planning-contract-check.mjs
 
       - name: Stage PC Command Center only
         shell: bash
@@ -62,6 +65,12 @@ jobs:
           test -f ui_lab/pc_command_center/hierarchy-tree-density-v30.js
           test -f ui_lab/pc_command_center/hierarchy-tree-density-v30.css
           test -f ui_lab/pc_command_center/TRADING_FLOOR_WINDOWS_HANDOFF.md
+          test -f ui_lab/pc_command_center/capital-planning-mock-v33.js
+          test -f ui_lab/pc_command_center/command-timeline-v32.js
+          test -f ui_lab/pc_command_center/command-timeline-v32.css
+          test -f ui_lab/pc_command_center/command-capital-milestones-v31.js
+          test -f ui_lab/pc_command_center/command-capital-milestones-v31.css
+          test -f ui_lab/pc_command_center/COMMAND_CAPITAL_MILESTONES_WINDOWS_HANDOFF.md
           test -f ui_lab/pc_command_center/performance-dashboard-v33.js
           test -f ui_lab/pc_command_center/performance-dashboard-v30.css
           test -f ui_lab/pc_command_center/performance-quant-v32.css
