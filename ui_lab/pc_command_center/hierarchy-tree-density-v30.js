@@ -45,9 +45,9 @@
     const progress = clamp(model.progress, -199, 299);
     const progressClass = progress >= 100 ? "ahead" : progress >= 0 ? "tracking" : "behind";
     return `<div class="tree-quick ${isLayer ? "tree-layer-quick" : "tree-desk-quick"}">
-      <span><small>REALIZED</small><b>${money(model.realized)}</b></span>
-      <span><small>TODAY</small><b>${signedPct(model.today)}</b></span>
-      <span class="tree-target ${progressClass}"><small>DAILY TARGET</small><b>${progress.toFixed(0)}%</b><i><em style="width:${clamp(Math.abs(progress),0,100)}%"></em></i></span>
+      <span><small>REAL</small><b>${money(model.realized)}</b></span>
+      <span><small>DAY</small><b>${signedPct(model.today)}</b></span>
+      <span class="tree-target ${progressClass}"><small>TGT</small><b>${progress.toFixed(0)}%</b></span>
     </div>`;
   }
 
@@ -69,13 +69,12 @@
       const desk = id ? entity(id) : null;
       if (!desk) return;
       const today = Number(desk.today || 0);
-      const model = {
+      row.querySelector(".tree-desk-quick")?.remove();
+      row.insertAdjacentHTML("beforeend", quickMarkup({
         realized:Number(desk.realizedPnlToday || 0),
         today,
         progress:dailyTargetPct > 0 ? today / dailyTargetPct * 100 : 0
-      };
-      row.querySelector(".tree-desk-quick")?.remove();
-      row.insertAdjacentHTML("beforeend", quickMarkup(model,false));
+      },false));
     });
   }
 
@@ -88,8 +87,6 @@
     });
   }
 
-  /* app-v16 replaces the hierarchy root as a whole. Observe only direct root
-     replacement so our own quick-data inserts never recursively trigger us. */
   new MutationObserver(mutations => {
     if (mutations.some(mutation => mutation.type === "childList")) safeDecorate();
   }).observe(target,{childList:true});
@@ -98,7 +95,7 @@
   safeDecorate();
 
   window.DUSTY_HIERARCHY_QUICK_VIEW = Object.freeze({
-    version:"3.0.1",
+    version:"3.1",
     dailyTargetPct,
     refresh:safeDecorate
   });
