@@ -65,7 +65,7 @@
     const load=(src,onload)=>{const script=document.createElement("script");script.src=src;if(onload)script.onload=onload;document.body.append(script);};
     load("hierarchy-tree-density-v30.js");
     load("command-timeline-v32.js");
-    load("command-capital-milestones-v31.js");
+    load("capital-planning-mock-v33.js",()=>load("command-capital-milestones-v31.js"));
     load("performance-scope-mock-v39.js",()=>load("performance-quant-scope-mock-v40.js",()=>load("performance-dashboard-v33.js",()=>load("performance-timeframe-v38.js",()=>load("performance-panel-sync-v39.js",()=>{
       load("performance-state-language-v310.js",()=>load("performance-quant-sync-v41.js"));
     })))));
