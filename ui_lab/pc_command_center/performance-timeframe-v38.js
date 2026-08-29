@@ -52,7 +52,7 @@
 
   const legend = document.createElement("div");
   legend.className = "perf-investor-legend";
-  legend.innerHTML = `<span><i class="legend-actual-bar"></i>ACTUAL CAPITAL / RETURN</span><span><i class="legend-line"></i>ABSOLUTE-RETURN OBJECTIVE</span><span><i class="legend-today"></i>AS-OF DATE</span><span><i class="legend-hwm"></i>HIGH-WATER MARK</span><span><i class="legend-floor"></i>DRAWDOWN WATCH FLOOR</span><span class="perf-benchmark-state">BENCHMARK · ${policy.benchmark?.status || "UNSELECTED"}</span>`;
+  legend.innerHTML = `<span><i class="legend-actual-bar"></i>ACTUAL CAPITAL / RETURN</span><span><i class="legend-line"></i><b class="perf-objective-legend-label">ABSOLUTE-RETURN OBJECTIVE</b></span><span><i class="legend-today"></i>AS-OF DATE</span><span><i class="legend-hwm"></i>HIGH-WATER MARK</span><span><i class="legend-floor"></i>DRAWDOWN WATCH FLOOR</span><span class="perf-benchmark-state">BENCHMARK · ${policy.benchmark?.status || "UNSELECTED"}</span>`;
   controls.insertAdjacentElement("afterend", legend);
 
   const staticControls = document.createElement("div");
@@ -72,6 +72,7 @@
   const scopeButtons = [...scopeControls.querySelectorAll("[data-capital-scope]")];
   const entitySelect = scopeControls.querySelector("#perfCapitalEntity");
   const scopeState = scopeControls.querySelector("#perfCapitalScopeState");
+  const objectiveLegendLabel = legend.querySelector(".perf-objective-legend-label");
   const reduceMotionQuery = matchMedia("(prefers-reduced-motion: reduce)");
 
   function buildConfig(index = selected) {
@@ -133,7 +134,8 @@
       currentDd:numberOrNull(entity.snapshot?.currentDrawdownPct),
       realized,
       actual,
-      objective:portfolio===0?config.target:null,
+      objective:config.target,
+      objectiveKind:portfolio===0?"SCOPE_OBJECTIVE":"FIRM_REFERENCE",
       provenance:entity.provenance || "READ_MODEL"
     };
   }
@@ -173,41 +175,48 @@
     const moneyAt=value=>refs.startCapital==null?null:refs.startCapital*(1+value/100);
     const grids=Array.from({length:6},(_,i)=>min+((max-min)*i)/5).map(value=>`<g><line class="chart-gridline" x1="${pad.l}" x2="${width-pad.r}" y1="${y(value)}" y2="${y(value)}"/><text class="chart-axis-label" x="${pad.l-9}" y="${y(value)+4}" text-anchor="end">${value.toFixed(Math.abs(max-min)>=100?0:1)}%</text>${refs.startCapital==null?"":`<text class="chart-capital-axis" x="${width-pad.r+9}" y="${y(value)+4}">${money(moneyAt(value))}</text>`}</g>`).join("");
     const plotWidth=Math.max(1,currentX-pad.l);
-    const barWidth=Math.max(4,Math.min(expanded?32:24,(plotWidth/Math.max(1,ctx.actual.length))*.62));
-    const bars=ctx.actual.map((point,index)=>{const py=y(point.value),top=Math.min(py,baselineY),barHeight=Math.max(1,Math.abs(baselineY-py));const bx=clamp(Math.min(x(point.date)-barWidth/2,currentX-barWidth),pad.l,width-pad.r-barWidth);return `<rect class="investor-actual-bar ${index===ctx.actual.length-1?"investor-current-bar":""}" x="${bx}" y="${top}" width="${barWidth}" height="${barHeight}" rx="2"><title>${formatDate(point.date)} · actual ${percent(point.value)}</title></rect>`;}).join("");
-    const objectivePoints=ctx.objective==null?"":Array.from({length:81},(_,i)=>{const f=i/80;return `${x(new Date(config.start.getTime()+span*f))},${y(objectiveAt(ctx.objective,f))}`;}).join(" ");
-    const objectiveLine=ctx.objective==null?"":`<polyline class="investor-target-line" points="${objectivePoints}"/>`;
-    const objectiveToday=ctx.objective==null?null:objectiveAt(ctx.objective,elapsed(config.start,config.end,asOf));
-    const gap=ctx.realized==null||objectiveToday==null?null:ctx.realized-objectiveToday;
+    const centers=ctx.actual.map(point=>clamp(x(point.date),pad.l,currentX));
+    const positiveGaps=centers.slice(1).map((center,index)=>center-centers[index]).filter(gap=>gap>0.05);
+    const minGap=positiveGaps.length?Math.min(...positiveGaps):plotWidth;
+    const densityWidth=(plotWidth/Math.max(1,ctx.actual.length))*.62;
+    const barWidth=Math.max(1.25,Math.min(expanded?32:24,densityWidth,minGap*.68));
+    const bars=ctx.actual.map((point,index)=>{const py=y(point.value),top=Math.min(py,baselineY),barHeight=Math.max(1,Math.abs(baselineY-py));const center=centers[index];const bx=clamp(center-barWidth/2,pad.l,width-pad.r-barWidth);return `<rect class="investor-actual-bar ${index===ctx.actual.length-1?"investor-current-bar":""}" x="${bx}" y="${top}" width="${barWidth}" height="${barHeight}" rx="2"><title>${formatDate(point.date)} · actual ${percent(point.value)}</title></rect>`;}).join("");
+    const objectivePoints=Array.from({length:81},(_,i)=>{const f=i/80;return `${x(new Date(config.start.getTime()+span*f))},${y(objectiveAt(ctx.objective,f))}`;}).join(" ");
+    const objectiveLine=`<polyline class="investor-target-line" points="${objectivePoints}"/>`;
+    const objectiveToday=objectiveAt(ctx.objective,elapsed(config.start,config.end,asOf));
+    const gap=ctx.realized-objectiveToday;
     const badgeWidth=110,badgeHeight=22,badgeX=clamp(currentX-badgeWidth/2,pad.l,width-pad.r-badgeWidth),badgeY=pad.t-badgeHeight;
-    return `<svg class="investor-detail-chart investor-depth-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${escapeText(ctx.label)} ${config.label} capital history">${grids}${protectionBand(pad,currentX,y,refs)}${bars}${objectiveLine}${gapMark(currentX,y,ctx.realized,objectiveToday,gap)}<g class="chart-today"><rect x="${badgeX}" y="${badgeY}" width="${badgeWidth}" height="${badgeHeight}" rx="3"/><text x="${badgeX+badgeWidth/2}" y="${badgeY+15}" text-anchor="middle">AS OF · ${formatShortDate(asOf)}</text><line x1="${currentX}" x2="${currentX}" y1="${badgeY+badgeHeight-2}" y2="${height-pad.b}"/></g>${dateAxis(config,x,height,pad)}<text class="chart-range-label" x="${pad.l}" y="${height-9}">${formatDate(config.start)}</text><text class="chart-range-label" x="${width-pad.r}" y="${height-9}" text-anchor="end">${formatDate(config.end)}</text><text class="chart-axis-title chart-axis-title-left" x="${pad.l}" y="${pad.t-12}">CUMULATIVE RETURN</text></svg>`;
+    return `<svg class="investor-detail-chart investor-depth-chart" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="${escapeText(ctx.label)} ${config.label} capital history">${grids}${protectionBandFill(pad,currentX,y,refs)}${bars}${objectiveLine}${protectionReferences(pad,currentX,y,refs)}${gapMark(currentX,y,ctx.realized,objectiveToday,gap,pad,width)}<g class="chart-today"><rect x="${badgeX}" y="${badgeY}" width="${badgeWidth}" height="${badgeHeight}" rx="3"/><text x="${badgeX+badgeWidth/2}" y="${badgeY+15}" text-anchor="middle">AS OF · ${formatShortDate(asOf)}</text><line x1="${currentX}" x2="${currentX}" y1="${badgeY+badgeHeight-2}" y2="${height-pad.b}"/></g>${dateAxis(config,x,height,pad)}<text class="chart-range-label" x="${pad.l}" y="${height-9}">${formatDate(config.start)}</text><text class="chart-range-label" x="${width-pad.r}" y="${height-9}" text-anchor="end">${formatDate(config.end)}</text><text class="chart-axis-title chart-axis-title-left" x="${pad.l}" y="${pad.t-12}">CUMULATIVE RETURN</text></svg>`;
   }
 
   function renderReadout(config,ctx,refs){
     if(!ctx.available){readout.innerHTML=`<div><b>—</b><span>ACTUAL</span></div><div><b>—</b><span>OBJECTIVE</span></div><div><b>—</b><span>VARIANCE</span></div><p>${ctx.reason}</p>`;ribbon.innerHTML=`<div><span>DATA COVERAGE</span><b>UNAVAILABLE</b><small>no synthetic production fallback</small></div>`;return;}
-    const objectiveToday=ctx.objective==null?null:objectiveAt(ctx.objective,elapsed(config.start,config.end,asOf));
-    const delta=objectiveToday==null?null:ctx.realized-objectiveToday;
-    readout.innerHTML=`<div><b>${percent(ctx.realized)}</b><span>${escapeText(ctx.label)} · AS OF ${formatShortDate(asOf)}</span></div><div><b>${percent(objectiveToday)}</b><span>${ctx.objective==null?"SCOPE OBJECTIVE UNSET":"OBJECTIVE AT AS-OF"}</span></div><div><b class="${delta==null?"":delta>=0?"positive":"caution"}">${delta==null?"—":`${delta>=0?"+":""}${delta.toFixed(2)} pts`}</b><span>VARIANCE TO OBJECTIVE</span></div><p>${ctx.provenance.startsWith("MOCK")?"Simulated UI-lab scope history. ":""}Green bars are observed cumulative performance for the selected scope. Firm objective remains separate unless Core explicitly supplies a scope objective.</p>`;
-    const endpoint=refs.startCapital==null||ctx.objective==null?null:refs.startCapital*(1+ctx.objective/100);
-    ribbon.innerHTML=`<div><span>PERIOD START CAPITAL</span><b>${money(refs.startCapital)}</b><small>scope read-model basis</small></div><div><span>CURRENT HIGH-WATER MARK</span><b>${money(refs.hwm)}</b><small>${ctx.currentDd==null?"drawdown unavailable":`${ctx.currentDd.toFixed(2)}% current drawdown`}</small></div><div><span>${drawdownWatchPct.toFixed(1)}% DRAWDOWN WATCH FLOOR</span><b>${money(refs.watchFloor)}</b><small>policy reference from scope HWM</small></div><div><span>HORIZON OBJECTIVE CAPITAL</span><b>${money(endpoint)}</b><small>${ctx.objective==null?"scope-specific objective not supplied":`${percent(ctx.objective)} cumulative objective`}</small></div>`;
+    const objectiveToday=objectiveAt(ctx.objective,elapsed(config.start,config.end,asOf));
+    const delta=ctx.realized-objectiveToday;
+    const referenceOnly=ctx.objectiveKind==="FIRM_REFERENCE";
+    readout.innerHTML=`<div><b>${percent(ctx.realized)}</b><span>${escapeText(ctx.label)} · AS OF ${formatShortDate(asOf)}</span></div><div><b>${percent(objectiveToday)}</b><span>${referenceOnly?"FIRM OBJECTIVE REFERENCE AT AS-OF":"OBJECTIVE AT AS-OF"}</span></div><div><b class="${delta>=0?"positive":"caution"}">${delta>=0?"+":""}${delta.toFixed(2)} pts</b><span>${referenceOnly?"VARIANCE TO FIRM REFERENCE":"VARIANCE TO OBJECTIVE"}</span></div><p>${ctx.provenance.startsWith("MOCK")?"Simulated UI-lab scope history. ":""}Green bars are observed cumulative performance for the selected scope. ${referenceOnly?"The yellow line remains the firm absolute-return objective as a comparison reference only; it is not a Portfolio/Desk target.":"The yellow line is the firm absolute-return objective."}</p>`;
+    const endpoint=refs.startCapital==null?null:refs.startCapital*(1+ctx.objective/100);
+    ribbon.innerHTML=`<div><span>PERIOD START CAPITAL</span><b>${money(refs.startCapital)}</b><small>scope read-model basis</small></div><div><span>CURRENT HIGH-WATER MARK</span><b>${money(refs.hwm)}</b><small>${ctx.currentDd==null?"drawdown unavailable":`${ctx.currentDd.toFixed(2)}% current drawdown`}</small></div><div><span>${drawdownWatchPct.toFixed(1)}% DRAWDOWN WATCH FLOOR</span><b>${money(refs.watchFloor)}</b><small>policy reference from scope HWM</small></div><div><span>${referenceOnly?"FIRM REFERENCE OBJECTIVE CAPITAL":"HORIZON OBJECTIVE CAPITAL"}</span><b>${money(endpoint)}</b><small>${percent(ctx.objective)} cumulative ${referenceOnly?"firm reference":"objective"}</small></div>`;
   }
 
-  function protectionBand(pad,currentX,y,refs){if(refs.hwmReturn==null||refs.watchFloorReturn==null)return"";return `<g class="chart-capital-protection"><rect x="${pad.l}" y="${y(refs.hwmReturn)}" width="${Math.max(0,currentX-pad.l)}" height="${Math.max(0,y(refs.watchFloorReturn)-y(refs.hwmReturn))}"/><line class="chart-hwm-line" x1="${pad.l}" x2="${currentX}" y1="${y(refs.hwmReturn)}" y2="${y(refs.hwmReturn)}"/><text class="chart-ref-label chart-hwm-label" x="${pad.l+6}" y="${y(refs.hwmReturn)-5}">HWM ${money(refs.hwm)}</text><line class="chart-watch-floor" x1="${pad.l}" x2="${currentX}" y1="${y(refs.watchFloorReturn)}" y2="${y(refs.watchFloorReturn)}"/><text class="chart-ref-label chart-floor-label" x="${pad.l+6}" y="${y(refs.watchFloorReturn)+13}">WATCH FLOOR ${money(refs.watchFloor)}</text></g>`;}
-  function gapMark(currentX,y,realized,objectiveToday,gap){if(gap==null)return"";const middle=(y(realized)+y(objectiveToday))/2,boxWidth=58,boxHeight=18,boxX=currentX-74,boxY=middle-boxHeight/2;return `<g class="chart-objective-gap"><line x1="${currentX-10}" x2="${currentX-10}" y1="${y(realized)}" y2="${y(objectiveToday)}"/><rect class="chart-objective-gap-box" x="${boxX}" y="${boxY}" width="${boxWidth}" height="${boxHeight}" rx="3"/><text class="chart-objective-gap-value" x="${boxX+boxWidth/2}" y="${boxY+12}" text-anchor="middle">${gap>=0?"+":""}${gap.toFixed(2)} pts</text></g>`;}
+  function protectionBandFill(pad,currentX,y,refs){if(refs.hwmReturn==null||refs.watchFloorReturn==null)return"";return `<g class="chart-capital-protection chart-capital-protection-fill"><rect x="${pad.l}" y="${y(refs.hwmReturn)}" width="${Math.max(0,currentX-pad.l)}" height="${Math.max(0,y(refs.watchFloorReturn)-y(refs.hwmReturn))}"/></g>`;}
+  function protectionReferences(pad,currentX,y,refs){if(refs.hwmReturn==null||refs.watchFloorReturn==null)return"";return `<g class="chart-capital-protection chart-capital-protection-foreground"><line class="chart-hwm-line" x1="${pad.l}" x2="${currentX}" y1="${y(refs.hwmReturn)}" y2="${y(refs.hwmReturn)}"/><text class="chart-ref-label chart-hwm-label" x="${pad.l+6}" y="${y(refs.hwmReturn)-5}">HWM ${money(refs.hwm)}</text><line class="chart-watch-floor" x1="${pad.l}" x2="${currentX}" y1="${y(refs.watchFloorReturn)}" y2="${y(refs.watchFloorReturn)}"/><text class="chart-ref-label chart-floor-label" x="${pad.l+6}" y="${y(refs.watchFloorReturn)+13}">WATCH FLOOR ${money(refs.watchFloor)}</text></g>`;}
+  function gapMark(currentX,y,realized,objectiveToday,gap,pad,width){if(gap==null)return"";const middle=(y(realized)+y(objectiveToday))/2,boxWidth=58,boxHeight=18,boxX=clamp(currentX-74,pad.l,width-pad.r-boxWidth),boxY=middle-boxHeight/2;return `<g class="chart-objective-gap"><line x1="${currentX-10}" x2="${currentX-10}" y1="${y(realized)}" y2="${y(objectiveToday)}"/><rect class="chart-objective-gap-box" x="${boxX}" y="${boxY}" width="${boxWidth}" height="${boxHeight}" rx="3"/><text class="chart-objective-gap-value" x="${boxX+boxWidth/2}" y="${boxY+12}" text-anchor="middle">${gap>=0?"+":""}${gap.toFixed(2)} pts</text></g>`;}
   function dateAxis(config,x,height,pad){const ticks=dateTicks(config);return ticks.map((date,index)=>`<g class="chart-date-tick"><line x1="${x(date)}" x2="${x(date)}" y1="${height-pad.b}" y2="${height-pad.b+5}"/><text class="chart-axis-label chart-date-label" x="${x(date)}" y="${height-pad.b+20}" text-anchor="middle">${dateLabel(config,date,index,ticks.length)}</text></g>`).join("");}
 
   function syncTime(){valueLabel.textContent=labels[selected];slider.value=String(selected);slider.setAttribute("aria-valuetext",labels[selected]);timeButtons.forEach((button,index)=>{const active=index===selected;button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active));});}
-  function syncScope(){scopeButtons.forEach(button=>{const active=Number(button.dataset.capitalScope)===portfolio;button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active));});entitySelect.hidden=portfolio===0;if(portfolio!==0)entitySelect.value=entityByPortfolio[portfolio];const entity=currentEntity();scopeState.textContent=portfolio===0?"FIRM · CANONICAL READ MODEL":`${scopeMock?.portfolios?.[portfolio]?.label || `PORTFOLIO ${portfolio}`} · ${entity?.label || "UNAVAILABLE"} · UI-LAB SIMULATED`;}
+  function syncScope(){scopeButtons.forEach(button=>{const active=Number(button.dataset.capitalScope)===portfolio;button.classList.toggle("active",active);button.setAttribute("aria-pressed",String(active));});entitySelect.hidden=portfolio===0;if(portfolio!==0)entitySelect.value=entityByPortfolio[portfolio];const entity=currentEntity();scopeState.textContent=portfolio===0?"FIRM · CANONICAL READ MODEL":`${scopeMock?.portfolios?.[portfolio]?.label || `PORTFOLIO ${portfolio}`} · ${entity?.label || "UNAVAILABLE"} · UI-LAB SIMULATED`;if(objectiveLegendLabel)objectiveLegendLabel.textContent=portfolio===0?"ABSOLUTE-RETURN OBJECTIVE":"FIRM OBJECTIVE REFERENCE";}
+  function emitScopeChanged(){window.dispatchEvent(new CustomEvent("dusty:performance-capital-scope-changed",{detail:{portfolio,entity:portfolio===0?"firm":entityByPortfolio[portfolio]}}));}
   function selectTime(index){cancelMorph();selected=clamp(index,0,3);syncTime();render(buildConfig());}
   function animateTo(index){const destination=clamp(index,0,3);if(destination===selected)return;if(noMotion()){selectTime(destination);return;}cancelMorph();const token=morphToken,from=buildConfig(selected),to=buildConfig(destination),started=performance.now();selected=destination;syncTime();const step=()=>{if(token!==morphToken)return;if(noMotion()){render(buildConfig());return;}const p=clamp((performance.now()-started)/MORPH_MS,0,1),t=smooth(p);const mixed={...to,start:new Date(lerp(from.start.getTime(),to.start.getTime(),t)),end:new Date(lerp(from.end.getTime(),to.end.getTime(),t)),target:lerp(from.target,to.target,t)};render(mixed,p>=1);if(p<1)morphTimer=setTimeout(step,16);else{morphTimer=0;render(buildConfig());}};step();}
-  function selectScope(next){portfolio=clamp(next,0,4);syncScope();render(buildConfig());}
+  function selectScope(next){portfolio=clamp(next,0,4);syncScope();render(buildConfig());emitScopeChanged();}
   function cancelMorph(){morphToken+=1;if(morphTimer)clearTimeout(morphTimer);morphTimer=0;}
   function noMotion(){return document.body.classList.contains("render-no-motion")||reduceMotionQuery.matches;}
 
   slider.addEventListener("input",event=>animateTo(Number(event.target.value)||0));
   timeButtons.forEach((button,index)=>button.addEventListener("click",()=>selectTime(index)));
   scopeButtons.forEach(button=>button.addEventListener("click",()=>selectScope(Number(button.dataset.capitalScope)||0)));
-  entitySelect.addEventListener("change",()=>{if(portfolio===0)return;entityByPortfolio[portfolio]=entitySelect.value;syncScope();render(buildConfig());});
+  entitySelect.addEventListener("change",()=>{if(portfolio===0)return;entityByPortfolio[portfolio]=entitySelect.value;syncScope();render(buildConfig());emitScopeChanged();});
   root.querySelector("#perfExpandChart")?.addEventListener("click",()=>setTimeout(()=>render(buildConfig()),0));
   window.addEventListener("dusty:performance-chart-resize",()=>setTimeout(()=>render(buildConfig()),0));
   new MutationObserver(()=>{if(noMotion())cancelMorph();syncTime();syncScope();render(buildConfig());}).observe(document.body,{attributes:true,attributeFilter:["class"]});
@@ -235,6 +244,6 @@
   function smooth(t){return t*t*(3-2*t);}
   function escapeText(value){return String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));}
 
-  window.DUSTY_PERFORMANCE_TIMEFRAME=Object.freeze({version:"3.8",scopeContract:"FIRM_PORTFOLIO_LAYER_DESK",historyContract:"DATED_CUMULATIVE_RETURN_SERIES_UTC",objectiveType:"ABSOLUTE_RETURN_OBJECTIVE",actualMark:"VERTICAL_BARS",compounding:"GEOMETRIC",syntheticProductionFallback:false});
+  window.DUSTY_PERFORMANCE_TIMEFRAME=Object.freeze({version:"3.9",scopeContract:"FIRM_PORTFOLIO_LAYER_DESK",historyContract:"DATED_CUMULATIVE_RETURN_SERIES_UTC",objectiveType:"ABSOLUTE_RETURN_OBJECTIVE_WITH_FIRM_REFERENCE_ON_CHILD_SCOPES",actualMark:"VERTICAL_BARS_NON_OVERLAP",compounding:"GEOMETRIC",syntheticProductionFallback:false});
   syncTime();syncScope();render();
 })();
