@@ -34,9 +34,15 @@ Quant reading order:
 3. Tail / Diversification — then inspect loss severity, dependence and concentration.
 4. Benchmark / Active Risk — finally evaluate relative skill only when a valid benchmark exists.
 
-The Quant rail uses a bright-purple semantic accent as a lens cue. Purple is presentation metadata only; it must not be reused as a trading/risk health state. Existing green/amber/red operational state semantics remain authoritative.
+## Lens color contract
 
-A lens change replaces rail labels and contents in place while preserving the selected Performance scope, chart horizon, snapshot version and Capital & Objectives context. Investor-only notes are hidden in Quant mode rather than duplicated.
+Quant uses one bright-purple semantic accent across the complete analytical workspace: the four Quant rail panels, the persistent `CAPITAL & OBJECTIVES` panel chrome, and the active `QUANT` segmented-control button. This gives the operator an immediate whole-workspace cue that the current interpretation lens is Quant even though the capital chart and selected scope remain shared.
+
+Purple is **presentation/lens metadata only**. It must never encode broker health, desk health, P&L sign, risk state, warning severity, order state, or execution authority. Green/amber/red retain those established operational meanings. Chart-series semantics also remain unchanged when the lens changes: actual return/capital stays green, objective stays amber, as-of stays blue, and risk-reference lines keep their defined semantics. Only container chrome changes to purple.
+
+In Windows forced-colors/high-contrast mode, system colors supersede the purple brand accent. Reduced/no-motion modes must not depend on animation to communicate the active lens.
+
+A lens change replaces rail labels and contents in place while preserving selected Performance scope, chart horizon, snapshot version and Capital & Objectives context. Investor-only notes are hidden in Quant mode rather than duplicated.
 
 ## Investor semantics
 
@@ -95,12 +101,12 @@ The WinUI 3 host owns one Performance scope state. WebView2 sends narrow intents
 {"type":"performance.lens.select","lens":"quant"}
 ```
 
-The application layer resolves scope against an authorized read service and returns one immutable versioned Performance snapshot. Investor and Quant are presentations of that same selected snapshot. A late response for an older scope/request ID must be discarded. Lens changes must be local/presentation-only and must not refetch MT5 merely to repaint the four rail slots.
+The application layer resolves scope against an authorized read service and returns one immutable versioned Performance snapshot. Investor and Quant are presentations of that same selected snapshot. A late response for an older scope/request ID must be discarded. Lens changes must be local/presentation-only and must not refetch MT5 merely to repaint the rail or recolor the shared capital-panel chrome.
 
 Neither message may be interpreted as a broker or trading command.
 
 ## QC before migration
 
-Require automated tests for all portfolios/entities; attribution reconciliation; identical scope/snapshot identity across Investor and Quant; lens changes preserving scope and timeframe; missing/retired/parked desks; stale/out-of-order responses; optional objectives/volatility targets/benchmarks; VaR/ES horizon consistency; benchmark-relative metric rejection without benchmark series; Core-side aggregation; UTC/DST; reduced motion; forced colors/high contrast; 100/125/150/200% Windows scaling; and WebView2 schema/version rejection.
+Require automated tests for all portfolios/entities; attribution reconciliation; identical scope/snapshot identity across Investor and Quant; lens changes preserving scope and timeframe; lens color never altering chart/risk semantics; missing/retired/parked desks; stale/out-of-order responses; optional objectives/volatility targets/benchmarks; VaR/ES horizon consistency; benchmark-relative metric rejection without benchmark series; Core-side aggregation; UTC/DST; reduced motion; forced colors/high contrast; 100/125/150/200% Windows scaling; and WebView2 schema/version rejection.
 
 The engineering target is zero known contract ambiguity before migration. Literal zero debugging cannot be guaranteed for a real Windows/MT5 integration.
