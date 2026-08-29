@@ -13,10 +13,10 @@ on:
 # from dev/ui-lab-v1; backend, broker, MT5, credentials and execution code are
 # never staged into the Pages artifact.
 #
-# Preview checkpoint: Performance v3.8 — Capital & Objectives has a local scope
-# selector for Firm or Portfolio 1-4, with Layer / Desk 1-6 drill-down. Portfolio
-# histories are explicit UI-lab simulated fixtures only; production requires Core
-# scope read models and never derives broker truth in JavaScript.
+# Preview checkpoint: Performance v3.9 — Capital & Objectives is the single
+# investor-scope selector. Headline, Protection, Quality, Exposure, Attribution,
+# notes and chart synchronize to Firm or Portfolio 1-4 + Layer/Desk 1-6.
+# Firm attribution renders four portfolios; portfolio attribution renders six desks.
 
 permissions:
   contents: read
@@ -45,7 +45,8 @@ jobs:
           set -euo pipefail
           node --check ui_lab/pc_command_center/performance-timeframe-v38.js
           node --check ui_lab/pc_command_center/performance-mock-history.js
-          node --check ui_lab/pc_command_center/performance-scope-mock-v38.js
+          node --check ui_lab/pc_command_center/performance-scope-mock-v39.js
+          node --check ui_lab/pc_command_center/performance-panel-sync-v39.js
           node ui_lab/pc_command_center/performance-contract-check.mjs
 
       - name: Stage PC Command Center only
@@ -60,8 +61,10 @@ jobs:
           test -f ui_lab/pc_command_center/performance-timeframe-v36.css
           test -f ui_lab/pc_command_center/performance-layout-v36.css
           test -f ui_lab/pc_command_center/performance-scope-v38.css
+          test -f ui_lab/pc_command_center/performance-panel-sync-v39.css
           test -f ui_lab/pc_command_center/performance-mock-history.js
-          test -f ui_lab/pc_command_center/performance-scope-mock-v38.js
+          test -f ui_lab/pc_command_center/performance-scope-mock-v39.js
+          test -f ui_lab/pc_command_center/performance-panel-sync-v39.js
           test -f ui_lab/pc_command_center/PERFORMANCE_WINDOWS_HANDOFF.md
           test -f ui_lab/pc_command_center/PERFORMANCE_SCOPE_WINDOWS_HANDOFF.md
           rm -rf _site
