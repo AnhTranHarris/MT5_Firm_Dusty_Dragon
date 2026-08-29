@@ -2,9 +2,38 @@
 
 Status: UI-Lab planning/read-model contract. This panel is a quick-reference planning surface, not execution authority and not a promise of returns.
 
+## Command left-rail priority
+
+The left rail is intentionally ordered by operator value, not by raw event volume:
+
+1. **FIRM EVENT TIMELINE** — only the five most recent events classified by Core as materially affecting a Desk's trading/execution/risk state.
+2. **RESEARCH DELTA** — compact research throughput/status.
+3. **CAPITAL MILESTONES** — the remaining vertical area, optimized for comfortable human reading rather than maximum data density.
+
+The UI-Lab `command-timeline-v32.js` currently uses fixture-text matching only because the legacy mock events are plain `[time, message]` arrays. This heuristic is presentation-only and must not survive the Windows migration.
+
+Production events should contain explicit metadata such as:
+
+```text
+eventId
+occurredAtUtc
+scopeType = DESK | LAYER | FIRM
+scopeId
+category
+severity
+operatorImpact = MAJOR | ROUTINE | INFO
+summary
+stateTransition (nullable)
+snapshotVersion
+```
+
+The Windows Command Center should request/filter `scopeType=DESK` and `operatorImpact=MAJOR`, sort by authoritative UTC occurrence time, and render the newest five. Research completions, generic CEO/session-open events, and other non-desk informational events do not belong in this five-item quick timeline unless Core explicitly classifies them as materially desk-impacting.
+
+The timeline's five-item limit is a presentation rule only. It must **not delete or truncate audit history**; the full immutable event/audit record remains in Core/persistence.
+
 ## Purpose
 
-The Command Center left rail uses otherwise-empty space beneath `RESEARCH DELTA` for a compact firm-capital reference:
+The Command Center left rail uses the recovered space beneath the five-event timeline and `RESEARCH DELTA` for a firm-capital reference:
 
 - daily realized-gain goal;
 - weekly realized-gain goal;
@@ -12,6 +41,12 @@ The Command Center left rail uses otherwise-empty space beneath `RESEARCH DELTA`
 - a visually separate **FIRM MASTER GAIN GOAL** of $50,000,000 with 1Y / 5Y / 10Y / 20Y planning horizons.
 
 The $50M master goal must never be presented as just another row in the ordinary milestone grid.
+
+## Readability contract
+
+The milestone surface is a planning/decision panel, not micro-telemetry. On the production Windows application, use the recovered vertical space to maintain readable typography at 100/125/150/200% Windows scaling. Reduce padding and secondary prose before reducing primary labels or financial values. Do not restore a taller timeline simply because additional event data exists.
+
+Primary milestone values, horizon rates, status labels, and restriction text must remain legible without zooming at the supported minimum Command Center resolution. If vertical space is constrained, progressively collapse secondary explanatory notes before shrinking primary numerical values.
 
 ## UI-Lab calculations
 
@@ -106,6 +141,6 @@ All values are **planning references only**. The $50M value is cumulative realiz
 
 ## Windows QC
 
-Test positive/zero/negative expectancy; missing target/objective policy; deposits and withdrawals around milestone boundaries; large external capital flows; gain reconciliation; 1/5/10/20-year rate calculations; threshold boundaries; stale/mixed snapshots; long numeric values; 100/125/150/200% scaling; forced colors/high contrast; and minimum supported Command Center height.
+Test event significance classification; correct newest-five ordering; full audit history retention despite the five-row presentation limit; positive/zero/negative expectancy; missing target/objective policy; deposits and withdrawals around milestone boundaries; large external capital flows; gain reconciliation; 1/5/10/20-year rate calculations; threshold boundaries; stale/mixed snapshots; long numeric values; 100/125/150/200% scaling; forced colors/high contrast; and minimum supported Command Center height.
 
 Engineering target: zero known presentation/contract ambiguity before migration. Literal zero debugging cannot be guaranteed for live MT5/Windows integration.
