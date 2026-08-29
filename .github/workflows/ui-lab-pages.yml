@@ -13,10 +13,10 @@ on:
 # content checked out from dev/ui-lab-v1; no backend, broker, MT5, credential,
 # or execution files are staged into the Pages artifact.
 #
-# Preview checkpoint: institutional quant Performance lens:
-# absolute efficiency, trade edge, tail/diversification diagnostics, and explicit
-# benchmark-relative metrics that remain unavailable until a valid benchmark and
-# periodic return series are selected. Investor objective chart remains v3.4.
+# Preview checkpoint: institutional investor Capital & Objectives v3.5:
+# actual capital path, compounded absolute-return objective, as-of date, HWM,
+# drawdown-watch floor, dual return/capital axes and explicit benchmark/data
+# coverage state. Longer-horizon actuals are never synthesized when unavailable.
 # References:
 # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 # https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
@@ -50,8 +50,8 @@ jobs:
           test -f ui_lab/pc_command_center/performance-dashboard-v32.js
           test -f ui_lab/pc_command_center/performance-dashboard-v30.css
           test -f ui_lab/pc_command_center/performance-quant-v32.css
-          test -f ui_lab/pc_command_center/performance-timeframe-v34.js
-          test -f ui_lab/pc_command_center/performance-timeframe-v34.css
+          test -f ui_lab/pc_command_center/performance-timeframe-v35.js
+          test -f ui_lab/pc_command_center/performance-timeframe-v35.css
           rm -rf _site
           mkdir -p _site
           cp -a ui_lab/pc_command_center/. _site/
