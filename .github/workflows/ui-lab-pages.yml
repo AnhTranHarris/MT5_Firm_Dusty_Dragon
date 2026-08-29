@@ -13,10 +13,9 @@ on:
 # from dev/ui-lab-v1; backend, broker, MT5, credentials and execution code are
 # never staged into the Pages artifact.
 #
-# Preview checkpoint: Performance v3.6.5 — CUMULATIVE RETURN now uses the same
-# visual scale as the investor legend and stays inside the chart, the as-of badge
-# physically overlaps its cutoff line, and objective variance uses a white boxed
-# annotation for contrast against the yellow objective path.
+# Preview checkpoint: Performance v3.7 — all reporting horizons consume explicit
+# dated UTC cumulative-return series. Mock quarterly/annual/5Y histories are
+# simulated fixtures, never arithmetic extrapolations from MTD/WTD values.
 
 permissions:
   contents: read
@@ -39,6 +38,14 @@ jobs:
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 
+      - name: Validate Performance UI contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --check ui_lab/pc_command_center/performance-timeframe-v37.js
+          node --check ui_lab/pc_command_center/performance-mock-history.js
+          node ui_lab/pc_command_center/performance-contract-check.mjs
+
       - name: Stage PC Command Center only
         shell: bash
         run: |
@@ -47,9 +54,11 @@ jobs:
           test -f ui_lab/pc_command_center/performance-dashboard-v32.js
           test -f ui_lab/pc_command_center/performance-dashboard-v30.css
           test -f ui_lab/pc_command_center/performance-quant-v32.css
-          test -f ui_lab/pc_command_center/performance-timeframe-v36.js
+          test -f ui_lab/pc_command_center/performance-timeframe-v37.js
           test -f ui_lab/pc_command_center/performance-timeframe-v36.css
           test -f ui_lab/pc_command_center/performance-layout-v36.css
+          test -f ui_lab/pc_command_center/performance-mock-history.js
+          test -f ui_lab/pc_command_center/PERFORMANCE_WINDOWS_HANDOFF.md
           rm -rf _site
           mkdir -p _site
           cp -a ui_lab/pc_command_center/. _site/
