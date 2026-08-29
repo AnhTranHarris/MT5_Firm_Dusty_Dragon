@@ -1,8 +1,35 @@
-/* Performance panel synchronization v3.9 */
+/* Performance panel synchronization v3.10 — shared Trading Floor state language */
 #performance .perf-legacy-scope-retired > select{display:none!important}
 #performance .perf-legacy-scope-retired{gap:6px}
-#performance .perf-contrib.selected{outline:1px solid rgba(101,242,176,.42);background:rgba(101,242,176,.06);padding:3px 4px;margin-left:-4px;margin-right:-4px}
-#performance .perf-contrib.selected>b{color:#dffff0}
-#performance .perf-contrib.selected>div{box-shadow:0 0 0 1px rgba(101,242,176,.16) inset}
-#performance .perf-contrib.selected>span{color:#dffff0}
-@media(max-width:720px){#performance .perf-contrib.selected{padding:2px 3px;margin-left:-3px;margin-right:-3px}}
+
+/* Canonical state palette: NORMAL/ACTIVE green, CAUTION amber, FAULT red,
+   PARKED blue, UNPROVISIONED/UNBOUND gray. Keep these semantic; P&L sign remains
+   a separate visual channel and must never redefine operational state. */
+#performance{--state-normal:#65f2b0;--state-caution:#ffc65c;--state-fault:#ff6474;--state-parked:#6bb7ff;--state-unprovisioned:#8b97a6}
+#performance .perf-state-badge{display:inline-flex;align-items:center;gap:5px;min-width:78px;font-style:normal;font-size:9px;font-weight:800;letter-spacing:.08em;white-space:nowrap}
+#performance .perf-state-badge i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+#performance .state-normal>.perf-state-badge,#performance .perf-state-badge.state-normal{color:var(--state-normal)}
+#performance .state-caution>.perf-state-badge,#performance .perf-state-badge.state-caution{color:var(--state-caution)}
+#performance .state-fault>.perf-state-badge,#performance .perf-state-badge.state-fault{color:var(--state-fault)}
+#performance .state-parked>.perf-state-badge,#performance .perf-state-badge.state-parked{color:var(--state-parked)}
+#performance .state-unprovisioned>.perf-state-badge,#performance .perf-state-badge.state-unprovisioned{color:var(--state-unprovisioned)}
+#performance .perf-contrib.state-normal>div i{background:var(--state-normal)}
+#performance .perf-contrib.state-caution>div i{background:var(--state-caution)}
+#performance .perf-contrib.state-fault>div i{background:var(--state-fault)}
+#performance .perf-contrib.state-parked>div i{background:var(--state-parked)}
+#performance .perf-contrib.state-unprovisioned>div i{background:var(--state-unprovisioned)}
+#performance .perf-contrib.selected{outline:1px solid color-mix(in srgb,currentColor 44%,transparent);background:rgba(255,255,255,.035);padding:3px 4px;margin-left:-4px;margin-right:-4px}
+#performance .perf-contrib.selected>b,#performance .perf-contrib.selected>span{color:#f3f8ff}
+#performance .perf-contrib.selected>div{box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+
+/* Capital scope state badge is injected beside the selected Layer/Desk selector. */
+#performance .perf-capital-scope-health{display:inline-flex;align-items:center;gap:6px;padding:3px 7px;border:1px solid currentColor;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.08em;white-space:nowrap}
+#performance .perf-capital-scope-health::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+#performance .perf-capital-scope-health.state-normal{color:var(--state-normal)}
+#performance .perf-capital-scope-health.state-caution{color:var(--state-caution)}
+#performance .perf-capital-scope-health.state-fault{color:var(--state-fault)}
+#performance .perf-capital-scope-health.state-parked{color:var(--state-parked)}
+#performance .perf-capital-scope-health.state-unprovisioned{color:var(--state-unprovisioned)}
+
+@media(forced-colors:active){#performance .perf-state-badge i,#performance .perf-capital-scope-health::before{box-shadow:none}#performance .perf-capital-scope-health{border-color:CanvasText}}
+@media(max-width:720px){#performance .perf-contrib.selected{padding:2px 3px;margin-left:-3px;margin-right:-3px}#performance .perf-state-badge{min-width:68px;font-size:8px}}
