@@ -1,35 +1,29 @@
-/* Performance panel synchronization v3.10 — shared Trading Floor state language */
+/* Performance panel synchronization v3.11 — shared Trading Floor state language + compact attribution. */
 #performance .perf-legacy-scope-retired > select{display:none!important}
 #performance .perf-legacy-scope-retired{gap:6px}
-
-/* Canonical state palette: NORMAL/ACTIVE green, CAUTION amber, FAULT red,
-   PARKED blue, UNPROVISIONED/UNBOUND gray. Keep these semantic; P&L sign remains
-   a separate visual channel and must never redefine operational state. */
 #performance{--state-normal:#65f2b0;--state-caution:#ffc65c;--state-fault:#ff6474;--state-parked:#6bb7ff;--state-unprovisioned:#8b97a6}
-#performance .perf-state-badge{display:inline-flex;align-items:center;gap:5px;min-width:78px;font-style:normal;font-size:9px;font-weight:800;letter-spacing:.08em;white-space:nowrap}
-#performance .perf-state-badge i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
-#performance .state-normal>.perf-state-badge,#performance .perf-state-badge.state-normal{color:var(--state-normal)}
-#performance .state-caution>.perf-state-badge,#performance .perf-state-badge.state-caution{color:var(--state-caution)}
-#performance .state-fault>.perf-state-badge,#performance .perf-state-badge.state-fault{color:var(--state-fault)}
-#performance .state-parked>.perf-state-badge,#performance .perf-state-badge.state-parked{color:var(--state-parked)}
-#performance .state-unprovisioned>.perf-state-badge,#performance .perf-state-badge.state-unprovisioned{color:var(--state-unprovisioned)}
-#performance .perf-contrib.state-normal>div i{background:var(--state-normal)}
-#performance .perf-contrib.state-caution>div i{background:var(--state-caution)}
-#performance .perf-contrib.state-fault>div i{background:var(--state-fault)}
-#performance .perf-contrib.state-parked>div i{background:var(--state-parked)}
-#performance .perf-contrib.state-unprovisioned>div i{background:var(--state-unprovisioned)}
-#performance .perf-contrib.selected{outline:1px solid color-mix(in srgb,currentColor 44%,transparent);background:rgba(255,255,255,.035);padding:3px 4px;margin-left:-4px;margin-right:-4px}
-#performance .perf-contrib.selected>b,#performance .perf-contrib.selected>span{color:#f3f8ff}
-#performance .perf-contrib.selected>div{box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+#performance .perf-state-badge{display:inline-flex;align-items:center;gap:4px;font-style:normal;font-size:8px;font-weight:800;letter-spacing:.07em;white-space:nowrap}
+#performance .perf-state-badge i{width:6px;height:6px;border-radius:50%;background:currentColor;box-shadow:0 0 7px currentColor;flex:0 0 auto}
+#performance .perf-state-badge.state-normal{color:var(--state-normal)}#performance .perf-state-badge.state-caution{color:var(--state-caution)}#performance .perf-state-badge.state-fault{color:var(--state-fault)}#performance .perf-state-badge.state-parked{color:var(--state-parked)}#performance .perf-state-badge.state-unprovisioned{color:var(--state-unprovisioned)}
 
-/* Capital scope state badge is injected beside the selected Layer/Desk selector. */
+/* One compact row per contributor: ID + operational state + contribution share,
+   followed by a small visual bar and P&L. This prevents Attribution from stealing
+   vertical height from Protection / Quality / Exposure. */
+#performance #perfContributors{display:grid!important;grid-template-columns:1fr!important;grid-auto-rows:minmax(22px,auto)!important;gap:2px!important;padding:4px 7px 5px!important}
+#performance .perf-contrib{display:grid!important;grid-template-columns:minmax(142px,1fr) minmax(72px,.7fr) minmax(48px,auto)!important;align-items:center!important;gap:6px!important;margin:0!important;min-height:22px!important;padding:1px 2px!important}
+#performance .perf-contrib-meta{display:flex!important;align-items:center;gap:6px;min-width:0;white-space:nowrap}
+#performance .perf-contrib-meta>b{font-size:.68rem;min-width:26px}
+#performance .perf-contrib-meta>strong{font-size:.62rem;font-weight:700;color:#aebfc9;margin-left:1px}
+#performance .perf-contrib-bar{height:6px!important;background:rgba(255,255,255,.05);overflow:hidden}
+#performance .perf-contrib-bar i{display:block;height:100%}
+#performance .perf-contrib>span{text-align:right;color:#b9ccd5;font-size:.65rem;white-space:nowrap}
+#performance .perf-contrib.state-normal .perf-contrib-bar i{background:var(--state-normal)}#performance .perf-contrib.state-caution .perf-contrib-bar i{background:var(--state-caution)}#performance .perf-contrib.state-fault .perf-contrib-bar i{background:var(--state-fault)}#performance .perf-contrib.state-parked .perf-contrib-bar i{background:var(--state-parked)}#performance .perf-contrib.state-unprovisioned .perf-contrib-bar i{background:var(--state-unprovisioned)}
+#performance .perf-contrib.selected{outline:1px solid rgba(205,233,244,.46);background:rgba(255,255,255,.035);padding:2px 3px!important}
+#performance .perf-contrib.selected .perf-contrib-meta>b,#performance .perf-contrib.selected>span{color:#f3f8ff}
+#performance .perf-contrib.selected .perf-contrib-bar{box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+
 #performance .perf-capital-scope-health{display:inline-flex;align-items:center;gap:6px;padding:3px 7px;border:1px solid currentColor;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.08em;white-space:nowrap}
 #performance .perf-capital-scope-health::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
-#performance .perf-capital-scope-health.state-normal{color:var(--state-normal)}
-#performance .perf-capital-scope-health.state-caution{color:var(--state-caution)}
-#performance .perf-capital-scope-health.state-fault{color:var(--state-fault)}
-#performance .perf-capital-scope-health.state-parked{color:var(--state-parked)}
-#performance .perf-capital-scope-health.state-unprovisioned{color:var(--state-unprovisioned)}
-
+#performance .perf-capital-scope-health.state-normal{color:var(--state-normal)}#performance .perf-capital-scope-health.state-caution{color:var(--state-caution)}#performance .perf-capital-scope-health.state-fault{color:var(--state-fault)}#performance .perf-capital-scope-health.state-parked{color:var(--state-parked)}#performance .perf-capital-scope-health.state-unprovisioned{color:var(--state-unprovisioned)}
 @media(forced-colors:active){#performance .perf-state-badge i,#performance .perf-capital-scope-health::before{box-shadow:none}#performance .perf-capital-scope-health{border-color:CanvasText}}
-@media(max-width:720px){#performance .perf-contrib.selected{padding:2px 3px;margin-left:-3px;margin-right:-3px}#performance .perf-state-badge{min-width:68px;font-size:8px}}
+@media(max-width:720px){#performance .perf-contrib{grid-template-columns:minmax(112px,1fr) minmax(48px,.55fr) minmax(42px,auto)!important;gap:4px!important}#performance .perf-contrib-meta{gap:4px}#performance .perf-state-badge{font-size:7px}#performance .perf-contrib-meta>strong,#performance .perf-contrib>span{font-size:.56rem}}
