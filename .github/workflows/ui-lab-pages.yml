@@ -13,10 +13,10 @@ on:
 # from dev/ui-lab-v1; backend, broker, MT5, credentials and execution code are
 # never staged into the Pages artifact.
 #
-# Preview checkpoint: Performance v4.0 — Investor and Quant lenses share one
-# Firm/Portfolio/Layer/Desk scope. Quant diagnostics now follow the same selected
-# read model and never reset silently to Firm. UI-Lab quant values are explicitly
-# simulated fixtures; production requires Dusty Core-owned quant read models.
+# Preview checkpoint: Performance v4.4 — Investor and Quant share one scope.
+# Capital chart keeps the firm objective visible as a child-scope reference,
+# prevents overlapping bars, raises HWM/watch-floor annotations above bars, and
+# makes benchmark-relative data requirements explicit instead of fabricating data.
 
 permissions:
   contents: read
@@ -49,7 +49,7 @@ jobs:
           node --check ui_lab/pc_command_center/performance-scope-mock-v39.js
           node --check ui_lab/pc_command_center/performance-panel-sync-v39.js
           node --check ui_lab/pc_command_center/performance-quant-scope-mock-v40.js
-          node --check ui_lab/pc_command_center/performance-quant-sync-v40.js
+          node --check ui_lab/pc_command_center/performance-quant-sync-v41.js
           node ui_lab/pc_command_center/performance-contract-check.mjs
 
       - name: Stage PC Command Center only
@@ -69,7 +69,7 @@ jobs:
           test -f ui_lab/pc_command_center/performance-scope-mock-v39.js
           test -f ui_lab/pc_command_center/performance-panel-sync-v39.js
           test -f ui_lab/pc_command_center/performance-quant-scope-mock-v40.js
-          test -f ui_lab/pc_command_center/performance-quant-sync-v40.js
+          test -f ui_lab/pc_command_center/performance-quant-sync-v41.js
           test -f ui_lab/pc_command_center/PERFORMANCE_WINDOWS_HANDOFF.md
           test -f ui_lab/pc_command_center/PERFORMANCE_SCOPE_WINDOWS_HANDOFF.md
           rm -rf _site
