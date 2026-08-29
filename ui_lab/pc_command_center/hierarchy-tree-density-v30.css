@@ -1,8 +1,7 @@
-/* Trading Floor analytical hierarchy v3.2 — true 2D no-motion cockpit. */
+/* Trading Floor analytical hierarchy v3.3 — true 2D cockpit with human-readable desk typography. */
 
-/* Analytical/no-motion mode is a different layout, not the 3D viewport with the
-   canvas merely hidden. Reclaim spatial-only chrome and give the hierarchy the
-   full Trading Floor body below its header. */
+/* Analytical/no-motion is a dedicated 2D layout. Spatial-only chrome is removed
+   from flow so the hierarchy owns the complete Trading Floor body. */
 body.analytical-mode .firm-stage,
 body.render-no-motion .firm-stage{grid-template-rows:30px minmax(0,1fr)!important}
 body.analytical-mode .firm-stage>.dossier,
@@ -16,19 +15,19 @@ body.render-no-motion .space-grid{display:none!important}
 body.analytical-mode .trading-floor-viewport,
 body.render-no-motion .trading-floor-viewport{grid-row:2!important;height:100%!important;min-height:0!important;overflow:hidden!important;position:relative}
 body.analytical-mode .hierarchy-tree-view,
-body.render-no-motion .hierarchy-tree-view{position:absolute;inset:0!important;padding:8px 10px 10px;overflow:hidden!important;background:linear-gradient(180deg,rgba(4,15,21,.98),rgba(2,8,12,.99))}
+body.render-no-motion .hierarchy-tree-view{position:absolute;inset:0!important;padding:7px 8px 9px;overflow:hidden!important;background:linear-gradient(180deg,rgba(4,15,21,.98),rgba(2,8,12,.99))}
 body.analytical-mode .tree-root,
-body.render-no-motion .tree-root{height:100%;min-height:0;gap:7px;align-items:stretch}
+body.render-no-motion .tree-root{height:100%;min-height:0;gap:6px;align-items:stretch}
 body.analytical-mode .tree-core,
-body.render-no-motion .tree-core{align-self:center;min-width:240px;padding:8px 22px}
+body.render-no-motion .tree-core{align-self:center;min-width:250px;padding:8px 24px}
 body.analytical-mode .tree-core b,
-body.render-no-motion .tree-core b{font-size:13px;line-height:1.05}
+body.render-no-motion .tree-core b{font-size:14px;line-height:1.05}
 body.analytical-mode .tree-core span,
-body.render-no-motion .tree-core span{font-size:9px;line-height:1.1}
+body.render-no-motion .tree-core span{font-size:9.5px;line-height:1.12}
 body.analytical-mode .tree-core em,
-body.render-no-motion .tree-core em{font-size:8px;margin-top:3px}
+body.render-no-motion .tree-core em{font-size:8.5px;margin-top:3px}
 body.analytical-mode .tree-trunk,
-body.render-no-motion .tree-trunk{height:8px;align-self:center}
+body.render-no-motion .tree-trunk{height:7px;align-self:center}
 body.analytical-mode .tree-layers,
 body.render-no-motion .tree-layers{flex:1;min-height:0;height:100%;grid-template-columns:repeat(5,minmax(150px,1fr));gap:7px;align-items:stretch}
 body.analytical-mode .tree-layer,
@@ -36,49 +35,66 @@ body.render-no-motion .tree-layer{display:grid;grid-template-rows:auto minmax(0,
 body.analytical-mode .tree-layer-head,
 body.render-no-motion .tree-layer-head{padding:7px 7px 6px;text-align:left;overflow:hidden}
 body.analytical-mode .tree-layer-head>b,
-body.render-no-motion .tree-layer-head>b{font-size:13px;line-height:1.05}
+body.render-no-motion .tree-layer-head>b{font-size:14px;line-height:1.05}
 body.analytical-mode .tree-layer-head>span,
-body.render-no-motion .tree-layer-head>span{font-size:8.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.render-no-motion .tree-layer-head>span{font-size:9.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.analytical-mode .tree-layer-head>em,
-body.render-no-motion .tree-layer-head>em{font-size:8px;margin-top:3px}
+body.render-no-motion .tree-layer-head>em{font-size:8.5px;margin-top:3px}
 body.analytical-mode .tree-children,
 body.render-no-motion .tree-children{display:grid;grid-template-rows:repeat(6,minmax(0,1fr));gap:4px;padding:5px;min-height:0;overflow:hidden}
+
+/* Each desk intentionally uses the vertical room it already owns. We enlarge the
+   information instead of leaving an empty lower half in every row. Identity/name/
+   health remain one scan line; quick performance uses the second line. */
 body.analytical-mode .tree-child,
-body.render-no-motion .tree-child{display:grid;grid-template-columns:38px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:3px 6px;align-content:center;min-height:0;padding:5px 6px;font-size:9px;overflow:hidden}
+body.render-no-motion .tree-child{display:grid;grid-template-columns:44px minmax(0,1fr) auto;grid-template-rows:auto auto;gap:7px 7px;align-content:center;min-height:0;padding:5px 7px;overflow:hidden}
 body.analytical-mode .tree-child>b,
-body.render-no-motion .tree-child>b{font-size:10.5px;line-height:1}
+body.render-no-motion .tree-child>b{font-size:12.5px;line-height:1.05;font-weight:750;letter-spacing:.01em}
 body.analytical-mode .tree-child>span,
-body.render-no-motion .tree-child>span{font-size:8.5px;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.render-no-motion .tree-child>span{font-size:10.5px;line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#9fb8c4}
 body.analytical-mode .tree-child>em,
-body.render-no-motion .tree-child>em{font-size:8px;justify-self:end;align-self:center;white-space:nowrap}
+body.render-no-motion .tree-child>em{font-size:9.5px;line-height:1;justify-self:end;align-self:center;white-space:nowrap;font-weight:750;letter-spacing:.035em}
 body.analytical-mode .tree-child .tree-desk-quick,
 body.render-no-motion .tree-child .tree-desk-quick{grid-column:1/-1}
 
-/* Quick metrics remain one scan line so larger type does not reintroduce vertical
-   overflow. Identity/state are primary; realized/day/target are secondary. */
-.tree-quick{display:flex;align-items:center;gap:8px;margin-top:4px;color:#d9edf5;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden}
-.tree-quick>span{display:inline-flex!important;align-items:baseline;gap:3px;min-width:0;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
+/* Quick performance is deliberately textual rather than card-like. At normal
+   desktop widths these values are large enough to read without zooming. */
+.tree-quick{display:flex;align-items:center;gap:10px;margin-top:0;color:#d9edf5;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;min-height:15px}
+.tree-quick>span{display:inline-flex!important;align-items:baseline;gap:4px;min-width:0;margin:0!important;padding:0!important;border:0!important;background:transparent!important}
 .tree-quick small,.tree-quick b{display:inline!important;overflow:visible!important;text-overflow:clip!important;white-space:nowrap}
-.tree-quick small{color:#7895a3;font-size:7px;letter-spacing:.05em;line-height:1}
-.tree-quick b{margin:0!important;color:#eaf7fb;font-size:9px;line-height:1}
-.tree-layer-quick{margin-top:5px;gap:9px}
-.tree-layer-quick small{font-size:7.5px}.tree-layer-quick b{font-size:10px}
+.tree-quick small{color:#7895a3;font-size:8px;letter-spacing:.055em;line-height:1}
+.tree-quick b{margin:0!important;color:#eaf7fb;font-size:10.5px;line-height:1;font-weight:750}
+.tree-layer-quick{margin-top:5px;gap:10px}
+.tree-layer-quick small{font-size:8px}.tree-layer-quick b{font-size:10.5px}
 .tree-target.behind b{color:#ff7b88}.tree-target.tracking b{color:#ffc568}.tree-target.ahead b{color:#65f2b0}
 
-/* Preserve one-screen five-layer structure. At smaller widths truncate long names
-   before allowing overlap or a second row of columns. */
+/* Preserve the five-column command-board shape. Long names truncate before
+   values overlap; the layout does not create a vertical scrollbar. */
 @media(max-width:1350px){
   body.analytical-mode .tree-layers,body.render-no-motion .tree-layers{grid-template-columns:repeat(5,minmax(128px,1fr));gap:5px}
-  body.analytical-mode .tree-child,body.render-no-motion .tree-child{grid-template-columns:34px minmax(0,1fr) auto;padding:4px 5px}
-  .tree-quick{gap:5px}.tree-quick small{font-size:6.5px}.tree-quick b{font-size:8.3px}
+  body.analytical-mode .tree-child,body.render-no-motion .tree-child{grid-template-columns:39px minmax(0,1fr) auto;gap:6px 5px;padding:4px 5px}
+  body.analytical-mode .tree-child>b,body.render-no-motion .tree-child>b{font-size:11.5px}
+  body.analytical-mode .tree-child>span,body.render-no-motion .tree-child>span{font-size:9.5px}
+  body.analytical-mode .tree-child>em,body.render-no-motion .tree-child>em{font-size:8.7px}
+  .tree-quick{gap:6px}.tree-quick small{font-size:7.2px}.tree-quick b{font-size:9.4px}
 }
 @media(max-height:820px){
-  body.analytical-mode .hierarchy-tree-view,body.render-no-motion .hierarchy-tree-view{padding:6px 8px}
+  body.analytical-mode .hierarchy-tree-view,body.render-no-motion .hierarchy-tree-view{padding:5px 7px 7px}
   body.analytical-mode .tree-core,body.render-no-motion .tree-core{padding:6px 18px}
-  body.analytical-mode .tree-trunk,body.render-no-motion .tree-trunk{height:5px}
+  body.analytical-mode .tree-trunk,body.render-no-motion .tree-trunk{height:4px}
   body.analytical-mode .tree-layer-head,body.render-no-motion .tree-layer-head{padding:5px 6px 4px}
   body.analytical-mode .tree-children,body.render-no-motion .tree-children{gap:3px;padding:4px}
-  body.analytical-mode .tree-child,body.render-no-motion .tree-child{padding:3px 5px}
-  .tree-quick{margin-top:2px;gap:5px}.tree-quick b{font-size:8px}.tree-quick small{font-size:6.3px}
+  body.analytical-mode .tree-child,body.render-no-motion .tree-child{padding:4px 5px;gap:5px}
+  body.analytical-mode .tree-child>b,body.render-no-motion .tree-child>b{font-size:11.5px}
+  body.analytical-mode .tree-child>span,body.render-no-motion .tree-child>span{font-size:9.5px}
+  body.analytical-mode .tree-child>em,body.render-no-motion .tree-child>em{font-size:8.8px}
+  .tree-quick{gap:6px;min-height:13px}.tree-quick b{font-size:9.3px}.tree-quick small{font-size:7.1px}
+}
+@media(max-height:680px){
+  body.analytical-mode .tree-child,body.render-no-motion .tree-child{padding:3px 4px;gap:3px}
+  body.analytical-mode .tree-child>b,body.render-no-motion .tree-child>b{font-size:10.5px}
+  body.analytical-mode .tree-child>span,body.render-no-motion .tree-child>span{font-size:8.7px}
+  body.analytical-mode .tree-child>em,body.render-no-motion .tree-child>em{font-size:8px}
+  .tree-quick{gap:5px}.tree-quick small{font-size:6.7px}.tree-quick b{font-size:8.7px}
 }
 @media(forced-colors:active){.tree-quick>span{color:CanvasText}.tree-target b{color:CanvasText!important}}
