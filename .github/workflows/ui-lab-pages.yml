@@ -20,8 +20,9 @@ on:
 # - actions/checkout explicitly reads dev/ui-lab-v1 while deployment authority
 #   remains attached to this protected main-branch workflow.
 #
-# Preview checkpoint: Performance UI v3.4 investor objective semantics:
-# yellow dashed line = compounded absolute-return objective, not forecast/benchmark.
+# Preview checkpoint: Performance panels use investor-grade measurement semantics:
+# no synthetic quality scores, explicit risk-budget math, reconciled attribution,
+# and reported/transparent quant diagnostics. Objective chart remains v3.4.
 # References:
 # https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages
 # https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments
@@ -52,7 +53,7 @@ jobs:
         run: |
           set -euo pipefail
           test -f ui_lab/pc_command_center/index.html
-          test -f ui_lab/pc_command_center/performance-dashboard-v30.js
+          test -f ui_lab/pc_command_center/performance-dashboard-v31.js
           test -f ui_lab/pc_command_center/performance-dashboard-v30.css
           test -f ui_lab/pc_command_center/performance-timeframe-v34.js
           test -f ui_lab/pc_command_center/performance-timeframe-v34.css
