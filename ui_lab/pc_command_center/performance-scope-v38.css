@@ -1,0 +1,15 @@
+/* Performance scope v3.8 — local graph scope controls for Firm / Portfolio drill-down. */
+#perfChartPanel>header{display:flex;align-items:center;gap:8px;min-width:0}
+#perfChartPanel>header>span:first-child{flex:0 0 auto}
+.perf-capital-scope-controls{display:flex;align-items:center;gap:5px;min-width:0;flex:1;margin-left:4px}
+.perf-capital-scope-buttons{display:flex;align-items:center;gap:3px;min-width:0}
+.perf-capital-scope-buttons button{font:inherit;font-size:9px;letter-spacing:.06em;color:#8fcce2;background:rgba(3,17,24,.88);border:1px solid rgba(68,150,180,.32);padding:3px 7px;min-height:22px;white-space:nowrap;cursor:pointer}
+.perf-capital-scope-buttons button:hover{border-color:rgba(101,242,176,.62);color:#dffff0}
+.perf-capital-scope-buttons button.active{color:#eafff5;border-color:#65f2b0;background:rgba(22,84,61,.32);box-shadow:inset 0 0 0 1px rgba(101,242,176,.08)}
+#perfCapitalEntity{height:22px;min-width:92px;max-width:118px;border:1px solid rgba(68,150,180,.38);background:#06141b;color:#cdeffc;font:inherit;font-size:9px;letter-spacing:.05em;padding:0 5px}
+.perf-capital-scope-state{font-size:8px;letter-spacing:.06em;color:#6095aa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.perf-chart-actions{margin-left:auto;flex:0 0 auto}
+@media(max-width:1300px){.perf-capital-scope-state{display:none}.perf-capital-scope-buttons button{padding-inline:5px}}
+@media(max-width:1050px){#perfChartPanel>header{align-items:flex-start;flex-wrap:wrap}.perf-capital-scope-controls{order:3;flex-basis:100%;margin:2px 0 0}.perf-chart-actions{margin-left:auto}.perf-capital-scope-buttons{flex-wrap:wrap}}
+@media(max-width:720px){.perf-capital-scope-buttons button{font-size:8px;padding:2px 4px;min-height:20px}#perfCapitalEntity{height:20px;font-size:8px;min-width:76px}}
+@media(forced-colors:active){.perf-capital-scope-buttons button.active{outline:2px solid Highlight;outline-offset:1px}.perf-capital-scope-buttons button,#perfCapitalEntity{forced-color-adjust:auto}}
