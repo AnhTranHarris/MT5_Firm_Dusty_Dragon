@@ -1,0 +1,11 @@
+/* Command timeline v3.2 — five major desk-impact events only. */
+#command .left-stack>.command-major-timeline-panel{flex:0 0 auto!important;min-height:0!important}
+#command .command-major-timeline-panel .timeline{padding:5px 7px 6px}
+#command .command-major-timeline-panel .timeline-row{padding:5px 0;font-size:9.5px;line-height:1.18;grid-template-columns:44px minmax(0,1fr)}
+#command .command-major-timeline-panel .timeline-row time{font-size:9px}
+#command .command-major-timeline-panel .timeline-row span{font-size:9.5px;line-height:1.18}
+#command .left-stack>.capital-milestones-panel{flex:1 1 0!important;min-height:0}
+@media(max-height:820px){
+  #command .command-major-timeline-panel .timeline-row{padding:4px 0;font-size:9px}
+  #command .command-major-timeline-panel .timeline-row span,#command .command-major-timeline-panel .timeline-row time{font-size:8.7px}
+}
