@@ -10,80 +10,30 @@
   const policy = data.performancePolicy || {};
   const openRiskLimit = Number(policy.risk?.openRiskLimitPct ?? 5);
   const monthlyObjective = Number(policy.objective?.monthlyEffectivePct ?? data.firm?.monthlyTargetPct ?? 5);
-
   const $ = selector => root.querySelector(selector);
-  const numberFrom = value => {
-    if (typeof value === "number") return Number.isFinite(value) ? value : null;
-    const parsed = Number(String(value ?? "").replace(/[^0-9.+-]/g, ""));
-    return Number.isFinite(parsed) ? parsed : null;
-  };
-  const stat = label => numberFrom(stats.get(label));
-  const money = (value, digits = 0) => value == null ? "—" : Number(value).toLocaleString(undefined, { style:"currency", currency:"USD", maximumFractionDigits:digits });
-  const pct = (value, digits = 2, signed = true) => value == null ? "—" : `${signed && Number(value) >= 0 ? "+" : ""}${Number(value).toFixed(digits)}%`;
-  const ratio = (value, digits = 2) => value == null ? "—" : Number(value).toFixed(digits);
-  const safeDivide = (a, b) => a == null || b == null || Math.abs(b) < 1e-12 ? null : a / b;
-  const metric = (label, value, sub = "", tone = "") => `<div class="perf-kpi ${tone}"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`;
+  const numberFrom = value => { if (typeof value === "number") return Number.isFinite(value) ? value : null; const parsed=Number(String(value??"").replace(/[^0-9.+-]/g,"")); return Number.isFinite(parsed)?parsed:null; };
+  const stat=label=>numberFrom(stats.get(label));
+  const money=(value,digits=0)=>value==null?"—":Number(value).toLocaleString(undefined,{style:"currency",currency:"USD",maximumFractionDigits:digits});
+  const pct=(value,digits=2,signed=true)=>value==null?"—":`${signed&&Number(value)>=0?"+":""}${Number(value).toFixed(digits)}%`;
+  const ratio=(value,digits=2)=>value==null?"—":Number(value).toFixed(digits);
+  const safeDivide=(a,b)=>a==null||b==null||Math.abs(b)<1e-12?null:a/b;
+  const metric=(label,value,sub="",tone="")=>`<div class="perf-kpi ${tone}"><span>${label}</span><strong>${value}</strong><small>${sub}</small></div>`;
 
-  // Shared Trading Floor state language. Performance never invents a second
-  // health vocabulary: NORMAL/ACTIVE=green, CAUTION=amber, FAULT=red,
-  // PARKED=blue, UNPROVISIONED/UNBOUND=gray.
-  function canonicalState(value) {
-    const raw = String(value || "UNKNOWN").toUpperCase();
-    if (["NORMAL","ACTIVE","HEALTHY","OPERATIONAL","VALID","SIMULATED"].includes(raw)) return { term:raw === "SIMULATED" ? "NORMAL" : raw, tone:"normal" };
-    if (["CAUTION","WATCH","DEGRADED","RISK"].includes(raw)) return { term:"CAUTION", tone:"caution" };
-    if (raw.includes("FAULT") || ["CRITICAL","BLOCKED"].includes(raw)) return { term:"FAULT", tone:"fault" };
-    if (["PARKED","PAUSED","DRAINED"].includes(raw)) return { term:"PARKED", tone:"parked" };
-    if (["UNPROVISIONED","UNBOUND","OFFLINE","UNKNOWN"].includes(raw)) return { term:raw === "UNBOUND" ? "UNBOUND" : "UNPROVISIONED", tone:"unprovisioned" };
-    return { term:raw, tone:"unprovisioned" };
-  }
-  const stateBadge = value => { const state=canonicalState(value); return `<em class="perf-state-badge state-${state.tone}"><i></i>${state.term}</em>`; };
-
-  function activeSelection() {
-    const button = root.querySelector("[data-capital-scope].active");
-    const portfolio = Number(button?.dataset.capitalScope || 0);
-    const entitySelect = root.querySelector("#perfCapitalEntity");
-    const entity = portfolio === 0 ? "firm" : entitySelect?.value || "layer";
-    return { portfolio, entity };
-  }
-
-  function firmMetrics() {
-    return {
-      equity:numberFrom(data.firm?.equity), freeMargin:numberFrom(data.firm?.freeMargin), mtdReturnPct:numberFrom(data.firm?.pnlMonthPct), netPnl:stat("Net P&L"),
-      currentDrawdownPct:numberFrom(data.firm?.drawdownPct), maxDrawdownPct:stat("Max DD"), openRiskPct:numberFrom(data.firm?.openRiskPct), winRatePct:stat("Win rate"),
-      profitFactor:stat("Profit Factor"), sharpe:stat("Sharpe"), expectancyR:stat("Expectancy"), grossExposurePct:numberFrom(data.riskStats?.grossExposure),
-      netExposurePct:numberFrom(data.riskStats?.netExposure), unresolvedExecutions:numberFrom(data.firm?.unresolvedExecutions) || 0,
-      activeDesks:(data.desks || []).filter(desk => !["FAULT","UNBOUND"].includes(desk.state)).length, totalDesks:(data.desks || []).length
-    };
-  }
-
-  function selectionModel(selection) {
-    if (selection.portfolio === 0) return { title:"DUSTY DRAGON · FIRM", note:"Firm investor read model · all panels share the Capital & Objectives scope.", entityLabel:"FIRM", portfolioLabel:"FIRM", metrics:firmMetrics(), provenance:data.performance?.historyProvenance || "READ_MODEL", state:data.firm?.state || "NORMAL" };
-    const portfolio = scopeMock.portfolios?.[selection.portfolio];
-    const entity = portfolio?.entities?.[selection.entity];
-    if (!portfolio || !entity) return null;
-    return { title:`${portfolio.label} · ${entity.label}`, note:`${entity.label} investor read model · synchronized across Capital, Protection, Quality, Exposure and Attribution.`, entityLabel:entity.label, portfolioLabel:`PORTFOLIO ${selection.portfolio}`, metrics:entity.panelMetrics, provenance:entity.provenance, state:entity.snapshot?.state, portfolio, entity };
-  }
-
-  function renderHeadline(model, selection) {
-    const m=model.metrics; const objectiveProgress=selection.portfolio===0?safeDivide(m.mtdReturnPct,monthlyObjective):null;
-    $("#perfHeadline").innerHTML=[metric("EQUITY",money(m.equity),"current marked capital"),metric("MTD RETURN",pct(m.mtdReturnPct),`${model.entityLabel.toLowerCase()} measured return`,m.mtdReturnPct>=0?"positive":"negative"),metric("NET P&L",money(m.netPnl,2),"scope net result",m.netPnl>=0?"positive":"negative"),metric("MAX DRAWDOWN",pct(m.maxDrawdownPct,2,false),"worst observed peak-to-trough decline",m.maxDrawdownPct!=null&&m.maxDrawdownPct<Number(policy.risk?.drawdownWatchPct??5)?"positive":"caution"),selection.portfolio===0?`<div class="perf-kpi perf-goal"><span>MONTH-END OBJECTIVE</span><strong>${objectiveProgress==null?"—":`${Math.max(0,objectiveProgress*100).toFixed(0)}%`}</strong><small>${pct(m.mtdReturnPct)} of ${monthlyObjective.toFixed(2)}%</small><div class="perf-progress"><i style="width:${Math.max(0,Math.min(100,(objectiveProgress||0)*100))}%"></i></div></div>`:metric("SCOPE OBJECTIVE","UNSET","Core has not supplied a portfolio/desk objective")].join("");
-  }
-
+  function canonicalState(value){const raw=String(value||"UNKNOWN").toUpperCase();if(["NORMAL","ACTIVE","HEALTHY","OPERATIONAL","VALID","SIMULATED"].includes(raw))return{term:raw==="SIMULATED"?"NORMAL":raw,tone:"normal"};if(["CAUTION","WATCH","DEGRADED","RISK"].includes(raw))return{term:"CAUTION",tone:"caution"};if(raw.includes("FAULT")||["CRITICAL","BLOCKED"].includes(raw))return{term:"FAULT",tone:"fault"};if(["PARKED","PAUSED","DRAINED"].includes(raw))return{term:"PARKED",tone:"parked"};if(["UNPROVISIONED","UNBOUND","OFFLINE","UNKNOWN"].includes(raw))return{term:raw==="UNBOUND"?"UNBOUND":"UNPROVISIONED",tone:"unprovisioned"};return{term:raw,tone:"unprovisioned"};}
+  const stateBadge=value=>{const state=canonicalState(value);return`<em class="perf-state-badge state-${state.tone}"><i></i>${state.term}</em>`;};
+  function activeSelection(){const button=root.querySelector("[data-capital-scope].active");const portfolio=Number(button?.dataset.capitalScope||0);const entitySelect=root.querySelector("#perfCapitalEntity");return{portfolio,entity:portfolio===0?"firm":entitySelect?.value||"layer"};}
+  function firmMetrics(){return{equity:numberFrom(data.firm?.equity),freeMargin:numberFrom(data.firm?.freeMargin),mtdReturnPct:numberFrom(data.firm?.pnlMonthPct),netPnl:stat("Net P&L"),currentDrawdownPct:numberFrom(data.firm?.drawdownPct),maxDrawdownPct:stat("Max DD"),openRiskPct:numberFrom(data.firm?.openRiskPct),winRatePct:stat("Win rate"),profitFactor:stat("Profit Factor"),sharpe:stat("Sharpe"),expectancyR:stat("Expectancy"),grossExposurePct:numberFrom(data.riskStats?.grossExposure),netExposurePct:numberFrom(data.riskStats?.netExposure),unresolvedExecutions:numberFrom(data.firm?.unresolvedExecutions)||0,activeDesks:(data.desks||[]).filter(desk=>!["FAULT","UNBOUND"].includes(desk.state)).length,totalDesks:(data.desks||[]).length};}
+  function selectionModel(selection){if(selection.portfolio===0)return{title:"DUSTY DRAGON · FIRM",note:"Firm investor read model · all panels share the Capital & Objectives scope.",entityLabel:"FIRM",portfolioLabel:"FIRM",metrics:firmMetrics(),provenance:data.performance?.historyProvenance||"READ_MODEL",state:data.firm?.state||"NORMAL"};const portfolio=scopeMock.portfolios?.[selection.portfolio];const entity=portfolio?.entities?.[selection.entity];if(!portfolio||!entity)return null;return{title:`${portfolio.label} · ${entity.label}`,note:`${entity.label} investor read model · synchronized across Capital, Protection, Quality, Exposure and Attribution.`,entityLabel:entity.label,portfolioLabel:`PORTFOLIO ${selection.portfolio}`,metrics:entity.panelMetrics,provenance:entity.provenance,state:entity.snapshot?.state,portfolio,entity};}
+  function renderHeadline(model,selection){const m=model.metrics;const objectiveProgress=selection.portfolio===0?safeDivide(m.mtdReturnPct,monthlyObjective):null;$("#perfHeadline").innerHTML=[metric("EQUITY",money(m.equity),"current marked capital"),metric("MTD RETURN",pct(m.mtdReturnPct),`${model.entityLabel.toLowerCase()} measured return`,m.mtdReturnPct>=0?"positive":"negative"),metric("NET P&L",money(m.netPnl,2),"scope net result",m.netPnl>=0?"positive":"negative"),metric("MAX DRAWDOWN",pct(m.maxDrawdownPct,2,false),"worst observed peak-to-trough decline",m.maxDrawdownPct!=null&&m.maxDrawdownPct<Number(policy.risk?.drawdownWatchPct??5)?"positive":"caution"),selection.portfolio===0?`<div class="perf-kpi perf-goal"><span>MONTH-END OBJECTIVE</span><strong>${objectiveProgress==null?"—":`${Math.max(0,objectiveProgress*100).toFixed(0)}%`}</strong><small>${pct(m.mtdReturnPct)} of ${monthlyObjective.toFixed(2)}%</small><div class="perf-progress"><i style="width:${Math.max(0,Math.min(100,(objectiveProgress||0)*100))}%"></i></div></div>`:metric("SCOPE OBJECTIVE","UNSET","Core has not supplied a portfolio/desk objective")].join("");}
   function renderProtection(model,selection){const m=model.metrics;const riskUsed=selection.portfolio===0?safeDivide(m.openRiskPct,openRiskLimit):null;$("#perfProtection").innerHTML=[metric("CURRENT DRAWDOWN",pct(m.currentDrawdownPct,2,false),"current equity below high-water mark"),metric("MAX DRAWDOWN",pct(m.maxDrawdownPct,2,false),"worst observed peak-to-trough decline"),metric("OPEN RISK",pct(m.openRiskPct,2,false),"current stop-defined capital at risk"),selection.portfolio===0?metric("RISK BUDGET USED",riskUsed==null?"—":`${(riskUsed*100).toFixed(0)}%`,`${Math.max(0,openRiskLimit-(m.openRiskPct||0)).toFixed(2)} pts headroom to ${openRiskLimit.toFixed(2)}% firm limit`,riskUsed!=null&&riskUsed<=1?"positive":"negative"):metric("SCOPE RISK LIMIT","UNSET","displayed open risk is measured; no scope limit inferred")].join("");$("#perfProtectionState").textContent=selection.portfolio===0?"FIRM POLICY":`${model.portfolioLabel} · ${model.entityLabel}`;}
   function renderQuality(model){const m=model.metrics;$("#perfQuality").innerHTML=[metric("WIN RATE",pct(m.winRatePct,1,false),"profitable / closed trades"),metric("PROFIT FACTOR",ratio(m.profitFactor),"gross profit / gross loss"),metric("SHARPE",ratio(m.sharpe),"reported total-risk-adjusted return"),metric("EXPECTANCY",m.expectancyR==null?"—":`${m.expectancyR>=0?"+":""}${Number(m.expectancyR).toFixed(2)}R`,"expected R per trade")].join("");$("#perfQualityState").textContent=`${model.portfolioLabel} · ${model.entityLabel}`;}
   function renderExposure(model){const m=model.metrics;const freeMarginRatio=safeDivide(m.freeMargin,m.equity);const marginUtilization=freeMarginRatio==null?null:Math.max(0,1-freeMarginRatio)*100;$("#perfExposure").innerHTML=[metric("FREE MARGIN",money(m.freeMargin),freeMarginRatio==null?"not reported":`${(freeMarginRatio*100).toFixed(1)}% of equity available`),metric("MARGIN UTILIZATION",marginUtilization==null?"—":`${marginUtilization.toFixed(1)}%`,"1 − free margin / equity"),metric("GROSS EXPOSURE",pct(m.grossExposurePct,1,false),"absolute notional footprint / equity"),metric("NET EXPOSURE",pct(m.netExposurePct,1,false),"signed directional footprint / equity")].join("");$("#perfExposureState").textContent=`${m.activeDesks??0}/${m.totalDesks??0} DESKS ACTIVE`;}
-
   function attributionRows(selection){if(selection.portfolio===0)return scopeMock.firmAttribution?.portfolios||[];return scopeMock.portfolios?.[selection.portfolio]?.attribution?.desks||[];}
-  function firmPortfolioState(index){const portfolio=scopeMock.portfolios?.[index+1];const states=Object.values(portfolio?.entities||{}).filter(entity=>entity.id?.startsWith("desk")).map(entity=>canonicalState(entity.snapshot?.state));if(states.some(s=>s.tone==="fault"))return "FAULT";if(states.some(s=>s.tone==="caution"))return "CAUTION";if(states.length&&states.every(s=>s.tone==="parked"))return "PARKED";if(states.length&&states.every(s=>s.tone==="unprovisioned"))return "UNPROVISIONED";return "NORMAL";}
-  function renderAttribution(model,selection){const rows=attributionRows(selection);const maxAbsShare=Math.max(1,...rows.map(row=>Math.abs(Number(row.sharePct||0))));const selectedDesk=selection.entity.startsWith("desk")?Number(selection.entity.replace("desk","")):null;$("#perfContributors").innerHTML=rows.map((row,index)=>{const share=Number(row.sharePct||0);const selected=selectedDesk===index+1;const rawState=selection.portfolio===0?firmPortfolioState(index):row.state;const state=canonicalState(rawState);return `<div class="perf-contrib state-${state.tone} ${Number(row.pnl)<0?"negative":""} ${selected?"selected":""}"><b>${row.id}</b>${stateBadge(rawState)}<div><i style="width:${Math.max(4,Math.abs(share)/maxAbsShare*100)}%"></i></div><span>${money(row.pnl)} · ${share.toFixed(1)}%</span></div>`;}).join("");$("#perfContributionScope").textContent=selection.portfolio===0?"FIRM · 4 PORTFOLIOS":`${model.portfolioLabel} · ${model.entityLabel} · 6 DESKS`;}
-
+  function firmPortfolioState(index){const portfolio=scopeMock.portfolios?.[index+1];const states=Object.values(portfolio?.entities||{}).filter(entity=>entity.id?.startsWith("desk")).map(entity=>canonicalState(entity.snapshot?.state));if(states.some(s=>s.tone==="fault"))return"FAULT";if(states.some(s=>s.tone==="caution"))return"CAUTION";if(states.length&&states.every(s=>s.tone==="parked"))return"PARKED";if(states.length&&states.every(s=>s.tone==="unprovisioned"))return"UNPROVISIONED";return"NORMAL";}
+  function renderAttribution(model,selection){const rows=attributionRows(selection);const maxAbsShare=Math.max(1,...rows.map(row=>Math.abs(Number(row.sharePct||0))));const selectedDesk=selection.entity.startsWith("desk")?Number(selection.entity.replace("desk","")):null;$("#perfContributors").innerHTML=rows.map((row,index)=>{const share=Number(row.sharePct||0);const selected=selectedDesk===index+1;const rawState=selection.portfolio===0?firmPortfolioState(index):row.state;const state=canonicalState(rawState);return`<div class="perf-contrib state-${state.tone} ${Number(row.pnl)<0?"negative":""} ${selected?"selected":""}"><div class="perf-contrib-meta"><b>${row.id}</b>${stateBadge(rawState)}<strong>${share.toFixed(1)}%</strong></div><div class="perf-contrib-bar"><i style="width:${Math.max(4,Math.abs(share)/maxAbsShare*100)}%"></i></div><span>${money(row.pnl)}</span></div>`;}).join("");$("#perfContributionScope").textContent=selection.portfolio===0?"FIRM · 4 PORTFOLIOS":`${model.portfolioLabel} · ${model.entityLabel} · 6 DESKS`;}
   function renderNotes(model,selection){const m=model.metrics;$("#perfInvestorNotes").innerHTML=`<div class="investor-note"><b>SHARED SCOPE</b><span>${model.portfolioLabel} · ${model.entityLabel}. Every investor panel is reading the same selected scope.</span></div><div class="investor-note"><b>RETURN MEASUREMENT</b><span>${pct(m.mtdReturnPct)} month-to-date; ${pct(m.maxDrawdownPct,2,false)} maximum drawdown.</span></div><div class="investor-note"><b>OBJECTIVE ≠ BENCHMARK</b><span>${selection.portfolio===0?`${monthlyObjective.toFixed(2)}% is the firm monthly absolute-return objective.`:"No portfolio/desk objective is inferred from the firm objective."}</span></div>`;$("#perfInvestorState").textContent=model.provenance?.startsWith("MOCK")?"MOCK SCOPE · CONTRACT-COMPATIBLE":"MEASURED / POLICY-AWARE";}
-
   function render(){const selection=activeSelection();const model=selectionModel(selection);if(!model)return;$("#perfScopeTitle").textContent=model.title;$("#perfScopeNote").textContent=model.note;renderHeadline(model,selection);renderProtection(model,selection);renderQuality(model);renderExposure(model);renderAttribution(model,selection);renderNotes(model,selection);window.dispatchEvent(new CustomEvent("dusty:performance-scope-synchronized",{detail:{...selection,label:model.title,state:canonicalState(model.state).term,stateTone:canonicalState(model.state).tone}}));}
-  function scheduleRender(){setTimeout(render,0);}
-  root.addEventListener("click",event=>{if(event.target.closest("[data-capital-scope]")||event.target.closest("[data-lens]"))scheduleRender();});
-  root.addEventListener("change",event=>{if(event.target.id==="perfCapitalEntity")scheduleRender();});
+  function scheduleRender(){setTimeout(render,0);}root.addEventListener("click",event=>{if(event.target.closest("[data-capital-scope]")||event.target.closest("[data-lens]"))scheduleRender();});root.addEventListener("change",event=>{if(event.target.id==="perfCapitalEntity")scheduleRender();});
   const legacyScope=$("#perfScope");const legacyEntity=$("#perfEntity");if(legacyScope)legacyScope.closest(".perf-controls")?.classList.add("perf-legacy-scope-retired");if(legacyScope)legacyScope.hidden=true;if(legacyEntity)legacyEntity.hidden=true;
-  window.DUSTY_PERFORMANCE_PANEL_SYNC=Object.freeze({version:"3.10",render,selection:activeSelection,canonicalState});
-  render();
+  window.DUSTY_PERFORMANCE_PANEL_SYNC=Object.freeze({version:"3.11",render,selection:activeSelection,canonicalState});render();
 })();
